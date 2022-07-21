@@ -3,17 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2A273FCB-721D-4883-93D6-98177675EAE9}") = "Build", "Build\Build.csproj", "{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Build", "Build\Build.csproj", "{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}"
 EndProject
-Project("{7A855D74-4BA6-4EEA-B394-9DB15F12A937}") = "Nice3point.Revit.Toolkit", "Nice3point.Revit.Toolkit\Nice3point.Revit.Toolkit.csproj", "{63ADFFCF-A009-449E-9F19-2611A01EDFCA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nice3point.Revit.Toolkit", "Nice3point.Revit.Toolkit\Nice3point.Revit.Toolkit.csproj", "{63ADFFCF-A009-449E-9F19-2611A01EDFCA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{54D6B6B5-F661-4B55-B787-46BE8CC5C6A3}"
-ProjectSection(SolutionItems) = preProject
-    .gitignore = .gitignore
-    Readme.md = Readme.md
-    Changelog.md = Changelog.md
-    Build\Build.Properties.cs = Build\Build.Properties.cs
-EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,16 +23,26 @@ Global
 		Release R23|Any CPU = Release R23|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}.Release R19|Any CPU.ActiveCfg = Release|Any CPU
-		{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}.Release R20|Any CPU.ActiveCfg = Release|Any CPU
-		{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}.Release R21|Any CPU.ActiveCfg = Release|Any CPU
-		{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}.Release R22|Any CPU.ActiveCfg = Release|Any CPU
 		{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}.Debug R19|Any CPU.ActiveCfg = Debug|Any CPU
 		{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}.Debug R20|Any CPU.ActiveCfg = Debug|Any CPU
 		{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}.Debug R21|Any CPU.ActiveCfg = Debug|Any CPU
 		{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}.Debug R22|Any CPU.ActiveCfg = Debug|Any CPU
 		{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}.Debug R23|Any CPU.ActiveCfg = Debug|Any CPU
+		{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}.Release R19|Any CPU.ActiveCfg = Release|Any CPU
+		{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}.Release R20|Any CPU.ActiveCfg = Release|Any CPU
+		{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}.Release R21|Any CPU.ActiveCfg = Release|Any CPU
+		{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}.Release R22|Any CPU.ActiveCfg = Release|Any CPU
 		{69A95C40-6A3B-4827-9DF3-AB8B79E52F42}.Release R23|Any CPU.ActiveCfg = Release|Any CPU
+		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R19|Any CPU.ActiveCfg = Debug R19|Any CPU
+		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R19|Any CPU.Build.0 = Debug R19|Any CPU
+		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R20|Any CPU.ActiveCfg = Debug R20|Any CPU
+		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R20|Any CPU.Build.0 = Debug R20|Any CPU
+		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R21|Any CPU.ActiveCfg = Debug R21|Any CPU
+		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R21|Any CPU.Build.0 = Debug R21|Any CPU
+		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R22|Any CPU.ActiveCfg = Debug R22|Any CPU
+		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R22|Any CPU.Build.0 = Debug R22|Any CPU
+		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R23|Any CPU.ActiveCfg = Debug R23|Any CPU
+		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R23|Any CPU.Build.0 = Debug R23|Any CPU
 		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Release R19|Any CPU.ActiveCfg = Release R19|Any CPU
 		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Release R19|Any CPU.Build.0 = Release R19|Any CPU
 		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Release R20|Any CPU.ActiveCfg = Release R20|Any CPU
@@ -47,16 +51,6 @@ Global
 		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Release R21|Any CPU.Build.0 = Release R21|Any CPU
 		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Release R22|Any CPU.ActiveCfg = Release R22|Any CPU
 		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Release R22|Any CPU.Build.0 = Release R22|Any CPU
-		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R19|Any CPU.ActiveCfg = Debug R19|Any CPU
-		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R19|Any CPU.Build.0 = Debug R19|Any CPU
-		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R20|Any CPU.ActiveCfg = Debug R20|Any CPU
-		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R20|Any CPU.Build.0 = Debug R20|Any CPU
-		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R22|Any CPU.ActiveCfg = Debug R22|Any CPU
-		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R22|Any CPU.Build.0 = Debug R22|Any CPU
-		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R21|Any CPU.ActiveCfg = Debug R21|Any CPU
-		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R21|Any CPU.Build.0 = Debug R21|Any CPU
-		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R23|Any CPU.ActiveCfg = Debug R23|Any CPU
-		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Debug R23|Any CPU.Build.0 = Debug R23|Any CPU
 		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Release R23|Any CPU.ActiveCfg = Release R23|Any CPU
 		{63ADFFCF-A009-449E-9F19-2611A01EDFCA}.Release R23|Any CPU.Build.0 = Release R23|Any CPU
 	EndGlobalSection

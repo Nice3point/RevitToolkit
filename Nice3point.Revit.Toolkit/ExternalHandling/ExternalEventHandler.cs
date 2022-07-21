@@ -26,7 +26,7 @@ public abstract class ExternalEventHandler : IExternalEventHandler
         _externalEvent = ExternalEvent.Create(this);
     }
 
-    public virtual void Execute(UIApplication app)
+    public virtual void Execute(UIApplication uiApplication)
     {
         throw new NotImplementedException();
     }

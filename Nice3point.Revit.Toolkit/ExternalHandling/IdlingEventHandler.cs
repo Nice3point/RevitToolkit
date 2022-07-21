@@ -1,13 +1,21 @@
 ﻿using Autodesk.Revit.UI;
+using Autodesk.Revit.UI.Events;
 
 namespace Nice3point.Revit.Toolkit.ExternalHandling;
 
-public class ActionEventHandler : ExternalEventHandler
+public class IdlingEventHandler : ExternalEventHandler
 {
     private Action<UIApplication> _action;
 
     public override void Execute(UIApplication uiApplication)
     {
+        uiApplication.Idling += UiApplicationOnIdling;
+    }
+
+    private void UiApplicationOnIdling(object sender, IdlingEventArgs e)
+    {
+        var uiApplication = (UIApplication) sender;
+        uiApplication.Idling -= UiApplicationOnIdling;
         _action?.Invoke(uiApplication);
     }
 
@@ -33,13 +41,20 @@ public class ActionEventHandler : ExternalEventHandler
     }
 }
 
-public class ActionEventHandler<T> : ExternalEventHandler
+public class IdlingEventHandler<T> : ExternalEventHandler
 {
     private T _param;
     private Action<UIApplication, T> _action;
 
     public override void Execute(UIApplication uiApplication)
     {
+        uiApplication.Idling += UiApplicationOnIdling;
+    }
+
+    private void UiApplicationOnIdling(object sender, IdlingEventArgs e)
+    {
+        var uiApplication = (UIApplication) sender;
+        uiApplication.Idling -= UiApplicationOnIdling;
         _action?.Invoke(uiApplication, _param);
     }
 
@@ -66,7 +81,7 @@ public class ActionEventHandler<T> : ExternalEventHandler
     }
 }
 
-public class ActionEventHandler<T0, T1> : ExternalEventHandler
+public class IdlingEventHandler<T0, T1> : ExternalEventHandler
 {
     private T0 _param0;
     private T1 _param1;
@@ -74,6 +89,13 @@ public class ActionEventHandler<T0, T1> : ExternalEventHandler
 
     public override void Execute(UIApplication uiApplication)
     {
+        uiApplication.Idling += UiApplicationOnIdling;
+    }
+
+    private void UiApplicationOnIdling(object sender, IdlingEventArgs e)
+    {
+        var uiApplication = (UIApplication) sender;
+        uiApplication.Idling -= UiApplicationOnIdling;
         _action?.Invoke(uiApplication, _param0, _param1);
     }
 
@@ -101,7 +123,7 @@ public class ActionEventHandler<T0, T1> : ExternalEventHandler
     }
 }
 
-public class ActionEventHandler<T0, T1, T2> : ExternalEventHandler
+public class IdlingEventHandler<T0, T1, T2> : ExternalEventHandler
 {
     private T0 _param0;
     private T1 _param1;
@@ -110,6 +132,13 @@ public class ActionEventHandler<T0, T1, T2> : ExternalEventHandler
 
     public override void Execute(UIApplication uiApplication)
     {
+        uiApplication.Idling += UiApplicationOnIdling;
+    }
+
+    private void UiApplicationOnIdling(object sender, IdlingEventArgs e)
+    {
+        var uiApplication = (UIApplication) sender;
+        uiApplication.Idling -= UiApplicationOnIdling;
         _action?.Invoke(uiApplication, _param0, _param1, _param2);
     }
 

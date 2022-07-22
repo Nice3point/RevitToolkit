@@ -33,7 +33,7 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 
 ### <a id="ExternalHandling">External Handling</a>
 
-The ExternalEventHandler class is used to modify the document when using modeless windows. It contains an implementation of the IExternalEventHandler interface. You can create your
+The **ExternalEventHandler** class is used to modify the document when using modeless windows. It contains an implementation of the IExternalEventHandler interface. You can create your
 own handlers by deriving from this class.
 
 To avoid closures and increase performance, use generic overloads and pass data through parameters.

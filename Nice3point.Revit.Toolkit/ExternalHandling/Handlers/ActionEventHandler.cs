@@ -2,6 +2,9 @@
 
 namespace Nice3point.Revit.Toolkit.ExternalHandling.Handlers;
 
+/// <summary>
+///     Handler, to provide access to change the Revit document from modeless windows
+/// </summary>
 public class ActionEventHandler : ExternalEventHandler
 {
     private Action<UIApplication> _action;
@@ -33,6 +36,9 @@ public class ActionEventHandler : ExternalEventHandler
     }
 }
 
+/// <summary>
+///     Handler, to provide access to change the Revit document from modeless windows
+/// </summary>
 public class ActionEventHandler<T> : ExternalEventHandler
 {
     private T _param;
@@ -66,6 +72,9 @@ public class ActionEventHandler<T> : ExternalEventHandler
     }
 }
 
+/// <summary>
+///     Handler, to provide access to change the Revit document from modeless windows
+/// </summary>
 public class ActionEventHandler<T0, T1> : ExternalEventHandler
 {
     private T0 _param0;
@@ -101,6 +110,9 @@ public class ActionEventHandler<T0, T1> : ExternalEventHandler
     }
 }
 
+/// <summary>
+///     Handler, to provide access to change the Revit document from modeless windows
+/// </summary>
 public class ActionEventHandler<T0, T1, T2> : ExternalEventHandler
 {
     private T0 _param0;

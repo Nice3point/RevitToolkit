@@ -3,6 +3,13 @@ using Autodesk.Revit.UI.Events;
 
 namespace Nice3point.Revit.Toolkit.ExternalHandling.Handlers;
 
+/// <summary>
+///     Handler, to provide access to change the Revit document from modeless windows
+/// </summary>
+/// <remarks>
+///     Lambda will be executed when your application becomes available again.
+///     Unsubscribing from the Idling event occurs immediately. Suitable for cases where you need to call code when Revit receives focus
+/// </remarks>
 public class IdlingEventHandler : ExternalEventHandler
 {
     private Action<UIApplication> _action;
@@ -41,6 +48,13 @@ public class IdlingEventHandler : ExternalEventHandler
     }
 }
 
+/// <summary>
+///     Handler, to provide access to change the Revit document from modeless windows
+/// </summary>
+/// <remarks>
+///     Lambda will be executed when your application becomes available again.
+///     Unsubscribing from the Idling event occurs immediately. Suitable for cases where you need to call code when Revit receives focus
+/// </remarks>
 public class IdlingEventHandler<T> : ExternalEventHandler
 {
     private T _param;
@@ -81,6 +95,13 @@ public class IdlingEventHandler<T> : ExternalEventHandler
     }
 }
 
+/// <summary>
+///     Handler, to provide access to change the Revit document from modeless windows
+/// </summary>
+/// <remarks>
+///     Lambda will be executed when your application becomes available again.
+///     Unsubscribing from the Idling event occurs immediately. Suitable for cases where you need to call code when Revit receives focus
+/// </remarks>
 public class IdlingEventHandler<T0, T1> : ExternalEventHandler
 {
     private T0 _param0;
@@ -123,6 +144,13 @@ public class IdlingEventHandler<T0, T1> : ExternalEventHandler
     }
 }
 
+/// <summary>
+///     Handler, to provide access to change the Revit document from modeless windows
+/// </summary>
+/// <remarks>
+///     Lambda will be executed when your application becomes available again.
+///     Unsubscribing from the Idling event occurs immediately. Suitable for cases where you need to call code when Revit receives focus
+/// </remarks>
 public class IdlingEventHandler<T0, T1, T2> : ExternalEventHandler
 {
     private T0 _param0;

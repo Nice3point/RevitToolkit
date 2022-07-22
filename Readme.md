@@ -33,7 +33,8 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 
 ### <a id="ExternalHandling">External Handling</a>
 
-The **ExternalEventHandler** class is used to modify the document when using modeless windows. It contains an implementation of the IExternalEventHandler interface. You can create your
+The **ExternalEventHandler** class is used to modify the document when using modeless windows. It contains an implementation of the IExternalEventHandler interface. You can create
+your
 own handlers by deriving from this class.
 
 To avoid closures and increase performance, use generic overloads and pass data through parameters.
@@ -98,11 +99,84 @@ private void NotifyOnIdling()
 
 ### <a id="Transaction">Transaction</a>
 
-//TODO
+The TransactionManager gives you the ability to create transactions. You can write custom code in a lambda, and the method will take care of safely closing transactions in case of
+exceptions and cleaning up unmanaged resources.
+
+To avoid closures and increase performance, use generic overloads and pass data through parameters.
+
+**CreateSubTransaction**
+
+```c#
+TransactionManager.CreateSubTransaction(application.ActiveUIDocument.Document, document =>
+{
+    document.Delete(new ElementId(106234));
+});
+
+//Available overloads:
+//CreateSubTransaction(Document document, Action<Document> action);
+//CreateSubTransaction<T>(Document document, T param, Action<Document, T> action)
+//CreateSubTransaction<T0, T1>(Document document, T0 param0, T1 param1, Action<Document, T0, T1> action)
+//CreateSubTransaction<T0, T1, T2>(Document document, T0 param0, T1 param1, T2 param2, Action<Document, T0, T1, T2> action)
+```
+
+**CreateTransaction**
+
+```c#
+public ElementId ElementId { get; set; }
+
+private void DeteleElement()
+{
+    TransactionManager.CreateTransaction(application.ActiveUIDocument.Document, "Delete element", this, (document, viewModel) =>
+    {
+        document.Delete(viewModel.ElementId);
+    });
+}
+
+//Available overloads:
+//CreateTransaction(Document document, string transactionName, Action<Document> action);
+//CreateTransaction<T>(Document document, string transactionName, T param, Action<Document, T> action)
+//CreateTransaction<T0, T1>(Document document, string transactionName, T0 param0, T1 param1, Action<Document, T0, T1> action)
+//CreateTransaction<T0, T1, T2>(Document document, string transactionName, T0 param0, T1 param1, T2 param2, Action<Document, T0, T1, T2> action)
+```
+
+**CreateGroupTransaction**
+
+```c#
+public ElementId ElementId1 { get; set; }
+public ElementId ElementId2 { get; set; }
+
+private void DeteleElements()
+{
+    TransactionManager.CreateGroupTransaction(application.ActiveUIDocument.Document, "Delete elements", this, (document, viewModel) =>
+    {
+        TransactionManager.CreateTransaction(application.ActiveUIDocument.Document, "Delete element", viewModel, (document, vm) =>
+        {
+            document.Delete(vm.ElementId1);
+        });
+        
+        TransactionManager.CreateTransaction(application.ActiveUIDocument.Document, "Delete element", viewModel, (document, vm) =>
+        {
+            document.Delete(vm.ElementId2);
+        });
+    });
+}
+
+//Available overloads:
+//CreateGroupTransaction(Document document, string transactionName, Action<Document> action);
+//CreateGroupTransaction<T>(Document document, string transactionName, T param, Action<Document, T> action)
+//CreateGroupTransaction<T0, T1>(Document document, string transactionName, T0 param0, T1 param1, Action<Document, T0, T1> action)
+//CreateGroupTransaction<T0, T1, T2>(Document document, string transactionName, T0 param0, T1 param1, T2 param2, Action<Document, T0, T1, T2> action)
+```
 
 ### <a id="Options">Options</a>
 
-//TODO
+**FamilyLoadOptions**
+
+Provide the callback for family load options. Shows a TaskDialog when loading a family that is different from what is loaded in the project.
+
+```c#
+document.LoadFamily(fileName, new FamilyLoadOptions(), out var family);
+```
 
 ## Technology Sponsors
 

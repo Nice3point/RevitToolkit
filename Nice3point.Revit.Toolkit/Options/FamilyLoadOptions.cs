@@ -3,6 +3,14 @@ using Autodesk.Revit.UI;
 
 namespace Nice3point.Revit.Toolkit.Options;
 
+/// <summary>
+///     A class which provide the callback for family load options.
+/// </summary>
+/// <example>
+///     <code>
+///         document.LoadFamily(fileName, new FamilyLoadOptions(), out var family);
+///     </code>
+/// </example>
 public class FamilyLoadOptions : IFamilyLoadOptions
 {
     public bool OnFamilyFound(bool familyInUse, out bool overwriteParameterValues)

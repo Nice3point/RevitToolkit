@@ -7,7 +7,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Build", "Build\Build.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nice3point.Revit.Toolkit", "Nice3point.Revit.Toolkit\Nice3point.Revit.Toolkit.csproj", "{63ADFFCF-A009-449E-9F19-2611A01EDFCA}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{54D6B6B5-F661-4B55-B787-46BE8CC5C6A3}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9C7A67AC-A5FD-4133-8007-320A840ADBAC}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		Readme.md = Readme.md
+		Changelog.md = Changelog.md
+		Build\Build.Properties.cs = Build\Build.Properties.cs
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -28,7 +28,8 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 ### Table of contents
 
 - [External Handling](#ExternalHandling)
-- [Transaction](#Transaction)
+- [Transaction utils](#TransactionUtils)
+- [Collector utils](#CollectorUtils)
 - [Options](#Options)
 
 ### <a id="ExternalHandling">External Handling</a>
@@ -97,7 +98,7 @@ private void NotifyOnIdling()
 }
 ```
 
-### <a id="Transaction">Transaction</a>
+### <a id="Transaction utils">TransactionUtils</a>
 
 The TransactionManager gives you the ability to create transactions. You can write custom code in a lambda, and the method will take care of safely closing transactions in case of
 exceptions and cleaning up unmanaged resources.
@@ -167,6 +168,10 @@ private void DeteleElements()
 //CreateGroupTransaction<T0, T1>(Document document, string transactionName, T0 param0, T1 param1, Action<Document, T0, T1> action)
 //CreateGroupTransaction<T0, T1, T2>(Document document, string transactionName, T0 param0, T1 param1, T2 param2, Action<Document, T0, T1, T2> action)
 ```
+
+### <a id="Transaction utils">TransactionUtils</a>
+
+
 
 ### <a id="Options">Options</a>
 

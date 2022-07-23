@@ -1,7 +1,10 @@
 ﻿using Autodesk.Revit.DB;
 
-namespace Nice3point.Revit.Toolkit.Transaction;
+namespace Nice3point.Revit.Toolkit.Utils;
 
+/// <summary>
+///     Provides control over transactions
+/// </summary>
 public static class TransactionManager
 {
     /// <summary>

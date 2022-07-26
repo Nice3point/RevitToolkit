@@ -29,7 +29,6 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 
 - [External Handling](#ExternalHandling)
 - [Transaction utils](#TransactionUtils)
-- [Collector utils](#CollectorUtils)
 - [Options](#Options)
 
 ### <a id="ExternalHandling">External Handling</a>
@@ -168,10 +167,6 @@ private void DeteleElements()
 //CreateGroupTransaction<T0, T1>(Document document, string transactionName, T0 param0, T1 param1, Action<Document, T0, T1> action)
 //CreateGroupTransaction<T0, T1, T2>(Document document, string transactionName, T0 param0, T1 param1, T2 param2, Action<Document, T0, T1, T2> action)
 ```
-
-### <a id="Transaction utils">TransactionUtils</a>
-
-
 
 ### <a id="Options">Options</a>
 

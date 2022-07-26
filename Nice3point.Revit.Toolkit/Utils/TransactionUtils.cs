@@ -124,7 +124,7 @@ public static class TransactionManager
     /// </remarks>
     public static void CreateTransaction(Document document, string transactionName, Action<Document> action)
     {
-        var transaction = new Autodesk.Revit.DB.Transaction(document);
+        var transaction = new Transaction(document);
         transaction.Start(transactionName);
         try
         {
@@ -151,7 +151,7 @@ public static class TransactionManager
     /// </remarks>
     public static void CreateTransaction<T>(Document document, string transactionName, T param, Action<Document, T> action)
     {
-        var transaction = new Autodesk.Revit.DB.Transaction(document);
+        var transaction = new Transaction(document);
         transaction.Start(transactionName);
         try
         {
@@ -178,7 +178,7 @@ public static class TransactionManager
     /// </remarks>
     public static void CreateTransaction<T0, T1>(Document document, string transactionName, T0 param0, T1 param1, Action<Document, T0, T1> action)
     {
-        var transaction = new Autodesk.Revit.DB.Transaction(document);
+        var transaction = new Transaction(document);
         transaction.Start(transactionName);
         try
         {
@@ -205,7 +205,7 @@ public static class TransactionManager
     /// </remarks>
     public static void CreateTransaction<T0, T1, T2>(Document document, string transactionName, T0 param0, T1 param1, T2 param2, Action<Document, T0, T1, T2> action)
     {
-        var transaction = new Autodesk.Revit.DB.Transaction(document);
+        var transaction = new Transaction(document);
         transaction.Start(transactionName);
         try
         {

@@ -5,7 +5,6 @@ partial class Build
 {
     Target Compile => _ => _
         .TriggeredBy(Cleaning)
-        .OnlyWhenStatic(() => IsServerBuild)
         .Executes(() =>
         {
             var configurations = GetConfigurations(BuildConfiguration);

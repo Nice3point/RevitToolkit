@@ -13,6 +13,15 @@ namespace Nice3point.Revit.Toolkit.Options;
 /// </example>
 public class FamilyLoadOptions : IFamilyLoadOptions
 {
+    /// <summary>A method called when the family was found in the target document</summary>
+    /// <remarks>Triggered only when the family is both loaded and changed</remarks>
+    /// <param name="familyInUse">
+    ///     Indicates if one or more instances of the family is placed in the project
+    /// </param>
+    /// <param name="overwriteParameterValues">
+    ///     This determines whether or not to overwrite the parameter values of existing types. The default value is false
+    /// </param>
+    /// <returns>Return true to continue loading the family, false to cancel</returns>
     public bool OnFamilyFound(bool familyInUse, out bool overwriteParameterValues)
     {
         overwriteParameterValues = false;
@@ -41,6 +50,19 @@ public class FamilyLoadOptions : IFamilyLoadOptions
         return true;
     }
 
+    /// <summary>A method called when the shared family was found in the target document</summary>
+    /// <remarks>Triggered only when the family is both loaded and changed</remarks>
+    /// <param name="sharedFamily">The shared family in the current family document</param>
+    /// <param name="familyInUse">
+    ///     Indicates if one or more instances of the family is placed in the project
+    /// </param>
+    /// <param name="source">
+    ///     This indicates if the family will load from the project or the current family
+    /// </param>
+    /// <param name="overwriteParameterValues">
+    ///     This indicates whether or not to overwrite the parameter values of existing types
+    /// </param>
+    /// <returns>Return true to continue loading the family, false to cancel</returns>
     public bool OnSharedFamilyFound(Family sharedFamily, bool familyInUse, out FamilySource source, out bool overwriteParameterValues)
     {
         source = FamilySource.Family;

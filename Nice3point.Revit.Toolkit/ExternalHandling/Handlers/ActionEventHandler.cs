@@ -9,6 +9,9 @@ public class ActionEventHandler : ExternalEventHandler
 {
     private Action<UIApplication> _action;
 
+    /// <summary>
+    ///     This method is called to handle the external event
+    /// </summary>
     public override void Execute(UIApplication uiApplication)
     {
         _action?.Invoke(uiApplication);
@@ -44,6 +47,9 @@ public class ActionEventHandler<T> : ExternalEventHandler
     private T _param;
     private Action<UIApplication, T> _action;
 
+    /// <summary>
+    ///     This method is called to handle the external event
+    /// </summary>
     public override void Execute(UIApplication uiApplication)
     {
         _action?.Invoke(uiApplication, _param);
@@ -81,6 +87,9 @@ public class ActionEventHandler<T0, T1> : ExternalEventHandler
     private T1 _param1;
     private Action<UIApplication, T0, T1> _action;
 
+    /// <summary>
+    ///     This method is called to handle the external event
+    /// </summary>
     public override void Execute(UIApplication uiApplication)
     {
         _action?.Invoke(uiApplication, _param0, _param1);
@@ -120,6 +129,9 @@ public class ActionEventHandler<T0, T1, T2> : ExternalEventHandler
     private T2 _param2;
     private Action<UIApplication, T0, T1, T2> _action;
 
+    /// <summary>
+    ///     This method is called to handle the external event
+    /// </summary>
     public override void Execute(UIApplication uiApplication)
     {
         _action?.Invoke(uiApplication, _param0, _param1, _param2);

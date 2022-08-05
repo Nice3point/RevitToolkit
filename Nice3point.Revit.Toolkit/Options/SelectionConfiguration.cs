@@ -6,6 +6,15 @@ namespace Nice3point.Revit.Toolkit.Options;
 /// <summary>
 ///     Configuration for creating <see cref="ISelectionFilter"/> instances
 /// </summary>
+/// <example>
+///     <code>
+///         var selectionConfiguration = new SelectionConfiguration()
+///             .Allow.Element(element => element.Category.Id.AreEquals(BuiltInCategory.OST_Walls))
+///             .Allow.Reference((reference, xyz) => false);
+///             
+///         uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
+///     </code>
+/// </example>
 public class SelectionConfiguration
 {
     private readonly SelectionFilterInternal _filter;

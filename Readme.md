@@ -187,10 +187,10 @@ Provides access to create a new dockable pane to the Revit user interface.
 
 ```c#
 DockablePaneProvider
-    .Register(application, new Guid(), "Dockable Pane")
+    .Register(application, new Guid(), "Dockable pane")
     .SetConfiguration(data =>
     {
-        data.FrameworkElement = new RevitAddIn1View(new RevitAddIn1ViewModel());
+        data.FrameworkElement = new RevitAddInView(new RevitAddInViewModel());
         data.InitialState = new DockablePaneState
         {
             MinimumWidth = 300,

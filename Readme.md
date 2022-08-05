@@ -190,7 +190,7 @@ DockablePaneProvider
     .Register(application, new Guid(), "Dockable pane")
     .SetConfiguration(data =>
     {
-        data.FrameworkElement = new RevitAddInView(new RevitAddInViewModel());
+        data.FrameworkElement = new RevitAddInView();
         data.InitialState = new DockablePaneState
         {
             MinimumWidth = 300,

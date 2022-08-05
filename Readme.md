@@ -39,7 +39,7 @@ own handlers by deriving from this class.
 
 To avoid closures and increase performance, use generic overloads and pass data through parameters.
 
-**ActionEventHandler**
+#### ActionEventHandler
 
 With this handler, you can call your code from a lambda.
 
@@ -70,7 +70,7 @@ private void DeteleElement()
 }
 ```
 
-**IdlingEventHandler**
+#### IdlingEventHandler
 
 With this handler, you can call your code from the lambda when your application becomes available again. Unsubscribing from the Idling event occurs immediately. Suitable for cases
 where you need to call code when Revit receives focus. For example, to display a window after loading a family into a project
@@ -104,7 +104,7 @@ exceptions and cleaning up unmanaged resources.
 
 To avoid closures and increase performance, use generic overloads and pass data through parameters.
 
-**CreateSubTransaction**
+#### CreateSubTransaction
 
 ```c#
 TransactionManager.CreateSubTransaction(application.ActiveUIDocument.Document, document =>
@@ -119,7 +119,7 @@ TransactionManager.CreateSubTransaction(application.ActiveUIDocument.Document, d
 //CreateSubTransaction<T0, T1, T2>(Document document, T0 param0, T1 param1, T2 param2, Action<Document, T0, T1, T2> action)
 ```
 
-**CreateTransaction**
+#### CreateTransaction
 
 ```c#
 public ElementId ElementId { get; set; }
@@ -139,7 +139,7 @@ private void DeteleElement()
 //CreateTransaction<T0, T1, T2>(Document document, string transactionName, T0 param0, T1 param1, T2 param2, Action<Document, T0, T1, T2> action)
 ```
 
-**CreateGroupTransaction**
+#### CreateGroupTransaction
 
 ```c#
 public ElementId ElementId1 { get; set; }
@@ -170,12 +170,61 @@ private void DeteleElements()
 
 ### <a id="Options">Options</a>
 
-**FamilyLoadOptions**
+Toolkit provides implementation of various Revit interfaces, with the possibility of customization.
+
+#### FamilyLoadOptions
 
 Provide the callback for family load options. Shows a TaskDialog when loading a family that is different from what is loaded in the project.
+Window looks like default Revit dialog with cancel ability.
 
 ```c#
 document.LoadFamily(fileName, new FamilyLoadOptions(), out var family);
+```
+
+#### DockablePaneProvider
+
+Provides access to create a new dockable pane to the Revit user interface.
+
+```c#
+DockablePaneProvider
+    .Register(application, new Guid(), "Dockable Pane")
+    .SetConfiguration(data =>
+    {
+        data.FrameworkElement = new RevitAddIn1View(new RevitAddIn1ViewModel());
+        data.InitialState = new DockablePaneState
+        {
+            MinimumWidth = 300,
+            MinimumHeight = 400,
+            DockPosition = DockPosition.Right
+        };
+    });
+```
+
+#### SelectionConfiguration
+
+Creates a configuration for creating ISelectionFilter instances.
+
+By default, all elements are allowed to be selected:
+```c#
+var selectionConfiguration = new SelectionConfiguration();
+uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
+```
+
+You can also customize the selection of Element or Reference separately:
+```c#
+var selectionConfiguration = new SelectionConfiguration()
+        .Allow.Element(element => element.Category.Id.AreEquals(BuiltInCategory.OST_Walls));
+
+uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
+```
+
+Or set rules for everything:
+```c#
+var selectionConfiguration = new SelectionConfiguration()
+    .Allow.Element(element => element.Category.Id.AreEquals(BuiltInCategory.OST_Walls))
+    .Allow.Reference((reference, xyz) => false);
+
+uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
 ```
 
 ## Technology Sponsors

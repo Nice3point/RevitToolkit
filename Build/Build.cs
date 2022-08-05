@@ -4,8 +4,8 @@ using Nuke.Common.ProjectModel;
 partial class Build : NukeBuild
 {
     readonly AbsolutePath ArtifactsDirectory = RootDirectory / ArtifactsFolder;
-    [Solution] readonly Solution Solution;
     [GitRepository] readonly GitRepository GitRepository;
+    [Solution] readonly Solution Solution;
 
     public static int Main() => Execute<Build>(x => x.Cleaning);
 

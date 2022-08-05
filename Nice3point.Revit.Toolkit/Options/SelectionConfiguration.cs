@@ -4,7 +4,7 @@ using Autodesk.Revit.UI.Selection;
 namespace Nice3point.Revit.Toolkit.Options;
 
 /// <summary>
-///     Configuration for creating <see cref="ISelectionFilter"/> instances
+///     Configuration for creating <see cref="ISelectionFilter" /> instances
 /// </summary>
 /// <example>
 ///     <code>
@@ -20,7 +20,7 @@ public class SelectionConfiguration
     private readonly SelectionFilterInternal _filter;
 
     /// <summary>
-    ///     Construct a <see cref="SelectionConfiguration"/>
+    ///     Construct a <see cref="SelectionConfiguration" />
     /// </summary>
     public SelectionConfiguration()
     {
@@ -41,13 +41,13 @@ public class SelectionConfiguration
     {
         private readonly SelectionConfiguration _selectionConfiguration;
 
+        private Func<Element, bool> _elementHandler;
+        private Func<Reference, XYZ, bool> _referenceHandler;
+
         public SelectionFilterInternal(SelectionConfiguration selectionConfiguration)
         {
             _selectionConfiguration = selectionConfiguration;
         }
-
-        private Func<Element, bool> _elementHandler;
-        private Func<Reference, XYZ, bool> _referenceHandler;
 
         public bool AllowElement(Element elem)
         {
@@ -82,12 +82,12 @@ public interface ISelectionFilterConfiguration
     ///     Handler indicating if a reference to a piece of geometry should be permitted to be selected
     /// </summary>
     /// <param name="elementHandler">
-    ///     Selection handler<br/>
+    ///     Selection handler<br />
     ///     element – A candidate element in selection operation
     /// </param>
     /// <returns>Return true to allow the user to select this candidate element. Return false to prevent selection of this element</returns>
     /// <remarks>
-    ///     If prompting the user to select an element from a Revit Link instance, the element passed here will be the link instance, not the selected linked element <br/>
+    ///     If prompting the user to select an element from a Revit Link instance, the element passed here will be the link instance, not the selected linked element <br />
     ///     If an exception is thrown from this method, the element will not be permitted to be selected
     /// </remarks>
     public SelectionConfiguration Element(Func<Element, bool> elementHandler);
@@ -96,11 +96,12 @@ public interface ISelectionFilterConfiguration
     ///     Handler indicating if the element should be permitted to be selected
     /// </summary>
     /// <param name="referenceHandler">
-    ///     Selection handler<br/>
-    ///     reference – A candidate reference in selection operation<br/>
-    ///     position – The 3D position of the mouse on the candidate reference</param>
+    ///     Selection handler<br />
+    ///     reference – A candidate reference in selection operation<br />
+    ///     position – The 3D position of the mouse on the candidate reference
+    /// </param>
     /// <returns>
-    ///     Return true to allow the user to select this candidate reference. Return false to prevent selection of this candidate <br/>
+    ///     Return true to allow the user to select this candidate reference. Return false to prevent selection of this candidate <br />
     ///     If an exception is thrown from this method, the element will not be permitted to be selected
     /// </returns>
     public SelectionConfiguration Reference(Func<Reference, XYZ, bool> referenceHandler);

@@ -205,12 +205,14 @@ DockablePaneProvider
 Creates a configuration for creating ISelectionFilter instances.
 
 By default, all elements are allowed to be selected:
+
 ```c#
 var selectionConfiguration = new SelectionConfiguration();
 uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
 ```
 
 You can also customize the selection of Element or Reference separately:
+
 ```c#
 var selectionConfiguration = new SelectionConfiguration()
         .Allow.Element(element => element.Category.Id.AreEquals(BuiltInCategory.OST_Walls));
@@ -219,6 +221,7 @@ uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filte
 ```
 
 Or set rules for everything:
+
 ```c#
 var selectionConfiguration = new SelectionConfiguration()
     .Allow.Element(element => element.Category.Id.AreEquals(BuiltInCategory.OST_Walls))

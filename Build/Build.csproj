@@ -12,15 +12,15 @@
         <Configurations>Release;Debug</Configurations>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Nuke.Common" Version="6.1.2" />
+        <PackageReference Include="Nuke.Common" Version="6.1.2"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageDownload Include="GitVersion.Tool" Version="[5.10.3]" />
+        <PackageDownload Include="GitVersion.Tool" Version="[5.10.3]"/>
     </ItemGroup>
 
     <ItemGroup>
-        <Using Include="Nuke.Common" />
-        <Using Include="Nuke.Common.IO" />
+        <Using Include="Nuke.Common"/>
+        <Using Include="Nuke.Common.IO"/>
     </ItemGroup>
 </Project>

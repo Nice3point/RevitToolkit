@@ -7,13 +7,28 @@ namespace Nice3point.Revit.Toolkit.Options;
 /// </summary>
 public class DockablePaneProvider : IDockablePaneProvider, IDockablePaneProviderId, IDockablePaneProviderTitle, IDockablePaneProviderConfiguration
 {
-    private string _title;
-    private DockablePaneId _id;
     private UIControlledApplication _application;
+    private DockablePaneId _id;
     private Action<DockablePaneProviderData> _setupHandler;
+    private string _title;
 
     private DockablePaneProvider()
     {
+    }
+
+    /// <summary>
+    ///     Method called during initialization of the user interface to gather information about a dockable pane window
+    /// </summary>
+    /// <param name="data">Container for information about the new dockable pane</param>
+    public void SetupDockablePane(DockablePaneProviderData data)
+    {
+        _setupHandler(data);
+    }
+
+    void IDockablePaneProviderConfiguration.SetConfiguration(Action<DockablePaneProviderData> handler)
+    {
+        _setupHandler = handler;
+        _application.RegisterDockablePane(_id, _title, this);
     }
 
     IDockablePaneProviderTitle IDockablePaneProviderId.SetId(Guid id)
@@ -34,14 +49,8 @@ public class DockablePaneProvider : IDockablePaneProvider, IDockablePaneProvider
         return this;
     }
 
-    void IDockablePaneProviderConfiguration.SetConfiguration(Action<DockablePaneProviderData> handler)
-    {
-        _setupHandler = handler;
-        _application.RegisterDockablePane(_id, _title, this);
-    }
-
     /// <summary>
-    ///     Creates a new <see cref="IDockablePaneProvider"/> instance
+    ///     Creates a new <see cref="IDockablePaneProvider" /> instance
     /// </summary>
     /// <param name="application">The UIControlledApplication</param>
     public static IDockablePaneProviderId Register(UIControlledApplication application)
@@ -51,10 +60,10 @@ public class DockablePaneProvider : IDockablePaneProvider, IDockablePaneProvider
             _application = application
         };
         return provider;
-    } 
-    
+    }
+
     /// <summary>
-    ///     Creates a new <see cref="IDockablePaneProvider"/> instance
+    ///     Creates a new <see cref="IDockablePaneProvider" /> instance
     /// </summary>
     /// <param name="application">The UIControlledApplication</param>
     /// <param name="id">Unique identifier for the new pane</param>
@@ -68,10 +77,10 @@ public class DockablePaneProvider : IDockablePaneProvider, IDockablePaneProvider
             _title = title
         };
         return provider;
-    }    
-    
+    }
+
     /// <summary>
-    ///     Creates a new <see cref="IDockablePaneProvider"/> instance
+    ///     Creates a new <see cref="IDockablePaneProvider" /> instance
     /// </summary>
     /// <param name="application">The UIControlledApplication</param>
     /// <param name="id">Unique identifier for the new pane</param>
@@ -86,19 +95,10 @@ public class DockablePaneProvider : IDockablePaneProvider, IDockablePaneProvider
         };
         return provider;
     }
-    
-    /// <summary>
-    ///    Method called during initialization of the user interface to gather information about a dockable pane window
-    /// </summary>
-    /// <param name="data">Container for information about the new dockable pane</param>
-    public void SetupDockablePane(DockablePaneProviderData data)
-    {
-        _setupHandler(data);
-    }
 }
 
 /// <summary>
-///     Interface for the data passed to the <see cref="UIControlledApplication.RegisterDockablePane"/> method
+///     Interface for the data passed to the <see cref="UIControlledApplication.RegisterDockablePane" /> method
 /// </summary>
 public interface IDockablePaneProviderTitle
 {
@@ -110,7 +110,7 @@ public interface IDockablePaneProviderTitle
 }
 
 /// <summary>
-///     Interface for the data passed to the <see cref="UIControlledApplication.RegisterDockablePane"/> method
+///     Interface for the data passed to the <see cref="UIControlledApplication.RegisterDockablePane" /> method
 /// </summary>
 public interface IDockablePaneProviderId
 {
@@ -119,7 +119,7 @@ public interface IDockablePaneProviderId
     /// </summary>
     /// <param name="id">Unique identifier for the new pane</param>
     IDockablePaneProviderTitle SetId(Guid id);
-    
+
     /// <summary>
     ///     Sets the Id of the dockable pane
     /// </summary>
@@ -133,13 +133,14 @@ public interface IDockablePaneProviderId
 public interface IDockablePaneProviderConfiguration
 {
     /// <summary>
-    ///    Sets the configuration of the dockable pane
+    ///     Sets the configuration of the dockable pane
     /// </summary>
-    /// <param name="handler">DockablePaneProviderData handler<br/>
-    ///    data - Container for information about the new dockable pane.  Implementers should set the
-    ///    FrameworkElement and InitialState Properties. Optionally, providers can set the
-    ///    ContextualHelp property if they wish to provide or react to help requests on the pane,
-    ///    or override the default EditorInteraction property by setting it here.
+    /// <param name="handler">
+    ///     DockablePaneProviderData handler<br />
+    ///     data - Container for information about the new dockable pane. Implementers should set the
+    ///     FrameworkElement and InitialState Properties. Optionally, providers can set the
+    ///     ContextualHelp property if they wish to provide or react to help requests on the pane,
+    ///     or override the default EditorInteraction property by setting it here.
     /// </param>
     void SetConfiguration(Action<DockablePaneProviderData> handler);
 }

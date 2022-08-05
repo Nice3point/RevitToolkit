@@ -21,16 +21,16 @@ public class ActionEventHandler : ExternalEventHandler
     ///     Instructing Revit to raise (signal) the external event
     /// </summary>
     /// <remarks>
-    ///    Revit will wait until it is ready to process the event and then
-    ///    it will execute its event handler by calling the Execute method.
-    ///    Revit processes external events only when no other commands or
-    ///    edit modes are currently active in Revit, which is the same policy
-    ///    like the one that applies to evoking external commands
+    ///     Revit will wait until it is ready to process the event and then
+    ///     it will execute its event handler by calling the Execute method.
+    ///     Revit processes external events only when no other commands or
+    ///     edit modes are currently active in Revit, which is the same policy
+    ///     like the one that applies to evoking external commands
     /// </remarks>
     /// <returns>
-    ///    The result of event raising request. If the request is 'Accepted',
-    ///    the event would be added to the event queue and its handler will
-    ///    be executed in the next event-processing cycle
+    ///     The result of event raising request. If the request is 'Accepted',
+    ///     the event would be added to the event queue and its handler will
+    ///     be executed in the next event-processing cycle
     /// </returns>
     public void Raise(Action<UIApplication> action)
     {
@@ -44,8 +44,8 @@ public class ActionEventHandler : ExternalEventHandler
 /// </summary>
 public class ActionEventHandler<T> : ExternalEventHandler
 {
-    private T _param;
     private Action<UIApplication, T> _action;
+    private T _param;
 
     /// <summary>
     ///     This method is called to handle the external event
@@ -59,16 +59,16 @@ public class ActionEventHandler<T> : ExternalEventHandler
     ///     Instructing Revit to raise (signal) the external event
     /// </summary>
     /// <remarks>
-    ///    Revit will wait until it is ready to process the event and then
-    ///    it will execute its event handler by calling the Execute method.
-    ///    Revit processes external events only when no other commands or
-    ///    edit modes are currently active in Revit, which is the same policy
-    ///    like the one that applies to evoking external commands
+    ///     Revit will wait until it is ready to process the event and then
+    ///     it will execute its event handler by calling the Execute method.
+    ///     Revit processes external events only when no other commands or
+    ///     edit modes are currently active in Revit, which is the same policy
+    ///     like the one that applies to evoking external commands
     /// </remarks>
     /// <returns>
-    ///    The result of event raising request. If the request is 'Accepted',
-    ///    the event would be added to the event queue and its handler will
-    ///    be executed in the next event-processing cycle
+    ///     The result of event raising request. If the request is 'Accepted',
+    ///     the event would be added to the event queue and its handler will
+    ///     be executed in the next event-processing cycle
     /// </returns>
     public void Raise(T param, Action<UIApplication, T> action)
     {
@@ -83,9 +83,9 @@ public class ActionEventHandler<T> : ExternalEventHandler
 /// </summary>
 public class ActionEventHandler<T0, T1> : ExternalEventHandler
 {
+    private Action<UIApplication, T0, T1> _action;
     private T0 _param0;
     private T1 _param1;
-    private Action<UIApplication, T0, T1> _action;
 
     /// <summary>
     ///     This method is called to handle the external event
@@ -99,16 +99,16 @@ public class ActionEventHandler<T0, T1> : ExternalEventHandler
     ///     Instructing Revit to raise (signal) the external event
     /// </summary>
     /// <remarks>
-    ///    Revit will wait until it is ready to process the event and then
-    ///    it will execute its event handler by calling the Execute method.
-    ///    Revit processes external events only when no other commands or
-    ///    edit modes are currently active in Revit, which is the same policy
-    ///    like the one that applies to evoking external commands
+    ///     Revit will wait until it is ready to process the event and then
+    ///     it will execute its event handler by calling the Execute method.
+    ///     Revit processes external events only when no other commands or
+    ///     edit modes are currently active in Revit, which is the same policy
+    ///     like the one that applies to evoking external commands
     /// </remarks>
     /// <returns>
-    ///    The result of event raising request. If the request is 'Accepted',
-    ///    the event would be added to the event queue and its handler will
-    ///    be executed in the next event-processing cycle
+    ///     The result of event raising request. If the request is 'Accepted',
+    ///     the event would be added to the event queue and its handler will
+    ///     be executed in the next event-processing cycle
     /// </returns>
     public void Raise(T0 param0, T1 param1, Action<UIApplication, T0, T1> action)
     {
@@ -124,10 +124,10 @@ public class ActionEventHandler<T0, T1> : ExternalEventHandler
 /// </summary>
 public class ActionEventHandler<T0, T1, T2> : ExternalEventHandler
 {
+    private Action<UIApplication, T0, T1, T2> _action;
     private T0 _param0;
     private T1 _param1;
     private T2 _param2;
-    private Action<UIApplication, T0, T1, T2> _action;
 
     /// <summary>
     ///     This method is called to handle the external event
@@ -141,16 +141,16 @@ public class ActionEventHandler<T0, T1, T2> : ExternalEventHandler
     ///     Instructing Revit to raise (signal) the external event
     /// </summary>
     /// <remarks>
-    ///    Revit will wait until it is ready to process the event and then
-    ///    it will execute its event handler by calling the Execute method.
-    ///    Revit processes external events only when no other commands or
-    ///    edit modes are currently active in Revit, which is the same policy
-    ///    like the one that applies to evoking external commands
+    ///     Revit will wait until it is ready to process the event and then
+    ///     it will execute its event handler by calling the Execute method.
+    ///     Revit processes external events only when no other commands or
+    ///     edit modes are currently active in Revit, which is the same policy
+    ///     like the one that applies to evoking external commands
     /// </remarks>
     /// <returns>
-    ///    The result of event raising request. If the request is 'Accepted',
-    ///    the event would be added to the event queue and its handler will
-    ///    be executed in the next event-processing cycle
+    ///     The result of event raising request. If the request is 'Accepted',
+    ///     the event would be added to the event queue and its handler will
+    ///     be executed in the next event-processing cycle
     /// </returns>
     public void Raise(T0 param0, T1 param1, T2 param2, Action<UIApplication, T0, T1, T2> action)
     {

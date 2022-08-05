@@ -1,1 +1,2 @@
-Initial release
+- New DockablePaneProvider
+- New SelectionConfiguration

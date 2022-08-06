@@ -51,7 +51,7 @@ ExternalCommand contains the logic for resolving dependencies. Now you may not e
 
 Override method **Execute()** to implement and external command within Revit.
 
-Exception handling is done on the Revit side, you can also set the ExceptionHandler property to catch errors. You don't need to implement try catch on the whole command
+Exception handling is done on the Revit side, you can also set the **ExceptionHandler** property to catch errors. You don't need to implement try catch on the whole command.
 
 Data available when executing an external command is accessible by properties.
 
@@ -63,7 +63,6 @@ public class Command : ExternalCommand
     {
         ExceptionHandler = (command, exception) =>
         {
-            var secretElement = command.Document.GetElement(new ElementId(69));
             command.ElementSet.Insert(secretElement);
             command.ErrorMessage = exception.Message;
             command.Result = Result.Failed;
@@ -104,9 +103,9 @@ public class Application : ExternalApplication
 
 Override method **OnStartup()** to execute some tasks when Revit starts.
 
-Override method **OnShutdown()** to execute some tasks when Revit shuts down. You can not override this method if you do not plan to use it.
+Override method **OnShutdown()** to execute some tasks when Revit shuts down. You don't have to override this method if you don't plan to use it.
 
-Data available when executing an external command is accessible by properties. Additionally, a hidden UiApplication property is available.
+Data available when executing an external command is accessible by properties. Additionally, a hidden **UiApplication** property is available.
 
 ```c#
 public class Application : ExternalApplication

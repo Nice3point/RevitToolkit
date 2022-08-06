@@ -55,7 +55,7 @@ public abstract class ExternalCommand : IExternalCommand
     /// </summary>
     public string ErrorMessage { get; set; } = string.Empty;
 
-    /// <summary>Overload this method to implement and external command within Revit.</summary>
+    /// <summary>Override this method to implement and external command within Revit.</summary>
     /// <returns>
     ///     The result indicates if the execution fails, succeeds, or was canceled by user. If it does not
     ///     succeed, Revit will undo any changes made by the external command.

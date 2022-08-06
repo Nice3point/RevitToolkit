@@ -27,11 +27,64 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 
 ### Table of contents
 
-- [External Handling](#ExternalHandling)
+- [External command](#ExternalCommand)
+- [External events](#ExternalEvents)
 - [Transaction utils](#TransactionUtils)
 - [Options](#Options)
 
-### <a id="ExternalHandling">External Handling</a>
+### <a id="ExternalCommand">External Command</a>
+
+The **ExternalCommand** class contains an implementation for IExternalCommand.
+
+```c#
+[Transaction(TransactionMode.Manual)]
+public class Command : ExternalCommand
+{
+    public override void Execute()
+    {
+    }
+}
+```
+
+ExternalCommand contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
+
+Override method **Execute()** to implement and external command within Revit.
+
+Exception handling is done on the Revit side, you can also set the ExceptionHandler property to catch errors. You don't need to implement try catch on the whole command
+
+Data available when executing an external command is accessible by properties.
+
+```c#
+[Transaction(TransactionMode.Manual)]
+public class Command : ExternalCommand
+{
+    public Command()
+    {
+        ExceptionHandler = (command, exception) =>
+        {
+            var secretElement = command.Document.GetElement(new ElementId(69));
+            command.ElementSet.Insert(secretElement);
+            command.ErrorMessage = exception.Message;
+            command.Result = Result.Failed;
+        };
+    }
+
+    public override void Execute()
+    {
+        var title = Document.Title;
+        if (title.Equals("Untitled"))
+        {
+            Result = Result.Cancelled;
+            return;
+        }
+
+        var activeView = UiDocument.ActiveView;
+        var loadedApplications = UiApplication.LoadedApplications;
+    }
+}
+```
+
+### <a id="ExternalEvents">External Events</a>
 
 The **ExternalEventHandler** class is used to modify the document when using modeless windows. It contains an implementation of the IExternalEventHandler interface. You can create
 your

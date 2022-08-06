@@ -1,2 +1,1 @@
-- New DockablePaneProvider
-- New SelectionConfiguration
+- New ExternalCommand

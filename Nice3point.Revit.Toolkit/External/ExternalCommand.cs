@@ -2,7 +2,7 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 
-namespace Nice3point.Revit.Toolkit.ExternalCommands;
+namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
 ///    Implementation for a Revit add-in External Command

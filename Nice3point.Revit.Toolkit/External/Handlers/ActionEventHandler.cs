@@ -1,16 +1,11 @@
 ﻿using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Events;
 
-namespace Nice3point.Revit.Toolkit.ExternalHandling.Handlers;
+namespace Nice3point.Revit.Toolkit.External.Handlers;
 
 /// <summary>
 ///     Handler, to provide access to change the Revit document from modeless windows
 /// </summary>
-/// <remarks>
-///     Lambda will be executed when your application becomes available again.
-///     Unsubscribing from the Idling event occurs immediately. Suitable for cases where you need to call code when Revit receives focus
-/// </remarks>
-public class IdlingEventHandler : ExternalEventHandler
+public class ActionEventHandler : ExternalEventHandler
 {
     private Action<UIApplication> _action;
 
@@ -19,13 +14,6 @@ public class IdlingEventHandler : ExternalEventHandler
     /// </summary>
     public override void Execute(UIApplication uiApplication)
     {
-        uiApplication.Idling += UiApplicationOnIdling;
-    }
-
-    private void UiApplicationOnIdling(object sender, IdlingEventArgs e)
-    {
-        var uiApplication = (UIApplication) sender;
-        uiApplication.Idling -= UiApplicationOnIdling;
         _action?.Invoke(uiApplication);
     }
 
@@ -54,11 +42,7 @@ public class IdlingEventHandler : ExternalEventHandler
 /// <summary>
 ///     Handler, to provide access to change the Revit document from modeless windows
 /// </summary>
-/// <remarks>
-///     Lambda will be executed when your application becomes available again.
-///     Unsubscribing from the Idling event occurs immediately. Suitable for cases where you need to call code when Revit receives focus
-/// </remarks>
-public class IdlingEventHandler<T> : ExternalEventHandler
+public class ActionEventHandler<T> : ExternalEventHandler
 {
     private Action<UIApplication, T> _action;
     private T _param;
@@ -68,13 +52,6 @@ public class IdlingEventHandler<T> : ExternalEventHandler
     /// </summary>
     public override void Execute(UIApplication uiApplication)
     {
-        uiApplication.Idling += UiApplicationOnIdling;
-    }
-
-    private void UiApplicationOnIdling(object sender, IdlingEventArgs e)
-    {
-        var uiApplication = (UIApplication) sender;
-        uiApplication.Idling -= UiApplicationOnIdling;
         _action?.Invoke(uiApplication, _param);
     }
 
@@ -104,11 +81,7 @@ public class IdlingEventHandler<T> : ExternalEventHandler
 /// <summary>
 ///     Handler, to provide access to change the Revit document from modeless windows
 /// </summary>
-/// <remarks>
-///     Lambda will be executed when your application becomes available again.
-///     Unsubscribing from the Idling event occurs immediately. Suitable for cases where you need to call code when Revit receives focus
-/// </remarks>
-public class IdlingEventHandler<T0, T1> : ExternalEventHandler
+public class ActionEventHandler<T0, T1> : ExternalEventHandler
 {
     private Action<UIApplication, T0, T1> _action;
     private T0 _param0;
@@ -119,13 +92,6 @@ public class IdlingEventHandler<T0, T1> : ExternalEventHandler
     /// </summary>
     public override void Execute(UIApplication uiApplication)
     {
-        uiApplication.Idling += UiApplicationOnIdling;
-    }
-
-    private void UiApplicationOnIdling(object sender, IdlingEventArgs e)
-    {
-        var uiApplication = (UIApplication) sender;
-        uiApplication.Idling -= UiApplicationOnIdling;
         _action?.Invoke(uiApplication, _param0, _param1);
     }
 
@@ -156,11 +122,7 @@ public class IdlingEventHandler<T0, T1> : ExternalEventHandler
 /// <summary>
 ///     Handler, to provide access to change the Revit document from modeless windows
 /// </summary>
-/// <remarks>
-///     Lambda will be executed when your application becomes available again.
-///     Unsubscribing from the Idling event occurs immediately. Suitable for cases where you need to call code when Revit receives focus
-/// </remarks>
-public class IdlingEventHandler<T0, T1, T2> : ExternalEventHandler
+public class ActionEventHandler<T0, T1, T2> : ExternalEventHandler
 {
     private Action<UIApplication, T0, T1, T2> _action;
     private T0 _param0;
@@ -172,13 +134,6 @@ public class IdlingEventHandler<T0, T1, T2> : ExternalEventHandler
     /// </summary>
     public override void Execute(UIApplication uiApplication)
     {
-        uiApplication.Idling += UiApplicationOnIdling;
-    }
-
-    private void UiApplicationOnIdling(object sender, IdlingEventArgs e)
-    {
-        var uiApplication = (UIApplication) sender;
-        uiApplication.Idling -= UiApplicationOnIdling;
         _action?.Invoke(uiApplication, _param0, _param1, _param2);
     }
 

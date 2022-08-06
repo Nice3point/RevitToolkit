@@ -72,14 +72,19 @@ public class Command : ExternalCommand
     public override void Execute()
     {
         var title = Document.Title;
+        var view = ExternalCommandData.View;
+        var activeView = UiDocument.ActiveView;
+        var windowHandle = UiApplication.MainWindowHandle;
+        
         if (title.Equals("Untitled"))
         {
             Result = Result.Cancelled;
             return;
         }
 
-        var activeView = UiDocument.ActiveView;
-        var loadedApplications = UiApplication.LoadedApplications;
+        var window = new AddinView();
+        window.Show(windowHandle);
+        throw new Exception("Something went wrong");
     }
 }
 ```

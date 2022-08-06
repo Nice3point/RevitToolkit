@@ -1,1 +1,1 @@
-- New ExternalCommand
+- New ExternalApplication

@@ -28,11 +28,12 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 ### Table of contents
 
 - [External command](#ExternalCommand)
+- [External application](#ExternalApplication)
 - [External events](#ExternalEvents)
 - [Transaction utils](#TransactionUtils)
 - [Options](#Options)
 
-### <a id="ExternalCommand">External Command</a>
+### <a id="ExternalCommand">External command</a>
 
 The **ExternalCommand** class contains an implementation for IExternalCommand.
 
@@ -84,7 +85,51 @@ public class Command : ExternalCommand
 }
 ```
 
-### <a id="ExternalEvents">External Events</a>
+### <a id="ExternalApplication">External application</a>
+
+The ExternalApplication class contains an implementation for IExternalApplication.
+
+```c#
+public class Application : ExternalApplication
+{
+    public override void OnStartup()
+    {
+    }
+
+    public override void OnShutdown()
+    {
+    }
+}
+```
+
+Override method **OnStartup()** to execute some tasks when Revit starts.
+
+Override method **OnShutdown()** to execute some tasks when Revit shuts down. You can not override this method if you do not plan to use it.
+
+Data available when executing an external command is accessible by properties. Additionally, a hidden UiApplication property is available.
+
+```c#
+public class Application : ExternalApplication
+{
+    public override void OnStartup()
+    {
+        var userId = UiApplication.Application.LoginUserId;
+        if (!userId.Equals("Nice3point"))
+        {
+            //When overriding Result, OnShutdown() method will not be called
+            Result = Result.Failed;
+            return;
+        }
+        
+        var panel = Application.CreatePanel("Secret Panel", "RevitAddin");
+        var showButton = panel.AddPushButton<Command>("Execute");
+        showButton.SetImage("/RevitAddin;component/Resources/Icons/RibbonIcon16.png");
+        showButton.SetLargeImage("/RevitAddin;component/Resources/Icons/RibbonIcon32.png");
+    }
+}
+```
+
+### <a id="ExternalEvents">External events</a>
 
 The **ExternalEventHandler** class is used to modify the document when using modeless windows. It contains an implementation of the IExternalEventHandler interface. You can create
 your

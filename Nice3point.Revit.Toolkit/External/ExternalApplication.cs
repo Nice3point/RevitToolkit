@@ -12,15 +12,18 @@ public class ExternalApplication : IExternalApplication
     /// <summary>
     ///     Indicates if the external application completes its work successfully.
     /// </summary>
+    /// <remarks>
+    ///     Method <see cref="OnShutdown()" /> will not be executed if the value of this property is different from <see cref="Autodesk.Revit.UI.Result.Succeeded" />
+    /// </remarks>
     public Result Result { get; set; } = Result.Succeeded;
-    
+
     /// <summary>
-    ///     Reference to the <see cref="Autodesk.Revit.UI.UIControlledApplication"/> that is needed by an external application
+    ///     Reference to the <see cref="Autodesk.Revit.UI.UIControlledApplication" /> that is needed by an external application
     /// </summary>
     public UIControlledApplication Application { get; private set; }
 
     /// <summary>
-    ///     Reference to the <see cref="Autodesk.Revit.UI.UIApplication"/> that is needed by an external application
+    ///     Reference to the <see cref="Autodesk.Revit.UI.UIApplication" /> that is needed by an external application
     /// </summary>
     /// <remarks>Can be <see langword="null" /> if the application has not yet loaded, such as when accessed from a class constructor</remarks>
     public UIApplication UiApplication => (UIApplication) Application?
@@ -58,7 +61,8 @@ public class ExternalApplication : IExternalApplication
     ///     Overload this method to execute some tasks when Revit shuts down
     /// </summary>
     /// <remarks>
-    ///     The method will not be executed if the value of the <see cref="Result"/> property in the <see cref="OnStartup()"/> method is different from <see cref="Autodesk.Revit.UI.Result.Succeeded"/>
+    ///     The method will not be executed if the value of the <see cref="Result" /> property in the <see cref="OnStartup()" />
+    ///     method is different from <see cref="Autodesk.Revit.UI.Result.Succeeded" />
     /// </remarks>
     public virtual void OnShutdown()
     {

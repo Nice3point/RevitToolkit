@@ -30,8 +30,8 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 - [External command](#ExternalCommand)
 - [External application](#ExternalApplication)
 - [External events](#ExternalEvents)
+- [Decorators](#Decorators)
 - [Transaction utils](#TransactionUtils)
-- [Options](#Options)
 
 ### <a id="ExternalCommand">External command</a>
 
@@ -199,6 +199,68 @@ private void NotifyOnIdling()
 }
 ```
 
+### <a id="Decorators">Decorators</a>
+
+Toolkit provides implementation of various Revit interfaces, with the possibility of customization.
+
+#### FamilyLoadOptions
+
+Provide the callback for family load options. Shows a TaskDialog when loading a family that is different from what is loaded in the project.
+Window looks like default Revit dialog with cancel ability.
+
+```c#
+document.LoadFamily(fileName, new FamilyLoadOptions(), out var family);
+```
+
+#### SelectionConfiguration
+
+Creates a configuration for creating ISelectionFilter instances.
+
+By default, all elements are allowed to be selected:
+
+```c#
+var selectionConfiguration = new SelectionConfiguration();
+uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
+```
+
+You can also customize the selection of Element or Reference separately:
+
+```c#
+var selectionConfiguration = new SelectionConfiguration()
+        .Allow.Element(element => element.Category.Id.AreEquals(BuiltInCategory.OST_Walls));
+
+uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
+```
+
+Or set rules for everything:
+
+```c#
+var selectionConfiguration = new SelectionConfiguration()
+    .Allow.Element(element => element.Category.Id.AreEquals(BuiltInCategory.OST_Walls))
+    .Allow.Reference((reference, xyz) => false);
+
+uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
+```
+
+#### DockablePaneProvider
+
+Provides access to create a new dockable pane to the Revit user interface.
+
+```c#
+DockablePaneProvider
+    .Register(application, new Guid(), "Dockable pane")
+    .SetConfiguration(data =>
+    {
+        data.FrameworkElement = new RevitAddInView();
+        data.InitialState = new DockablePaneState
+        {
+            MinimumWidth = 300,
+            MinimumHeight = 400,
+            DockPosition = DockPosition.Right
+        };
+    });
+```
+
 ### <a id="Transaction utils">TransactionUtils</a>
 
 The TransactionManager gives you the ability to create transactions. You can write custom code in a lambda, and the method will take care of safely closing transactions in case of
@@ -268,68 +330,6 @@ private void DeteleElements()
 //CreateGroupTransaction<T>(Document document, string transactionName, T param, Action<Document, T> action)
 //CreateGroupTransaction<T0, T1>(Document document, string transactionName, T0 param0, T1 param1, Action<Document, T0, T1> action)
 //CreateGroupTransaction<T0, T1, T2>(Document document, string transactionName, T0 param0, T1 param1, T2 param2, Action<Document, T0, T1, T2> action)
-```
-
-### <a id="Options">Options</a>
-
-Toolkit provides implementation of various Revit interfaces, with the possibility of customization.
-
-#### FamilyLoadOptions
-
-Provide the callback for family load options. Shows a TaskDialog when loading a family that is different from what is loaded in the project.
-Window looks like default Revit dialog with cancel ability.
-
-```c#
-document.LoadFamily(fileName, new FamilyLoadOptions(), out var family);
-```
-
-#### DockablePaneProvider
-
-Provides access to create a new dockable pane to the Revit user interface.
-
-```c#
-DockablePaneProvider
-    .Register(application, new Guid(), "Dockable pane")
-    .SetConfiguration(data =>
-    {
-        data.FrameworkElement = new RevitAddInView();
-        data.InitialState = new DockablePaneState
-        {
-            MinimumWidth = 300,
-            MinimumHeight = 400,
-            DockPosition = DockPosition.Right
-        };
-    });
-```
-
-#### SelectionConfiguration
-
-Creates a configuration for creating ISelectionFilter instances.
-
-By default, all elements are allowed to be selected:
-
-```c#
-var selectionConfiguration = new SelectionConfiguration();
-uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
-```
-
-You can also customize the selection of Element or Reference separately:
-
-```c#
-var selectionConfiguration = new SelectionConfiguration()
-        .Allow.Element(element => element.Category.Id.AreEquals(BuiltInCategory.OST_Walls));
-
-uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
-```
-
-Or set rules for everything:
-
-```c#
-var selectionConfiguration = new SelectionConfiguration()
-    .Allow.Element(element => element.Category.Id.AreEquals(BuiltInCategory.OST_Walls))
-    .Allow.Reference((reference, xyz) => false);
-
-uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
 ```
 
 ## Technology Sponsors

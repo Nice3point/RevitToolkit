@@ -1,1 +1,1 @@
-- New ExternalApplication
+- Change namespace for DockablePaneProvider

@@ -30,6 +30,7 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 - [External command](#ExternalCommand)
 - [External application](#ExternalApplication)
 - [External events](#ExternalEvents)
+- [Options](#Options)
 - [Decorators](#Decorators)
 - [Transaction utils](#TransactionUtils)
 
@@ -199,7 +200,7 @@ private void NotifyOnIdling()
 }
 ```
 
-### <a id="Decorators">Decorators</a>
+### <a id="Options">Options</a>
 
 Toolkit provides implementation of various Revit interfaces, with the possibility of customization.
 
@@ -241,6 +242,8 @@ var selectionConfiguration = new SelectionConfiguration()
 
 uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
 ```
+
+### <a id="Decorators">Decorators</a>
 
 #### DockablePaneProvider
 

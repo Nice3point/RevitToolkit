@@ -1,6 +1,6 @@
 ﻿using Autodesk.Revit.UI;
 
-namespace Nice3point.Revit.Toolkit.Options;
+namespace Nice3point.Revit.Toolkit.Decorators;
 
 /// <summary>
 ///     Provides access to create a new dockable pane to the Revit user interface

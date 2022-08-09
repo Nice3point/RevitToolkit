@@ -60,21 +60,19 @@ Data available when executing an external command is accessible by properties.
 [Transaction(TransactionMode.Manual)]
 public class Command : ExternalCommand
 {
-    public Command()
-    {
-        ExceptionHandler = (command, exception) =>
-        {
-            command.ElementSet.Insert(secretElement);
-            command.ErrorMessage = exception.Message;
-            command.Result = Result.Failed;
-        };
-    }
-
     public override void Execute()
     {
+        SuppressDialogs();
+        SuppressDialogs(args => args.OverrideResult(2));
+        RestoreDialogs();
+        SuppressExceptions();
+        SuppressExceptions(exception => Log.Fatal(exception, "Fatal exception"));
+
         var title = Document.Title;
+        var viewName = ActiveView.Name;
         var view = ExternalCommandData.View;
         var activeView = UiDocument.ActiveView;
+        var applicationUsername = Application.Username;
         var windowHandle = UiApplication.MainWindowHandle;
         
         if (title.Equals("Untitled"))
@@ -83,8 +81,6 @@ public class Command : ExternalCommand
             return;
         }
 
-        var window = new AddinView();
-        window.Show(windowHandle);
         throw new Exception("Something went wrong");
     }
 }

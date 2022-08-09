@@ -9,7 +9,7 @@ namespace Nice3point.Revit.Toolkit.External;
 /// </remarks>
 public class ExternalApplication : IExternalApplication
 {
-    private  UIApplication _uiApplication;
+    private UIApplication _uiApplication;
 
     /// <summary>
     ///     Indicates if the external application completes its work successfully.

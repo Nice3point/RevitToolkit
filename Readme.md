@@ -52,7 +52,7 @@ ExternalCommand contains the logic for resolving dependencies. Now you may not e
 
 Override method **Execute()** to implement and external command within Revit.
 
-Exception handling is done on the Revit side, you can also set the **ExceptionHandler** property to catch errors. You don't need to implement try catch on the whole command.
+You can suppress the display of exceptions, dialog boxes, without subscribing to events.
 
 Data available when executing an external command is accessible by properties.
 
@@ -71,8 +71,8 @@ public class Command : ExternalCommand
         var title = Document.Title;
         var viewName = ActiveView.Name;
         var view = ExternalCommandData.View;
-        var activeView = UiDocument.ActiveView;
-        var applicationUsername = Application.Username;
+        var username = Application.Username;
+        var selection = UiDocument.Selection;
         var windowHandle = UiApplication.MainWindowHandle;
         
         if (title.Equals("Untitled"))

@@ -3,6 +3,11 @@ using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBeProtected.Global
+// ReSharper disable LoopCanBeConvertedToQuery
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable SwitchStatementMissingSomeEnumCasesNoDefault
 
 namespace Nice3point.Revit.Toolkit.External;
 
@@ -203,7 +208,6 @@ public abstract class ExternalCommand : IExternalCommand
         var currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
         var assemblies = Directory.EnumerateFiles(currentDirectory, "*.dll");
         var assemblyName = new AssemblyName(args.Name).Name;
-        // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var assembly in assemblies)
             if (assemblyName == Path.GetFileNameWithoutExtension(assembly))
                 return Assembly.LoadFile(assembly);

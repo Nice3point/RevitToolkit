@@ -11,11 +11,12 @@ namespace Nice3point.Revit.Toolkit.External;
 /// </summary>
 public abstract class ExternalCommand : IExternalCommand
 {
-    private Action<DialogBoxShowingEventArgs> _dialogBoxHandler;
+    private SuppressDialog _suppressDialog;
     private int _dialogBoxResult;
+    private Action<DialogBoxShowingEventArgs> _dialogBoxHandler;
+
+    private SuppressException _suppressException;
     private Action<Exception> _exceptionHandler;
-    private bool _isDialogBoxSuppressed;
-    private bool _isExceptionsSuppressed;
 
     /// <summary>
     ///     Element set indicating problem elements to display in the failure dialog. This will be used only if the command status was "Failed".
@@ -91,7 +92,6 @@ public abstract class ExternalCommand : IExternalCommand
         ExternalCommandData = commandData;
         UiApplication = commandData.Application;
         AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
-        UiApplication.DialogBoxShowing += ResolveDialogBox;
 
         try
         {
@@ -99,21 +99,23 @@ public abstract class ExternalCommand : IExternalCommand
         }
         catch (Exception exception)
         {
-            if (_isExceptionsSuppressed)
+            switch (_suppressException)
             {
-                _exceptionHandler?.Invoke(exception);
-                message = ErrorMessage;
-                return Result.Failed;
-            }
-            else
-            {
-                throw;
+                case SuppressException.None:
+                    throw;
+                case SuppressException.Full:
+                    message = ErrorMessage;
+                    return Result.Failed;
+                case SuppressException.Handler:
+                    _exceptionHandler?.Invoke(exception);
+                    message = ErrorMessage;
+                    return Result.Failed;
             }
         }
         finally
         {
+            RestoreDialogs();
             AppDomain.CurrentDomain.AssemblyResolve -= ResolveAssembly;
-            UiApplication.DialogBoxShowing -= ResolveDialogBox;
             message = ErrorMessage;
         }
 
@@ -133,8 +135,7 @@ public abstract class ExternalCommand : IExternalCommand
     /// <remarks>Does not affect the output of the ErrorMessage</remarks>
     public void SuppressExceptions()
     {
-        _isExceptionsSuppressed = true;
-        _exceptionHandler = null;
+        _suppressException = SuppressException.Full;
     }
 
     /// <summary>
@@ -143,7 +144,7 @@ public abstract class ExternalCommand : IExternalCommand
     /// <remarks>Does not affect the output of the ErrorMessage</remarks>
     public void SuppressExceptions(Action<Exception> handler)
     {
-        _isExceptionsSuppressed = true;
+        _suppressException = SuppressException.Handler;
         _exceptionHandler = handler;
     }
 
@@ -173,8 +174,9 @@ public abstract class ExternalCommand : IExternalCommand
     /// </remarks>
     public void SuppressDialogs(int result = 1)
     {
+        _suppressDialog = SuppressDialog.Code;
         _dialogBoxResult = result;
-        _isDialogBoxSuppressed = true;
+        if (_suppressDialog == SuppressDialog.None) UiApplication.DialogBoxShowing += ResolveDialogBox;
     }
 
     /// <summary>
@@ -183,8 +185,9 @@ public abstract class ExternalCommand : IExternalCommand
     /// <param name="handler">Dialog handler</param>
     public void SuppressDialogs(Action<DialogBoxShowingEventArgs> handler)
     {
+        _suppressDialog = SuppressDialog.Handler;
         _dialogBoxHandler = handler;
-        _isDialogBoxSuppressed = true;
+        if (_suppressDialog == SuppressDialog.None) UiApplication.DialogBoxShowing += ResolveDialogBox;
     }
 
     /// <summary>
@@ -192,8 +195,8 @@ public abstract class ExternalCommand : IExternalCommand
     /// </summary>
     public void RestoreDialogs()
     {
-        _isDialogBoxSuppressed = false;
-        _dialogBoxHandler = null;
+        if (_suppressDialog != SuppressDialog.None) UiApplication.DialogBoxShowing += ResolveDialogBox;
+        _suppressDialog = SuppressDialog.None;
     }
 
     private static Assembly ResolveAssembly(object sender, ResolveEventArgs args)
@@ -211,8 +214,28 @@ public abstract class ExternalCommand : IExternalCommand
 
     private void ResolveDialogBox(object sender, DialogBoxShowingEventArgs e)
     {
-        if (!_isDialogBoxSuppressed) return;
-        if (_dialogBoxHandler is null) e.OverrideResult(_dialogBoxResult);
-        else _dialogBoxHandler.Invoke(e);
+        switch (_suppressDialog)
+        {
+            case SuppressDialog.Code:
+                e.OverrideResult(_dialogBoxResult);
+                break;
+            case SuppressDialog.Handler:
+                _dialogBoxHandler?.Invoke(e);
+                break;
+        }
     }
+}
+
+internal enum SuppressDialog
+{
+    None,
+    Code,
+    Handler
+}
+
+internal enum SuppressException
+{
+    None,
+    Full,
+    Handler
 }

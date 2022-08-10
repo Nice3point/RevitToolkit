@@ -205,9 +205,9 @@ public abstract class ExternalCommand : IExternalCommand
 
     private static Assembly ResolveAssembly(object sender, ResolveEventArgs args)
     {
-        var currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-        var assemblies = Directory.EnumerateFiles(currentDirectory, "*.dll");
         var assemblyName = new AssemblyName(args.Name).Name;
+        var assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+        var assemblies = Directory.EnumerateFiles(assemblyDirectory, "*.dll");
         foreach (var assembly in assemblies)
             if (assemblyName == Path.GetFileNameWithoutExtension(assembly))
                 return Assembly.LoadFile(assembly);

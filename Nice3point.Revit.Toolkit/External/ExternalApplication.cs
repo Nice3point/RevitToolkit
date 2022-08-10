@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
 using Autodesk.Revit.UI;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace Nice3point.Revit.Toolkit.External;
 
@@ -27,7 +29,6 @@ public class ExternalApplication : IExternalApplication
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIApplication" /> that is needed by an external application
     /// </summary>
-    /// <remarks>Can be <see langword="null" /> if the application has not yet loaded, such as when accessed from a class constructor</remarks>
     public UIApplication UiApplication => _uiApplication ??= (UIApplication) Application?
         .GetType()
         .GetField("m_uiapplication", BindingFlags.NonPublic | BindingFlags.Instance)?

@@ -11,12 +11,11 @@ namespace Nice3point.Revit.Toolkit.External;
 /// </summary>
 public abstract class ExternalCommand : IExternalCommand
 {
-    private SuppressDialog _suppressDialog;
-    private int _dialogBoxResult;
     private Action<DialogBoxShowingEventArgs> _dialogBoxHandler;
-
-    private SuppressException _suppressException;
+    private int _dialogBoxResult;
     private Action<Exception> _exceptionHandler;
+    private SuppressDialog _suppressDialog;
+    private SuppressException _suppressException;
 
     /// <summary>
     ///     Element set indicating problem elements to display in the failure dialog. This will be used only if the command status was "Failed".
@@ -101,8 +100,6 @@ public abstract class ExternalCommand : IExternalCommand
         {
             switch (_suppressException)
             {
-                case SuppressException.None:
-                    throw;
                 case SuppressException.Full:
                     message = ErrorMessage;
                     return Result.Failed;
@@ -111,6 +108,8 @@ public abstract class ExternalCommand : IExternalCommand
                     message = ErrorMessage;
                     return Result.Failed;
             }
+
+            throw;
         }
         finally
         {
@@ -195,7 +194,7 @@ public abstract class ExternalCommand : IExternalCommand
     /// </summary>
     public void RestoreDialogs()
     {
-        if (_suppressDialog != SuppressDialog.None) UiApplication.DialogBoxShowing += ResolveDialogBox;
+        if (_suppressDialog != SuppressDialog.None) UiApplication.DialogBoxShowing -= ResolveDialogBox;
         _suppressDialog = SuppressDialog.None;
     }
 

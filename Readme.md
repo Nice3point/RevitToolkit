@@ -114,10 +114,10 @@ public class Application : ExternalApplication
 {
     public override void OnStartup()
     {
-        var userId = UiApplication.Application.LoginUserId;
-        if (!userId.Equals("Nice3point"))
+        var userName = UiApplication.Application.Username;
+        if (userName != "Nice3point")
         {
-            //When overriding Result, OnShutdown() method will not be called
+            //If Result is overridden, the OnShutdown() method will not be called
             Result = Result.Failed;
             return;
         }

@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Reflection;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
@@ -178,9 +179,9 @@ public abstract class ExternalCommand : IExternalCommand
     /// </remarks>
     public void SuppressDialogs(int result = 1)
     {
+        if (_suppressDialog == SuppressDialog.None) UiApplication.DialogBoxShowing += ResolveDialogBox;
         _suppressDialog = SuppressDialog.Code;
         _dialogBoxResult = result;
-        if (_suppressDialog == SuppressDialog.None) UiApplication.DialogBoxShowing += ResolveDialogBox;
     }
 
     /// <summary>
@@ -189,9 +190,9 @@ public abstract class ExternalCommand : IExternalCommand
     /// <param name="handler">Dialog handler</param>
     public void SuppressDialogs(Action<DialogBoxShowingEventArgs> handler)
     {
+        if (_suppressDialog == SuppressDialog.None) UiApplication.DialogBoxShowing += ResolveDialogBox;
         _suppressDialog = SuppressDialog.Handler;
         _dialogBoxHandler = handler;
-        if (_suppressDialog == SuppressDialog.None) UiApplication.DialogBoxShowing += ResolveDialogBox;
     }
 
     /// <summary>

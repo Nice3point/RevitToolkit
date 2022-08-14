@@ -1,3 +1,7 @@
+# Release 2023.0.6
+
+- External command minor backend optimization
+
 # Release 2023.0.5
 
 External command:

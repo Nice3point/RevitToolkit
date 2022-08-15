@@ -1,8 +1,10 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
+
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBeProtected.Global
 // ReSharper disable LoopCanBeConvertedToQuery
@@ -16,8 +18,9 @@ namespace Nice3point.Revit.Toolkit.External;
 /// </summary>
 public abstract class ExternalCommand : IExternalCommand
 {
+    private string _callerAssemblyDirectory;
     private Action<DialogBoxShowingEventArgs> _dialogBoxHandler;
-    private int _dialogBoxResult;
+    private int _dialogResultCode;
     private Action<Exception> _exceptionHandler;
     private SuppressDialog _suppressDialog;
     private SuppressException _suppressException;
@@ -179,8 +182,8 @@ public abstract class ExternalCommand : IExternalCommand
     public void SuppressDialogs(int result = 1)
     {
         if (_suppressDialog == SuppressDialog.None) UiApplication.DialogBoxShowing += ResolveDialogBox;
-        _suppressDialog = SuppressDialog.Code;
-        _dialogBoxResult = result;
+        _suppressDialog = SuppressDialog.ResultCode;
+        _dialogResultCode = result;
     }
 
     /// <summary>
@@ -203,11 +206,27 @@ public abstract class ExternalCommand : IExternalCommand
         _suppressDialog = SuppressDialog.None;
     }
 
-    private static Assembly ResolveAssembly(object sender, ResolveEventArgs args)
+    private Assembly ResolveAssembly(object sender, ResolveEventArgs args)
     {
+        if (_callerAssemblyDirectory is null)
+        {
+            var frames = new StackTrace().GetFrames();
+            if (frames is not null)
+                foreach (var frame in frames)
+                {
+                    var method = frame.GetMethod();
+                    if (method.Name == nameof(Execute) && method.IsVirtual && method.DeclaringType is not null)
+                    {
+                        _callerAssemblyDirectory = Path.GetDirectoryName(method.DeclaringType.Assembly.Location)!;
+                        break;
+                    }
+                }
+
+            if (_callerAssemblyDirectory is null) return null;
+        }
+
         var assemblyName = new AssemblyName(args.Name).Name;
-        var assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-        var assemblies = Directory.EnumerateFiles(assemblyDirectory, "*.dll");
+        var assemblies = Directory.EnumerateFiles(_callerAssemblyDirectory, "*.dll");
         foreach (var assembly in assemblies)
             if (assemblyName == Path.GetFileNameWithoutExtension(assembly))
                 return Assembly.LoadFile(assembly);
@@ -219,8 +238,8 @@ public abstract class ExternalCommand : IExternalCommand
     {
         switch (_suppressDialog)
         {
-            case SuppressDialog.Code:
-                e.OverrideResult(_dialogBoxResult);
+            case SuppressDialog.ResultCode:
+                e.OverrideResult(_dialogResultCode);
                 break;
             case SuppressDialog.Handler:
                 _dialogBoxHandler?.Invoke(e);
@@ -232,7 +251,7 @@ public abstract class ExternalCommand : IExternalCommand
 internal enum SuppressDialog
 {
     None,
-    Code,
+    ResultCode,
     Handler
 }
 

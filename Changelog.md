@@ -1,3 +1,7 @@
+# Release 2023.0.7
+
+Fixed dependency search issue for several plugins loaded in Revit
+
 # Release 2023.0.6
 
 - External command minor backend optimization

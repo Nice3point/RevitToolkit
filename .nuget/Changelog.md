@@ -1,1 +1,1 @@
-External command minor backend optimization
+Fixed dependency search issue for several plugins loaded in Revit

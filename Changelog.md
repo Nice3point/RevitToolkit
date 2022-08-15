@@ -1,3 +1,7 @@
+# Release 2023.0.8
+
+Fixed security issues
+
 # Release 2023.0.7
 
 Fixed dependency search issue for several plugins loaded in Revit

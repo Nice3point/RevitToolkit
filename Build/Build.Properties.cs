@@ -5,10 +5,10 @@ partial class Build
 
     readonly Dictionary<string, string> VersionMap = new()
     {
-        {"Release R19", "2019.0.8"},
-        {"Release R20", "2020.0.8"},
-        {"Release R21", "2021.0.8"},
-        {"Release R22", "2022.0.8"},
-        {"Release R23", "2023.0.8"}
+        {"Release R19", "2019.0.9"},
+        {"Release R20", "2020.0.9"},
+        {"Release R21", "2021.0.9"},
+        {"Release R22", "2022.0.9"},
+        {"Release R23", "2023.0.9"}
     };
 }

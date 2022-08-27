@@ -1,3 +1,10 @@
+# Release 2023.0.9
+
+TransactionUtils:
+
+- Updated transaction mechanism
+- New Modify document method
+
 # Release 2023.0.8
 
 Fixed security issues

@@ -1,1 +1,4 @@
-Fixed dependency search issue for several plugins loaded in Revit
+TransactionUtils:
+
+- Updated transaction mechanism
+- New Modify document method

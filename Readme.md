@@ -265,70 +265,64 @@ DockablePaneProvider
 The TransactionManager gives you the ability to create transactions. You can write custom code in a lambda, and the method will take care of safely closing transactions in case of
 exceptions and cleaning up unmanaged resources.
 
-To avoid closures and increase performance, use generic overloads and pass data through parameters.
-
-#### CreateSubTransaction
+Modification of the document, without specifying settings, the implementation already contains the name, and may not be specified:
 
 ```c#
-TransactionManager.CreateSubTransaction(application.ActiveUIDocument.Document, document =>
+document.Modify().Commit((document, transaction) =>
 {
-    document.Delete(new ElementId(106234));
+    document.Delete(new ElementId(69));
 });
 
-//Available overloads:
-//CreateSubTransaction(Document document, Action<Document> action);
-//CreateSubTransaction<T>(Document document, T param, Action<Document, T> action)
-//CreateSubTransaction<T0, T1>(Document document, T0 param0, T1 param1, Action<Document, T0, T1> action)
-//CreateSubTransaction<T0, T1, T2>(Document document, T0 param0, T1 param1, T2 param2, Action<Document, T0, T1, T2> action)
+//The same, with an explicit indication of the transaction:
+document.Modify(settings => settings.Transaction).Commit((document, transaction) =>
+{
+    document.Delete(new ElementId(69));
+});
 ```
 
-#### CreateTransaction
+You can also create sub-transactions or groups of transactions:
 
 ```c#
-public ElementId ElementId { get; set; }
-
-private void DeteleElement()
+document.Modify(settings => settings.SubTransaction).Commit((document, transaction) =>
 {
-    TransactionManager.CreateTransaction(application.ActiveUIDocument.Document, "Delete element", this, (document, viewModel) =>
-    {
-        document.Delete(viewModel.ElementId);
-    });
-}
+    document.Delete(new ElementId(69));
+});
 
-//Available overloads:
-//CreateTransaction(Document document, string transactionName, Action<Document> action);
-//CreateTransaction<T>(Document document, string transactionName, T param, Action<Document, T> action)
-//CreateTransaction<T0, T1>(Document document, string transactionName, T0 param0, T1 param1, Action<Document, T0, T1> action)
-//CreateTransaction<T0, T1, T2>(Document document, string transactionName, T0 param0, T1 param1, T2 param2, Action<Document, T0, T1, T2> action)
+document.Modify(settings => settings.GroupTransaction).Commit((document, transaction) =>
+{
+    transaction.RollBack();
+});
 ```
 
-#### CreateGroupTransaction
+You can apply various settings to modify a document:
 
 ```c#
-public ElementId ElementId1 { get; set; }
-public ElementId ElementId2 { get; set; }
 
-private void DeteleElements()
-{
-    TransactionManager.CreateGroupTransaction(application.ActiveUIDocument.Document, "Delete elements", this, (document, viewModel) =>
+document.Modify(settings => settings.Transaction
+        .SetName("Deleting element 69")
+        .DisableModalHandling()
+        .EnableClearAfterRollback()
+        .EnableDelayedMiniWarnings())
+    .Commit((document, transaction) =>
     {
-        TransactionManager.CreateTransaction(application.ActiveUIDocument.Document, "Delete element", viewModel, (document, vm) =>
+        document.Delete(new ElementId(69));
+    });
+
+document.Modify(settings => settings.GroupTransaction.DisableModalHandling()).Assimilate((document, transaction) =>
+{
+    document.Modify().Commit((document2, transaction2) =>
+    {
+        document2.Delete(new ElementId(69));
+    });
+
+    document.Modify().Commit((document2, transaction2) =>
+    {
+        document2.Modify(settings => settings.SubTransaction).Commit((document3, subTransaction) =>
         {
-            document.Delete(vm.ElementId1);
-        });
-        
-        TransactionManager.CreateTransaction(application.ActiveUIDocument.Document, "Delete element", viewModel, (document, vm) =>
-        {
-            document.Delete(vm.ElementId2);
+            document3.Delete(new ElementId(96));
         });
     });
-}
-
-//Available overloads:
-//CreateGroupTransaction(Document document, string transactionName, Action<Document> action);
-//CreateGroupTransaction<T>(Document document, string transactionName, T param, Action<Document, T> action)
-//CreateGroupTransaction<T0, T1>(Document document, string transactionName, T0 param0, T1 param1, Action<Document, T0, T1> action)
-//CreateGroupTransaction<T0, T1, T2>(Document document, string transactionName, T0 param0, T1 param1, T2 param2, Action<Document, T0, T1, T2> action)
+});
 ```
 
 ## Technology Sponsors

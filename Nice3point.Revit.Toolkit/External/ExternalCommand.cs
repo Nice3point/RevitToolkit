@@ -1,9 +1,9 @@
-﻿using System.Diagnostics;
-using System.Reflection;
+﻿using System.Reflection;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
+using Nice3point.Revit.Toolkit.External.Internal;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBeProtected.Global
@@ -98,7 +98,7 @@ public abstract class ExternalCommand : IExternalCommand
         ErrorMessage = message;
         ExternalCommandData = commandData;
         UiApplication = commandData.Application;
-        AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
+        AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyOnExecute;
 
         try
         {
@@ -122,7 +122,7 @@ public abstract class ExternalCommand : IExternalCommand
         finally
         {
             RestoreDialogs();
-            AppDomain.CurrentDomain.AssemblyResolve -= ResolveAssembly;
+            AppDomain.CurrentDomain.AssemblyResolve -= ResolveAssemblyOnExecute;
             message = ErrorMessage;
         }
 
@@ -206,34 +206,6 @@ public abstract class ExternalCommand : IExternalCommand
         _suppressDialog = SuppressDialog.None;
     }
 
-    private Assembly ResolveAssembly(object sender, ResolveEventArgs args)
-    {
-        if (_callerAssemblyDirectory is null)
-        {
-            var frames = new StackTrace().GetFrames();
-            if (frames is not null)
-                foreach (var frame in frames)
-                {
-                    var method = frame.GetMethod();
-                    if (method.Name == nameof(Execute) && method.IsVirtual && method.DeclaringType is not null)
-                    {
-                        _callerAssemblyDirectory = Path.GetDirectoryName(method.DeclaringType.Assembly.Location)!;
-                        break;
-                    }
-                }
-
-            if (_callerAssemblyDirectory is null) return null;
-        }
-
-        var assemblyName = new AssemblyName(args.Name).Name;
-        var assemblies = Directory.EnumerateFiles(_callerAssemblyDirectory, "*.dll");
-        foreach (var assembly in assemblies)
-            if (assemblyName == Path.GetFileNameWithoutExtension(assembly))
-                return Assembly.LoadFile(assembly);
-
-        return null;
-    }
-
     private void ResolveDialogBox(object sender, DialogBoxShowingEventArgs e)
     {
         switch (_suppressDialog)
@@ -246,8 +218,14 @@ public abstract class ExternalCommand : IExternalCommand
                 break;
         }
     }
+
+    private Assembly ResolveAssemblyOnExecute(object sender, ResolveEventArgs args)
+    {
+        return Resolvers.ResolveAssembly(nameof(Execute), args, ref _callerAssemblyDirectory);
+    }
 }
 
+[PublicAPI]
 internal enum SuppressDialog
 {
     None,
@@ -255,6 +233,7 @@ internal enum SuppressDialog
     Handler
 }
 
+[PublicAPI]
 internal enum SuppressException
 {
     None,

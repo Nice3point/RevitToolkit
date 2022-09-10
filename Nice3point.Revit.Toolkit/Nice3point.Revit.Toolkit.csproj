@@ -17,17 +17,17 @@
         <PackageIcon>images\PackageIcon.png</PackageIcon>
         <PackageLicenseFile>License.md</PackageLicenseFile>
         <PackageReleaseNotes>$([System.IO.File]::ReadAllText("$(SolutionDir)\.nuget\Changelog.md"))</PackageReleaseNotes>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     </PropertyGroup>
 
     <PropertyGroup Condition="$(Configuration.Contains('Debug'))">
-        <DebugType>full</DebugType>
         <IsPackable>false</IsPackable>
         <DebugSymbols>true</DebugSymbols>
         <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
     </PropertyGroup>
     <PropertyGroup Condition="$(Configuration.Contains('Release'))">
         <Optimize>true</Optimize>
-        <DebugType>none</DebugType>
         <IsPackable>true</IsPackable>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <DefineConstants>$(DefineConstants);RELEASE;JETBRAINS_ANNOTATIONS</DefineConstants>

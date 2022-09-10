@@ -1,5 +1,8 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using Autodesk.Revit.UI;
+using Nice3point.Revit.Toolkit.External.Internal;
+
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable MemberCanBeProtected.Global
 
@@ -12,6 +15,7 @@ namespace Nice3point.Revit.Toolkit.External;
 public class ExternalApplication : IExternalApplication
 {
     private UIApplication _uiApplication;
+    private string _callerAssemblyDirectory;
 
     /// <summary>
     ///     Indicates if the external application completes its work successfully.
@@ -40,7 +44,16 @@ public class ExternalApplication : IExternalApplication
     public Result OnStartup(UIControlledApplication application)
     {
         Application = application;
-        OnStartup();
+        AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyOnStartup;
+        try
+        {
+            OnStartup();
+        }
+        finally
+        {
+            AppDomain.CurrentDomain.AssemblyResolve -= ResolveAssemblyOnStartup;
+        }
+
         return Result;
     }
 
@@ -49,7 +62,9 @@ public class ExternalApplication : IExternalApplication
     /// <returns>Indicates if the external application completes its work successfully</returns>
     public Result OnShutdown(UIControlledApplication application)
     {
+        AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyOnShutdown;
         OnShutdown();
+
         return Result.Succeeded;
     }
 
@@ -69,5 +84,15 @@ public class ExternalApplication : IExternalApplication
     /// </remarks>
     public virtual void OnShutdown()
     {
+    }
+
+    private Assembly ResolveAssemblyOnStartup(object sender, ResolveEventArgs args)
+    {
+        return Resolvers.ResolveAssembly(nameof(OnStartup), args, ref _callerAssemblyDirectory);
+    }
+
+    private Assembly ResolveAssemblyOnShutdown(object sender, ResolveEventArgs args)
+    {
+        return Resolvers.ResolveAssembly(nameof(OnShutdown), args, ref _callerAssemblyDirectory);
     }
 }

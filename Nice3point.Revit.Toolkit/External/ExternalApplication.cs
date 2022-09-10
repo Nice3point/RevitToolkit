@@ -63,7 +63,14 @@ public class ExternalApplication : IExternalApplication
     public Result OnShutdown(UIControlledApplication application)
     {
         AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyOnShutdown;
-        OnShutdown();
+        try
+        {
+            OnShutdown();
+        }
+        finally
+        {
+            AppDomain.CurrentDomain.AssemblyResolve -= ResolveAssemblyOnShutdown;
+        }
 
         return Result.Succeeded;
     }

@@ -90,6 +90,8 @@ public class Command : ExternalCommand
 
 The ExternalApplication class contains an implementation for IExternalApplication.
 
+ExternalApplication contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
+
 ```c#
 public class Application : ExternalApplication
 {
@@ -324,6 +326,14 @@ document.Modify(settings => settings.GroupTransaction.DisableModalHandling()).As
     });
 });
 ```
+
+## Symbol server
+
+When debugging, sometimes the library symbols are not available on your local machine.
+In this case, you can use [symbol servers](https://docs.microsoft.com/en-us/windows/win32/dxtecharts/debugging-with-symbols?redirectedfrom=MSDN#symbol-servers).
+Then, you can point your debugger to the symbol server to resolve symbol names.
+
+The symbols for this package are available at https://symbols.nuget.org/download/symbols
 
 ## Technology Sponsors
 

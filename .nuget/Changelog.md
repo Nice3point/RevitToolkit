@@ -1,4 +1,3 @@
-TransactionUtils:
+Dependency resolver for ExternalApplication
 
-- Updated transaction mechanism
-- New Modify document method
+Nuget symbol server support: https://symbols.nuget.org/download/symbols

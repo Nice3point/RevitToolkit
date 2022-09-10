@@ -1,3 +1,9 @@
+# Release 2023.0.10
+
+Dependency resolver for ExternalApplication
+
+Nuget symbol server support: https://symbols.nuget.org/download/symbols
+
 # Release 2023.0.9
 
 TransactionUtils:

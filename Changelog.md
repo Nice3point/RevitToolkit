@@ -1,3 +1,9 @@
+# Release 2023.0.11
+
+Options:
+
+- New DuplicateTypeNamesHandler
+
 # Release 2023.0.10
 
 Dependency resolver for ExternalApplication

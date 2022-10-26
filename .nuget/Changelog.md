@@ -1,3 +1,3 @@
-Dependency resolver for ExternalApplication
+Options:
 
-Nuget symbol server support: https://symbols.nuget.org/download/symbols
+- New DuplicateTypeNamesHandler

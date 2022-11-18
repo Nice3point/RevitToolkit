@@ -4,7 +4,7 @@ using Autodesk.Revit.UI;
 namespace Nice3point.Revit.Toolkit.External.Handlers;
 
 /// <summary>
-///     Handler, to provide access to change the Revit document with the ability to queue calls to Raise methods 
+///     Handler, to provide access to change the Revit document with the ability to queue calls to Raise methods
 /// </summary>
 [PublicAPI]
 public class ActionEventHandler : ExternalEventHandler

@@ -15,8 +15,8 @@ namespace Nice3point.Revit.Toolkit.External;
 [PublicAPI]
 public abstract class ExternalApplication : IExternalApplication
 {
-    private UIApplication _uiApplication;
     private string _callerAssemblyDirectory;
+    private UIApplication _uiApplication;
 
     /// <summary>
     ///     Indicates if the external application completes its work successfully.

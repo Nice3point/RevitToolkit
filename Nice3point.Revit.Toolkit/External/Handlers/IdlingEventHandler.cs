@@ -1,16 +1,15 @@
 ﻿using System.ComponentModel;
-using System.ComponentModel;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 
 namespace Nice3point.Revit.Toolkit.External.Handlers;
 
 /// <summary>
-///     Handler, to provide access to change the Revit document with the ability to queue calls to Raise methods. <br/>
+///     Handler, to provide access to change the Revit document with the ability to queue calls to Raise methods. <br />
 ///     Delegates will be invoked when UIApplication.Idling occurs
 /// </summary>
 /// <remarks>
-///     Unsubscribing from the Idling event occurs immediately. <br/>
+///     Unsubscribing from the Idling event occurs immediately. <br />
 ///     Suitable for cases where you need to call code when Revit receives focus or to open a dialog after loading a family into the project
 /// </remarks>
 [PublicAPI]

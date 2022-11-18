@@ -1,4 +1,4 @@
-# Release 2023.0.12
+# Release 2023.0.11
 
 - New AsyncEventHandler
 - New AsyncEventHandler<T>
@@ -12,12 +12,6 @@
 
 - Removed ActionEventHandler params versions. Use parameterless version
 - Removed IdlingEventHandler params versions. Use parameterless version
-
-# Release 2023.0.11
-
-Options:
-
-- New DuplicateTypeNamesHandler
 
 # Release 2023.0.10
 

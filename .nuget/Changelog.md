@@ -1,3 +1,12 @@
-Options:
+- New AsyncEventHandler
+- New AsyncEventHandler<T>
+- New ResolveHelper.ResolveAssembly
+- New FamilyLoadOptions overloads
 
-- New DuplicateTypeNamesHandler
+- Updated ExternalCommand
+- Updated ExternalApplication
+
+- Fixed ExternalEventHandler performance
+
+- Removed ActionEventHandler params versions. Use parameterless version
+- Removed IdlingEventHandler params versions. Use parameterless version

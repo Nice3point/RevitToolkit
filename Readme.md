@@ -31,6 +31,7 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 - [External application](#ExternalApplication)
 - [External events](#ExternalEvents)
 - [Options](#Options)
+- [Helpers](#Helpers)
 - [Decorators](#Decorators)
 - [Transaction utils](#TransactionUtils)
 
@@ -147,25 +148,20 @@ With this handler, you can call your code from a lambda.
 ```c#
 public ViewModel
 {
-    ActionEventHandler = new ActionEventHandler<ViewModel>();
-    //Available overloads:
-    //new ActionEventHandler()
-    //new ActionEventHandler<T>()
-    //new ActionEventHandler<T0, T1>()
-    //new ActionEventHandler<T0, T1, T2>()
+    ActionEventHandler = new ActionEventHandler();
 }
 
-public ActionEventHandler<ViewModel> ActionEventHandler { get; set; }
+public ActionEventHandler ActionEventHandler { get; }
 public ElementId ElementId { get; set; }
 
 private void DeteleElement()
 {
-    ActionEventHandler.Raise(this, (application, viewModel) =>
+    ActionEventHandler.Raise(application =>
     {
         var document = application.ActiveUIDocument.Document;
         using var transaction = new Transaction(document, $"Delete element");
         transaction.Start();
-        document.Delete(viewModel.ElementId)
+        document.Delete(ElementId)
         transaction.Commit();
     });
 }
@@ -180,22 +176,94 @@ where you need to call code when Revit receives focus. For example, to display a
 public ViewModel
 {
     IdlingEventHandler = new IdlingEventHandler();
-    //Available overloads:
-    //new IdlingEventHandler()
-    //new IdlingEventHandler<T>()
-    //new IdlingEventHandler<T0, T1>()
-    //new IdlingEventHandler<T0, T1, T2>()
 }
 
-public IdlingEventHandler IdlingEventHandler { get; set; }
+public IdlingEventHandler IdlingEventHandler { get; }
 
 private void NotifyOnIdling()
 {
     IdlingEventHandler.Raise(application =>
     {
-        Log.Information("Application is available again");
+        WindowController.Show<RevitAddinView>();
     });
 }
+```
+
+#### AsyncEventHandler
+
+With this handler, you can wait for the external event to complete.
+The RaiseAsync method will return to its previous context after executing the method encapsulated in the delegate. 
+Suitable for cases where you need to maintain the sequence of code execution.
+
+Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context
+
+```c#
+public ViewModel
+{
+    AsyncEventHandler = new AsyncEventHandler();
+}
+
+public AsyncEventHandler AsyncEventHandler { get; }
+
+private async Task DeleteDoorsAsync()
+{
+    await AsyncEventHandler.RaiseAsync(application =>
+    {
+        application.ActiveUIDocument.Document.Modify().Commit((document, _) =>
+        {
+            var doorIds = document.GetInstanceIds(BuiltInCategory.OST_Doors);
+            document.Delete(doorIds);
+        });
+
+        Debug.WriteLine("Doors deleted");
+    });
+
+    Debug.WriteLine("Command completed");
+}
+```
+
+Debug output:
+```text
+Doors deleted
+Command completed
+```
+
+#### AsyncEventHandler\<T>
+
+With this handler, you can wait for the external event to complete with the return value from the method encapsulated in the delegate.
+The RaiseAsync method will return to its previous context after executing.
+Suitable for cases where you need to maintain the sequence of code execution.
+
+Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context
+
+```c#
+public ViewModel
+{
+    AsyncEventHandler = new AsyncEventHandler();
+}
+
+public AsyncEventHandler AsyncEventHandler { get; }
+
+private async Task GetWindowsCountAsync()
+{
+    var windowsCount = await AsyncEventHandler.RaiseAsync(application =>
+    {
+        
+        var uiDocument = application.ActiveUIDocument;
+        var elementIds = uiDocument.Document.GetInstanceIds(BuiltInCategory.OST_Windows);
+        uiDocument.Selection.SetElementIds(elementIds);
+        Debug.WriteLine($"Windows count {elementIds.Count}");
+        return elementIds.Count;
+    });
+
+    Debug.WriteLine("Command completed");
+}
+```
+
+Debug output:
+```text
+Windows count 17
+Command completed
 ```
 
 ### <a id="Options">Options</a>
@@ -204,11 +272,24 @@ Toolkit provides implementation of various Revit interfaces, with the possibilit
 
 #### FamilyLoadOptions
 
-Provide the callback for family load options. Shows a TaskDialog when loading a family that is different from what is loaded in the project.
-Window looks like default Revit dialog with cancel ability.
+Provide the callback for family load options.
 
 ```c#
 document.LoadFamily(fileName, new FamilyLoadOptions(), out var family);
+document.LoadFamily(fileName, new FamilyLoadOptions(false, FamilySource.Project), out var family);
+document.LoadFamily(fileName, UIDocument.GetRevitUIFamilyLoadOptions(), out var family);
+```
+
+#### DuplicateTypeNamesHandler
+
+Provides a handler of duplicate type names encountered during a paste operation
+
+```c#
+var options = new CopyPasteOptions();
+options.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler());
+options.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler(() => DuplicateTypeAction.Abort));
+options.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler(DuplicateTypeAction.UseDestinationTypes));
+var copyElements = ElementTransformUtils.CopyElements(source, elementIds, destination, null, options);
 ```
 
 #### SelectionConfiguration
@@ -239,6 +320,20 @@ var selectionConfiguration = new SelectionConfiguration()
     .Allow.Reference((reference, xyz) => false);
 
 uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
+```
+
+### <a id="Helpers">Helpers</a>
+
+Provides auxiliary components
+
+#### ResolveHelper
+
+Provides handlers to resolve dependencies. Optimized assembly resolver is enabled by default for ExternalApplication and ExternalCommand
+
+```c#
+AppDomain.CurrentDomain.AssemblyResolve += ResolveHelper.ResolveAssembly;
+window.Show();
+AppDomain.CurrentDomain.AssemblyResolve -= ResolveHelper.ResolveAssembly;
 ```
 
 ### <a id="Decorators">Decorators</a>

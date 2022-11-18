@@ -15,6 +15,7 @@ namespace Nice3point.Revit.Toolkit.Options;
 ///         uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
 ///     </code>
 /// </example>
+[PublicAPI]
 public class SelectionConfiguration
 {
     private readonly SelectionFilterInternal _filter;

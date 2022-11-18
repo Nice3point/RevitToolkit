@@ -5,6 +5,7 @@ namespace Nice3point.Revit.Toolkit.Utils;
 /// <summary>
 ///     Provides control over transactions
 /// </summary>
+[PublicAPI]
 public static class TransactionManager
 {
     /// <summary>
@@ -387,14 +388,14 @@ public static class TransactionManager
     #endregion
 }
 
-internal class DocumentTransactionSettings : IDocumentTransactionSettings
+internal sealed class DocumentTransactionSettings : IDocumentTransactionSettings
 {
     public ITransactionSettings Transaction => new TransactionSettings();
     public ISubTransactionSettings SubTransaction => null;
     public IGroupTransactionSettings GroupTransaction => new GroupTransactionSettings();
 }
 
-internal class TransactionSettings : ITransactionSettings
+internal sealed class TransactionSettings : ITransactionSettings
 {
     private string _name;
 
@@ -446,7 +447,7 @@ internal class TransactionSettings : ITransactionSettings
     }
 }
 
-internal class GroupTransactionSettings : IGroupTransactionSettings
+internal sealed class GroupTransactionSettings : IGroupTransactionSettings
 {
     private string _name;
 
@@ -471,7 +472,7 @@ internal class GroupTransactionSettings : IGroupTransactionSettings
     }
 }
 
-internal class Transaction : ITransaction
+internal sealed class Transaction : ITransaction
 {
     private readonly Document _document;
     private readonly TransactionSettings _settings;
@@ -515,7 +516,7 @@ internal class Transaction : ITransaction
     }
 }
 
-internal class SubTransaction : ISubTransaction
+internal sealed class SubTransaction : ISubTransaction
 {
     private readonly Document _document;
 
@@ -556,7 +557,7 @@ internal class SubTransaction : ISubTransaction
     }
 }
 
-internal class GroupTransaction : IGroupTransaction
+internal sealed class GroupTransaction : IGroupTransaction
 {
     private readonly Document _document;
     private readonly GroupTransactionSettings _settings;

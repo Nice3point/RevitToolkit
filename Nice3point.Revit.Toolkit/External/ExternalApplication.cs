@@ -1,18 +1,19 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
 using System.Reflection;
 using Autodesk.Revit.UI;
-using Nice3point.Revit.Toolkit.External.Internal;
+using Nice3point.Revit.Toolkit.Helpers;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable MemberCanBeProtected.Global
 
 namespace Nice3point.Revit.Toolkit.External;
 
-/// <summary>Сlass that supports addition of external applications to Revit. Is the entry point when loading an external application</summary>
+/// <summary>Class that supports addition of external applications to Revit. Is the entry point when loading an external application</summary>
 /// <remarks>
 ///     External applications are permitted to customize the Revit UI, and to add events and updaters to the session
 /// </remarks>
-public class ExternalApplication : IExternalApplication
+[PublicAPI]
+public abstract class ExternalApplication : IExternalApplication
 {
     private UIApplication _uiApplication;
     private string _callerAssemblyDirectory;
@@ -41,6 +42,7 @@ public class ExternalApplication : IExternalApplication
     /// <summary>Implement this method to execute some tasks when Autodesk Revit starts</summary>
     /// <param name="application">A handle to the application being started</param>
     /// <returns>Indicates if the external application completes its work successfully</returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public Result OnStartup(UIControlledApplication application)
     {
         Application = application;
@@ -60,6 +62,7 @@ public class ExternalApplication : IExternalApplication
     /// <summary>Implement this method to execute some tasks when Autodesk Revit shuts down</summary>
     /// <param name="application">A handle to the application being shut down</param>
     /// <returns>Indicates if the external application completes its work successfully</returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public Result OnShutdown(UIControlledApplication application)
     {
         AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyOnShutdown;
@@ -78,9 +81,7 @@ public class ExternalApplication : IExternalApplication
     /// <summary>
     ///     Overload this method to execute some tasks when Revit starts
     /// </summary>
-    public virtual void OnStartup()
-    {
-    }
+    public abstract void OnStartup();
 
     /// <summary>
     ///     Overload this method to execute some tasks when Revit shuts down
@@ -95,11 +96,11 @@ public class ExternalApplication : IExternalApplication
 
     private Assembly ResolveAssemblyOnStartup(object sender, ResolveEventArgs args)
     {
-        return Resolvers.ResolveAssembly(nameof(OnStartup), args, ref _callerAssemblyDirectory);
+        return ResolveHelper.ResolveAssembly(nameof(OnStartup), args, ref _callerAssemblyDirectory);
     }
 
     private Assembly ResolveAssemblyOnShutdown(object sender, ResolveEventArgs args)
     {
-        return Resolvers.ResolveAssembly(nameof(OnShutdown), args, ref _callerAssemblyDirectory);
+        return ResolveHelper.ResolveAssembly(nameof(OnShutdown), args, ref _callerAssemblyDirectory);
     }
 }

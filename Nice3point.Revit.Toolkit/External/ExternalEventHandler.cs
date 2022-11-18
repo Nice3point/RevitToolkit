@@ -5,36 +5,25 @@ namespace Nice3point.Revit.Toolkit.External;
 /// <summary>
 ///     External event used to change the document.
 /// </summary>
-/// <example>
-///     <code>
-///          CustomEventHandler.Raise(value1, value2);
-///      </code>
-///     Or use public properties.
-///     <code>
-///         CustomEventHandler.Property1 = "value1";
-///         CustomEventHandler.Property2 = "value2";
-///         CustomEventHandler.Raise();
-///      </code>
-/// </example>
+[PublicAPI]
 public abstract class ExternalEventHandler : IExternalEventHandler
 {
     private readonly ExternalEvent _externalEvent;
+    private readonly string _identifier;
 
     /// <summary>
     ///     Creates an instance of external event
     /// </summary>
     protected ExternalEventHandler()
     {
+        _identifier = GetType().Name;
         _externalEvent = ExternalEvent.Create(this);
     }
 
     /// <summary>
     ///     This method is called to handle the external event
     /// </summary>
-    public virtual void Execute(UIApplication uiApplication)
-    {
-        throw new NotImplementedException();
-    }
+    public abstract void Execute(UIApplication uiApplication);
 
     /// <summary>
     ///     String identification of the event handler
@@ -42,7 +31,7 @@ public abstract class ExternalEventHandler : IExternalEventHandler
     /// <returns>Event name</returns>
     public string GetName()
     {
-        return GetType().Name;
+        return _identifier;
     }
 
     /// <summary>

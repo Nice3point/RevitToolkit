@@ -1,21 +1,17 @@
-﻿using System.Reflection;
+﻿using System.ComponentModel;
+using System.Reflection;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
-using Nice3point.Revit.Toolkit.External.Internal;
-
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable MemberCanBeProtected.Global
-// ReSharper disable LoopCanBeConvertedToQuery
-// ReSharper disable MemberCanBePrivate.Global
-// ReSharper disable SwitchStatementMissingSomeEnumCasesNoDefault
+using Nice3point.Revit.Toolkit.Helpers;
 
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
 ///     Implementation for a Revit add-in External Command
 /// </summary>
+[PublicAPI]
 public abstract class ExternalCommand : IExternalCommand
 {
     private string _callerAssemblyDirectory;
@@ -92,6 +88,7 @@ public abstract class ExternalCommand : IExternalCommand
     ///     Element set indicating problem elements to display in the failure dialog.  This will be used
     ///     only if the command status was "Failed".
     /// </param>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
         ElementSet = elements;
@@ -132,9 +129,7 @@ public abstract class ExternalCommand : IExternalCommand
     /// <summary>
     ///     Overload this method to implement and external command within Revit
     /// </summary>
-    public virtual void Execute()
-    {
-    }
+    public abstract void Execute();
 
     /// <summary>
     ///     Suppresses exceptions in external command
@@ -221,7 +216,7 @@ public abstract class ExternalCommand : IExternalCommand
 
     private Assembly ResolveAssemblyOnExecute(object sender, ResolveEventArgs args)
     {
-        return Resolvers.ResolveAssembly(nameof(Execute), args, ref _callerAssemblyDirectory);
+        return ResolveHelper.ResolveAssembly(nameof(Execute), args, ref _callerAssemblyDirectory);
     }
 }
 

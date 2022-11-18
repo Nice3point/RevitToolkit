@@ -1,4 +1,5 @@
-﻿using Autodesk.Revit.DB;
+﻿using System.ComponentModel;
+using Autodesk.Revit.DB;
 
 namespace Nice3point.Revit.Toolkit.Options;
 
@@ -7,6 +8,7 @@ namespace Nice3point.Revit.Toolkit.Options;
 ///     contains types that have the same names as the types being copied, but different internals, a decision must be made on how to proceed - whether to
 ///     cancel the operation or continue, but only copy types with unique names.
 /// </summary>
+[PublicAPI]
 public class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
 {
     private readonly DuplicateTypeAction _duplicateTypeAction;
@@ -46,6 +48,7 @@ public class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
     /// <returns>
     ///     The action to be taken: copy only types with unique names or cancel the operation
     /// </returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public DuplicateTypeAction OnDuplicateTypeNamesFound(DuplicateTypeNamesHandlerArgs args)
     {
         return _duplicateTypeAction;

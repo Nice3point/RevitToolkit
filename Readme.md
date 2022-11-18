@@ -143,7 +143,7 @@ To avoid closures and increase performance, use generic overloads and pass data 
 
 #### ActionEventHandler
 
-With this handler, you can call your code from a lambda.
+With this handler you can queue delegates for method calls
 
 ```c#
 public ViewModel
@@ -169,8 +169,9 @@ private void DeteleElement()
 
 #### IdlingEventHandler
 
-With this handler, you can call your code from the lambda when your application becomes available again. Unsubscribing from the Idling event occurs immediately. Suitable for cases
-where you need to call code when Revit receives focus. For example, to display a window after loading a family into a project
+With this handler you can queue delegates for method calls when Revit becomes available again. 
+Unsubscribing from the Idling event occurs immediately. Suitable for cases where you need to call code when Revit receives focus. 
+For example, to display a window after loading a family into a project.
 
 ```c#
 public ViewModel
@@ -209,11 +210,8 @@ private async Task DeleteDoorsAsync()
 {
     await AsyncEventHandler.RaiseAsync(application =>
     {
-        application.ActiveUIDocument.Document.Modify().Commit((document, _) =>
-        {
-            var doorIds = document.GetInstanceIds(BuiltInCategory.OST_Doors);
-            document.Delete(doorIds);
-        });
+        var doorIds = document.GetInstanceIds(BuiltInCategory.OST_Doors);
+        document.Delete(doorIds);
 
         Debug.WriteLine("Doors deleted");
     });
@@ -248,10 +246,10 @@ private async Task GetWindowsCountAsync()
 {
     var windowsCount = await AsyncEventHandler.RaiseAsync(application =>
     {
-        
         var uiDocument = application.ActiveUIDocument;
         var elementIds = uiDocument.Document.GetInstanceIds(BuiltInCategory.OST_Windows);
         uiDocument.Selection.SetElementIds(elementIds);
+
         Debug.WriteLine($"Windows count {elementIds.Count}");
         return elementIds.Count;
     });
@@ -272,7 +270,7 @@ Toolkit provides implementation of various Revit interfaces, with the possibilit
 
 #### FamilyLoadOptions
 
-Provide the callback for family load options.
+Provides a handler for loading families
 
 ```c#
 document.LoadFamily(fileName, new FamilyLoadOptions(), out var family);
@@ -289,7 +287,7 @@ var options = new CopyPasteOptions();
 options.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler());
 options.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler(() => DuplicateTypeAction.Abort));
 options.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler(DuplicateTypeAction.UseDestinationTypes));
-var copyElements = ElementTransformUtils.CopyElements(source, elementIds, destination, null, options);
+ElementTransformUtils.CopyElements(source, elementIds, destination, null, options);
 ```
 
 #### SelectionConfiguration

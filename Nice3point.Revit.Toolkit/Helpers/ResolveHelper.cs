@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Diagnostics;
 using System.Reflection;
 
 namespace Nice3point.Revit.Toolkit.Helpers;

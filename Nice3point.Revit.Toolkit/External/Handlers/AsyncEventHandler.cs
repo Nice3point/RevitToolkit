@@ -45,9 +45,10 @@ public sealed class AsyncEventHandler : ExternalEventHandler
     ///     Instructing Revit to queue a handler, raise (signal) the external event and async awaiting for its completion
     /// </summary>
     /// <remarks>
-    ///     This method async awaiting completion of the <see cref="Nice3point.Revit.Toolkit.External.Handlers.AsyncEventHandler.Execute"/> method. <br/>
-    ///     Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context.<br/>
-    ///     Use <see langword="await" /> to awaiting. <see cref="Task.WaitAll(System.Threading.Tasks.Task[])"/>, <see cref="Task.Wait()"/> will cause a deadlock.
+    ///     This method async awaiting completion of the <see cref="Nice3point.Revit.Toolkit.External.Handlers.AsyncEventHandler.Execute" /> method. <br />
+    ///     Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context.<br />
+    ///     Use <see langword="await" /> to awaiting.
+    ///     <see cref="System.Threading.Tasks.Task.WaitAll(System.Threading.Tasks.Task[])" />, <see cref="System.Threading.Tasks.Task.Wait()" /> will cause a deadlock.
     /// </remarks>
     public async Task RaiseAsync([NotNull] Action<UIApplication> action)
     {
@@ -100,9 +101,10 @@ public sealed class AsyncEventHandler<T> : ExternalEventHandler
     ///     The return value of the method that delegate encapsulates
     /// </returns>
     /// <remarks>
-    ///     This method async awaiting completion of the <see cref="Nice3point.Revit.Toolkit.External.Handlers.AsyncEventHandler.Execute"/> method. <br/>
-    ///     Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context.<br/>
-    ///     Use <see langword="await" /> to awaiting. <see cref="Task.WaitAll(System.Threading.Tasks.Task[])"/>, <see cref="Task.Wait()"/> will cause a deadlock.
+    ///     This method async awaiting completion of the <see cref="Nice3point.Revit.Toolkit.External.Handlers.AsyncEventHandler.Execute" /> method. <br />
+    ///     Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context.<br />
+    ///     Use <see langword="await" /> to awaiting.
+    ///     <see cref="System.Threading.Tasks.Task.WaitAll(System.Threading.Tasks.Task[])" />, <see cref="System.Threading.Tasks.Task.Wait()" /> will cause a deadlock.
     /// </remarks>
     public async Task<T> RaiseAsync([NotNull] Func<UIApplication, T> func)
     {

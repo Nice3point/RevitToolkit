@@ -1,5 +1,5 @@
-﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
+﻿using System.ComponentModel;
+using Autodesk.Revit.DB;
 
 namespace Nice3point.Revit.Toolkit.Options;
 
@@ -9,10 +9,46 @@ namespace Nice3point.Revit.Toolkit.Options;
 /// <example>
 ///     <code>
 ///         document.LoadFamily(fileName, new FamilyLoadOptions(), out var family);
+///         document.LoadFamily(fileName, UIDocument.GetRevitUIFamilyLoadOptions(), out var family);
 ///     </code>
 /// </example>
+[PublicAPI]
 public class FamilyLoadOptions : IFamilyLoadOptions
 {
+    private readonly FamilySource _familySource;
+    private readonly bool _overwrite;
+
+    /// <summary>
+    ///     Return the option object that allows families to be loaded
+    /// </summary>
+    /// <remarks>Overwrites parameter values of existing types</remarks>
+    public FamilyLoadOptions()
+    {
+        _overwrite = true;
+        _familySource = FamilySource.Family;
+    }
+
+    /// <summary>
+    ///     Return the option object that allows families to be loaded
+    /// </summary>
+    /// <param name="overwrite">This determines whether or not to overwrite the parameter values of existing types</param>
+    public FamilyLoadOptions(bool overwrite)
+    {
+        _overwrite = overwrite;
+        _familySource = FamilySource.Family;
+    }
+
+    /// <summary>
+    ///     Return the option object that allows families to be loaded
+    /// </summary>
+    /// <param name="overwrite">This determines whether or not to overwrite the parameter values of existing types</param>
+    /// <param name="familySource">This indicates if the family will load from the project or the current family</param>
+    public FamilyLoadOptions(bool overwrite, FamilySource familySource)
+    {
+        _overwrite = overwrite;
+        _familySource = familySource;
+    }
+
     /// <summary>A method called when the family was found in the target document</summary>
     /// <remarks>Triggered only when the family is both loaded and changed</remarks>
     /// <param name="familyInUse">
@@ -22,32 +58,10 @@ public class FamilyLoadOptions : IFamilyLoadOptions
     ///     This determines whether or not to overwrite the parameter values of existing types. The default value is false
     /// </param>
     /// <returns>Return true to continue loading the family, false to cancel</returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public bool OnFamilyFound(bool familyInUse, out bool overwriteParameterValues)
     {
-        overwriteParameterValues = false;
-        if (familyInUse)
-        {
-            var taskDialog = new TaskDialog("Family already exists")
-            {
-                TitleAutoPrefix = false,
-                MainInstruction = "You are trying to load the family which already exists in this project. What do you want to do?",
-                CommonButtons = TaskDialogCommonButtons.Cancel,
-                DefaultButton = TaskDialogResult.Cancel
-            };
-
-            taskDialog.AddCommandLink(TaskDialogCommandLinkId.CommandLink1, "Overwrite the existing version");
-            taskDialog.AddCommandLink(TaskDialogCommandLinkId.CommandLink2, "Overwrite the existing version and its parameter values");
-            var result = taskDialog.Show();
-            switch (result)
-            {
-                case TaskDialogResult.Cancel:
-                    return false;
-                case TaskDialogResult.CommandLink2:
-                    overwriteParameterValues = true;
-                    break;
-            }
-        }
-
+        overwriteParameterValues = _overwrite;
         return true;
     }
 
@@ -64,10 +78,11 @@ public class FamilyLoadOptions : IFamilyLoadOptions
     ///     This indicates whether or not to overwrite the parameter values of existing types
     /// </param>
     /// <returns>Return true to continue loading the family, false to cancel</returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public bool OnSharedFamilyFound(Family sharedFamily, bool familyInUse, out FamilySource source, out bool overwriteParameterValues)
     {
-        source = FamilySource.Family;
-        overwriteParameterValues = false;
+        overwriteParameterValues = _overwrite;
+        source = _familySource;
         return true;
     }
 }

@@ -164,7 +164,7 @@ private void DeteleElement()
         document.Delete(ElementId)
         transaction.Commit();
         
-        Debug.WriteLine("Idling");
+        Debug.WriteLine("Deleted");
     });
 
     Debug.WriteLine("Command completed");

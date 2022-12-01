@@ -185,7 +185,8 @@ private void NotifyOnIdling()
 {
     IdlingEventHandler.Raise(application =>
     {
-        WindowController.Show<RevitAddinView>();
+        var view = new FamilyBrowser();
+        view.Show();
     });
 }
 ```
@@ -237,10 +238,10 @@ Exceptions in the delegate will not be ignored and will be rethrown in the origi
 ```c#
 public ViewModel
 {
-    AsyncEventHandler = new AsyncEventHandler();
+    AsyncEventHandler = new AsyncEventHandler<int>();
 }
 
-public AsyncEventHandler AsyncEventHandler { get; }
+public AsyncEventHandler<int> AsyncEventHandler { get; }
 
 private async Task GetWindowsCountAsync()
 {

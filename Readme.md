@@ -163,8 +163,18 @@ private void DeteleElement()
         transaction.Start();
         document.Delete(ElementId)
         transaction.Commit();
+        
+        Debug.WriteLine("Idling");
     });
+
+    Debug.WriteLine("Command completed");
 }
+```
+
+Debug output:
+```text
+Command completed
+Deleted
 ```
 
 #### IdlingEventHandler
@@ -187,8 +197,18 @@ private void NotifyOnIdling()
     {
         var view = new FamilyBrowser();
         view.Show();
+        
+        Debug.WriteLine("Idling");
     });
+
+    Debug.WriteLine("Command completed");
 }
+```
+
+Debug output:
+```text
+Command completed
+Idling
 ```
 
 #### AsyncEventHandler

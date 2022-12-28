@@ -1,12 +1,3 @@
-- New AsyncEventHandler
-- New AsyncEventHandler<T>
-- New ResolveHelper.ResolveAssembly
-- New FamilyLoadOptions overloads
+# Release 2023.0.12
 
-- Updated ExternalCommand
-- Updated ExternalApplication
-
-- Fixed ExternalEventHandler performance
-
-- Removed ActionEventHandler params versions. Use parameterless version
-- Removed IdlingEventHandler params versions. Use parameterless version
+New runtime attributes: init, required keywords support

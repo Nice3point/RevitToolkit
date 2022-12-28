@@ -8,6 +8,7 @@ namespace System.Runtime.CompilerServices;
 /// <summary>
 ///     Indicates that compiler support for a particular feature is required for the location where this attribute is applied.
 /// </summary>
+[PublicAPI("C# 11 feature: required keyword")]
 [AttributeUsage(AttributeTargets.All, AllowMultiple = true, Inherited = false)]
 public sealed class CompilerFeatureRequiredAttribute : Attribute
 {
@@ -21,6 +22,7 @@ public sealed class CompilerFeatureRequiredAttribute : Attribute
     /// </summary>
     public const string RequiredMembers = nameof(RequiredMembers);
 
+    /// <inheritdoc />
     public CompilerFeatureRequiredAttribute(string featureName)
     {
         FeatureName = featureName;

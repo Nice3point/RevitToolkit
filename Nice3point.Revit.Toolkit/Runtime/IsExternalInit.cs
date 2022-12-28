@@ -11,6 +11,7 @@ namespace System.Runtime.CompilerServices;
 ///     This class should not be used by developers in source code.
 ///     This dummy class is required to compile records when targeting .NET Standard
 /// </summary>
+[PublicAPI("C# 9 feature: init keyword")]
 [EditorBrowsable(EditorBrowsableState.Never)]
 #if BUILDING_IOT_DEVICE_BINDINGS
 internal

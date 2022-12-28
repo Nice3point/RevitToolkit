@@ -1,3 +1,7 @@
+# Release 2023.0.12
+
+New runtime attributes: init, required keywords support
+
 # Release 2023.0.11
 
 - New AsyncEventHandler

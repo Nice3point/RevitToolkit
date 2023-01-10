@@ -41,7 +41,6 @@ public class SelectionConfiguration
     private class SelectionFilterInternal : ISelectionFilter, ISelectionFilterConfiguration
     {
         private readonly SelectionConfiguration _selectionConfiguration;
-
         private Func<Element, bool> _elementHandler;
         private Func<Reference, XYZ, bool> _referenceHandler;
 

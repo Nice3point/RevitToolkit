@@ -13,11 +13,6 @@ namespace System.Runtime.CompilerServices;
 /// </summary>
 [PublicAPI("C# 9 feature: init keyword")]
 [EditorBrowsable(EditorBrowsableState.Never)]
-#if BUILDING_IOT_DEVICE_BINDINGS
-internal
-#else
-public
-#endif
-    static class IsExternalInit
+public static class IsExternalInit
 {
 }

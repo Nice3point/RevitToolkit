@@ -1,3 +1,7 @@
+# Release 2024.0.0
+
+- New SaveSharedCoordinatesCallback
+
 # Release 2023.0.12
 
 New runtime attributes: init, required keywords support

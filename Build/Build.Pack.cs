@@ -20,7 +20,7 @@ partial class Build
 
     string GetPackVersion(string configuration)
     {
-        if (VersionMap.ContainsKey(configuration)) return VersionMap[configuration];
+        if (VersionMap.TryGetValue(configuration, out var value)) return value;
         throw new Exception($"Can't find pack version for configuration: {configuration}");
     }
 }

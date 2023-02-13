@@ -311,6 +311,21 @@ options.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler(DuplicateType
 ElementTransformUtils.CopyElements(source, elementIds, destination, null, options);
 ```
 
+#### SaveSharedCoordinatesCallback
+
+Provides a handler for control Revit when trying to unload or reload a Revit link with changes in shared coordinates
+
+```c#
+var linkType = elementId.ToElement<RevitLinkType>(RevitApi.Document);
+linkType.Unload(new SaveSharedCoordinatesCallback());
+linkType.Unload(new SaveSharedCoordinatesCallback(SaveModifiedLinksOptions.DoNotSaveLinks));
+linkType.Unload(new SaveSharedCoordinatesCallback(type =>
+{
+    if (type.AttachmentType == AttachmentType.Overlay) return SaveModifiedLinksOptions.SaveLinks;
+    return SaveModifiedLinksOptions.DoNotSaveLinks;
+}));
+```
+
 #### SelectionConfiguration
 
 Creates a configuration for creating ISelectionFilter instances.

@@ -1,6 +1,8 @@
 # Release 2024.0.0
 
+- Revit 2024 support
 - New SaveSharedCoordinatesCallback
+- New ExternalDbApplication
 
 # Release 2023.0.12
 

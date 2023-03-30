@@ -133,6 +133,29 @@ public class Application : ExternalApplication
 }
 ```
 
+### <a id="ExternalDBApplication">External DB application</a>
+
+The ExternalDBApplication class contains an implementation for IExternalDBApplication.
+
+ExternalDBApplication contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
+
+```c#
+public class Application : ExternalDBApplication
+{
+    public override void OnStartup()
+    {
+    }
+
+    public override void OnShutdown()
+    {
+    }
+}
+```
+
+Override method **OnStartup()** to execute some tasks when Revit starts.
+
+Override method **OnShutdown()** to execute some tasks when Revit shuts down. You don't have to override this method if you don't plan to use it.
+
 ### <a id="ExternalEvents">External events</a>
 
 The **ExternalEventHandler** class is used to modify the document when using modeless windows. It contains an implementation of the IExternalEventHandler interface. You can create

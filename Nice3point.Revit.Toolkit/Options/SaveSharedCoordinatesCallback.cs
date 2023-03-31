@@ -5,6 +5,7 @@ namespace Nice3point.Revit.Toolkit.Options;
 /// <summary>
 ///    Callback that may be used to control Revit when trying to unload or reload a Revit link with changes in shared coordinates
 /// </summary>
+[PublicAPI]
 public class SaveSharedCoordinatesCallback : ISaveSharedCoordinatesCallback
 {
     private readonly Func<RevitLinkType, SaveModifiedLinksOptions> _handler;

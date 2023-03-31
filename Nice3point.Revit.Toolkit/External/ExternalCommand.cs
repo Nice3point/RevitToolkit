@@ -2,6 +2,7 @@
 using System.Reflection;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using Nice3point.Revit.Toolkit.Helpers;
@@ -18,6 +19,7 @@ public abstract class ExternalCommand : IExternalCommand
     private Action<DialogBoxShowingEventArgs> _dialogBoxHandler;
     private int _dialogResultCode;
     private Action<Exception> _exceptionHandler;
+    private bool _suppressFailures;
     private SuppressDialog _suppressDialog;
     private SuppressException _suppressException;
 
@@ -118,9 +120,10 @@ public abstract class ExternalCommand : IExternalCommand
         }
         finally
         {
-            RestoreDialogs();
             AppDomain.CurrentDomain.AssemblyResolve -= ResolveAssemblyOnExecute;
             message = ErrorMessage;
+            RestoreFailures();
+            RestoreDialogs();
         }
 
         return Result;
@@ -148,6 +151,18 @@ public abstract class ExternalCommand : IExternalCommand
     {
         _suppressException = SuppressException.Handler;
         _exceptionHandler = handler;
+    }
+
+    /// <summary>
+    ///     Suppresses failures in external command
+    /// </summary>
+    /// <remarks>Deletes all FailureMessages of severity "Warning"</remarks>
+    public void SuppressFailures()
+    {
+        if (_suppressFailures) return;
+
+        _suppressFailures = true;
+        Application.FailuresProcessing += ResolveFailures;
     }
 
     /// <summary>
@@ -201,17 +216,33 @@ public abstract class ExternalCommand : IExternalCommand
         _suppressDialog = SuppressDialog.None;
     }
 
-    private void ResolveDialogBox(object sender, DialogBoxShowingEventArgs e)
+    /// <summary>
+    ///     Restores failure handling
+    /// </summary>
+    public void RestoreFailures()
+    {
+        if (_suppressFailures == false) return;
+
+        Application.FailuresProcessing -= ResolveFailures;
+        _suppressFailures = false;
+    }
+
+    private void ResolveDialogBox(object sender, DialogBoxShowingEventArgs args)
     {
         switch (_suppressDialog)
         {
             case SuppressDialog.ResultCode:
-                e.OverrideResult(_dialogResultCode);
+                args.OverrideResult(_dialogResultCode);
                 break;
             case SuppressDialog.Handler:
-                _dialogBoxHandler?.Invoke(e);
+                _dialogBoxHandler?.Invoke(args);
                 break;
         }
+    }
+
+    private void ResolveFailures(object sender, FailuresProcessingEventArgs args)
+    {
+        args.GetFailuresAccessor().DeleteAllWarnings();
     }
 
     private Assembly ResolveAssemblyOnExecute(object sender, ResolveEventArgs args)

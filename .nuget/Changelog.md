@@ -1,3 +1,7 @@
-# Release 2023.0.12
+- Revit 2024 support
+- New SaveSharedCoordinatesCallback
+- New ExternalDbApplication
 
-New runtime attributes: init, required keywords support
+ExternalCommand:
+
+- New SuppressFailures method

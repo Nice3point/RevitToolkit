@@ -76,6 +76,7 @@ public class SelectionConfiguration
 /// <summary>
 ///     An interface that provides the ability to filter objects during a selection operation
 /// </summary>
+[PublicAPI]
 public interface ISelectionFilterConfiguration
 {
     /// <summary>

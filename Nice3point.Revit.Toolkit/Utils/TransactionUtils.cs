@@ -62,330 +62,6 @@ public static class TransactionManager
         var transactionSettings = settings?.Invoke(new DocumentTransactionSettings());
         return new GroupTransaction(document, (GroupTransactionSettings) transactionSettings);
     }
-
-    #region Obsolete
-
-    /// <summary>
-    ///     Initializes a new sub-transaction
-    /// </summary>
-    /// <remarks>
-    ///     The transaction will be canceled when exceptions occur, exceptions are not handled by the method<br />
-    ///     Sub-transactions are objects that provide control over a subset of changes in a document<br />
-    ///     A Sub-transaction can only be active as a part of an open transaction.
-    ///     Sub-transactions may be nested inside each other, but with the restriction that every nested
-    ///     sub-transaction is entirely contained (opened and closed) in the parent sub-transaction
-    /// </remarks>
-    [Obsolete("please use Modify extension instead")]
-    public static void CreateSubTransaction(Document document, Action<Document> action)
-    {
-        var transaction = new Autodesk.Revit.DB.SubTransaction(document);
-        transaction.Start();
-        try
-        {
-            action?.Invoke(document);
-            transaction.Commit();
-        }
-        finally
-        {
-            if (!transaction.HasEnded()) transaction.RollBack();
-            transaction.Dispose();
-        }
-    }
-
-    /// <summary>
-    ///     Initializes a new sub-transaction
-    /// </summary>
-    /// <remarks>
-    ///     The transaction will be canceled when exceptions occur, exceptions are not handled by the method<br />
-    ///     Sub-transactions are objects that provide control over a subset of changes in a document<br />
-    ///     A Sub-transaction can only be active as a part of an open transaction.
-    ///     Sub-transactions may be nested inside each other, but with the restriction that every nested
-    ///     sub-transaction is entirely contained (opened and closed) in the parent sub-transaction
-    /// </remarks>
-    [Obsolete("please use Modify extension instead")]
-    public static void CreateSubTransaction<T>(Document document, T param, Action<Document, T> action)
-    {
-        var transaction = new Autodesk.Revit.DB.SubTransaction(document);
-        transaction.Start();
-        try
-        {
-            action?.Invoke(document, param);
-            transaction.Commit();
-        }
-        finally
-        {
-            if (!transaction.HasEnded()) transaction.RollBack();
-            transaction.Dispose();
-        }
-    }
-
-    /// <summary>
-    ///     Initializes a new sub-transaction
-    /// </summary>
-    /// <remarks>
-    ///     The transaction will be canceled when exceptions occur, exceptions are not handled by the method<br />
-    ///     Sub-transactions are objects that provide control over a subset of changes in a document<br />
-    ///     A Sub-transaction can only be active as a part of an open transaction.
-    ///     Sub-transactions may be nested inside each other, but with the restriction that every nested
-    ///     sub-transaction is entirely contained (opened and closed) in the parent sub-transaction
-    /// </remarks>
-    [Obsolete("please use Modify extension instead")]
-    public static void CreateSubTransaction<T0, T1>(Document document, T0 param0, T1 param1, Action<Document, T0, T1> action)
-    {
-        var transaction = new Autodesk.Revit.DB.SubTransaction(document);
-        transaction.Start();
-        try
-        {
-            action?.Invoke(document, param0, param1);
-            transaction.Commit();
-        }
-        finally
-        {
-            if (!transaction.HasEnded()) transaction.RollBack();
-            transaction.Dispose();
-        }
-    }
-
-    /// <summary>
-    ///     Initializes a new sub-transaction
-    /// </summary>
-    /// <remarks>
-    ///     The transaction will be canceled when exceptions occur, exceptions are not handled by the method<br />
-    ///     Sub-transactions are objects that provide control over a subset of changes in a document<br />
-    ///     A Sub-transaction can only be active as a part of an open transaction.
-    ///     Sub-transactions may be nested inside each other, but with the restriction that every nested
-    ///     sub-transaction is entirely contained (opened and closed) in the parent sub-transaction
-    /// </remarks>
-    [Obsolete("please use Modify extension instead")]
-    public static void CreateSubTransaction<T0, T1, T2>(Document document, T0 param0, T1 param1, T2 param2, Action<Document, T0, T1, T2> action)
-    {
-        var transaction = new Autodesk.Revit.DB.SubTransaction(document);
-        transaction.Start();
-        try
-        {
-            action?.Invoke(document, param0, param1, param2);
-            transaction.Commit();
-        }
-        finally
-        {
-            if (!transaction.HasEnded()) transaction.RollBack();
-            transaction.Dispose();
-        }
-    }
-
-    /// <summary>
-    ///     Initializes a new transaction
-    /// </summary>
-    /// <remarks>
-    ///     The transaction will be canceled when exceptions occur, exceptions are not handled by the method<br />
-    ///     Transactions are context-like objects that guard any changes made to a Revit model<br />
-    ///     A document can have only one transaction open at any given time<br />
-    ///     Transactions cannot be started when the document is in read-only mode, either permanently or temporarily.
-    ///     See the Document class methods IsReadOnly and IsModifiable for more details<br />
-    ///     Transactions in linked documents are not permitted, for linked documents are not allowed to be modified
-    /// </remarks>
-    [Obsolete("please use Modify extension instead")]
-    public static void CreateTransaction(Document document, string transactionName, Action<Document> action)
-    {
-        var transaction = new Autodesk.Revit.DB.Transaction(document);
-        transaction.Start(transactionName);
-        try
-        {
-            action?.Invoke(document);
-            transaction.Commit();
-        }
-        finally
-        {
-            if (!transaction.HasEnded()) transaction.RollBack();
-            transaction.Dispose();
-        }
-    }
-
-    /// <summary>
-    ///     Initializes a new transaction
-    /// </summary>
-    /// <remarks>
-    ///     The transaction will be canceled when exceptions occur, exceptions are not handled by the method<br />
-    ///     Transactions are context-like objects that guard any changes made to a Revit model<br />
-    ///     A document can have only one transaction open at any given time<br />
-    ///     Transactions cannot be started when the document is in read-only mode, either permanently or temporarily.
-    ///     See the Document class methods IsReadOnly and IsModifiable for more details<br />
-    ///     Transactions in linked documents are not permitted, for linked documents are not allowed to be modified
-    /// </remarks>
-    [Obsolete("please use Modify extension instead")]
-    public static void CreateTransaction<T>(Document document, string transactionName, T param, Action<Document, T> action)
-    {
-        var transaction = new Autodesk.Revit.DB.Transaction(document);
-        transaction.Start(transactionName);
-        try
-        {
-            action?.Invoke(document, param);
-            transaction.Commit();
-        }
-        finally
-        {
-            if (!transaction.HasEnded()) transaction.RollBack();
-            transaction.Dispose();
-        }
-    }
-
-    /// <summary>
-    ///     Initializes a new transaction
-    /// </summary>
-    /// <remarks>
-    ///     The transaction will be canceled when exceptions occur, exceptions are not handled by the method<br />
-    ///     Transactions are context-like objects that guard any changes made to a Revit model<br />
-    ///     A document can have only one transaction open at any given time<br />
-    ///     Transactions cannot be started when the document is in read-only mode, either permanently or temporarily.
-    ///     See the Document class methods IsReadOnly and IsModifiable for more details<br />
-    ///     Transactions in linked documents are not permitted, for linked documents are not allowed to be modified
-    /// </remarks>
-    [Obsolete("please use Modify extension instead")]
-    public static void CreateTransaction<T0, T1>(Document document, string transactionName, T0 param0, T1 param1, Action<Document, T0, T1> action)
-    {
-        var transaction = new Autodesk.Revit.DB.Transaction(document);
-        transaction.Start(transactionName);
-        try
-        {
-            action?.Invoke(document, param0, param1);
-            transaction.Commit();
-        }
-        finally
-        {
-            if (!transaction.HasEnded()) transaction.RollBack();
-            transaction.Dispose();
-        }
-    }
-
-    /// <summary>
-    ///     Initializes a new transaction
-    /// </summary>
-    /// <remarks>
-    ///     The transaction will be canceled when exceptions occur, exceptions are not handled by the method<br />
-    ///     Transactions are context-like objects that guard any changes made to a Revit model<br />
-    ///     A document can have only one transaction open at any given time<br />
-    ///     Transactions cannot be started when the document is in read-only mode, either permanently or temporarily.
-    ///     See the Document class methods IsReadOnly and IsModifiable for more details<br />
-    ///     Transactions in linked documents are not permitted, for linked documents are not allowed to be modified
-    /// </remarks>
-    [Obsolete("please use Modify extension instead")]
-    public static void CreateTransaction<T0, T1, T2>(Document document, string transactionName, T0 param0, T1 param1, T2 param2, Action<Document, T0, T1, T2> action)
-    {
-        var transaction = new Autodesk.Revit.DB.Transaction(document);
-        transaction.Start(transactionName);
-        try
-        {
-            action?.Invoke(document, param0, param1, param2);
-            transaction.Commit();
-        }
-        finally
-        {
-            if (!transaction.HasEnded()) transaction.RollBack();
-            transaction.Dispose();
-        }
-    }
-
-    /// <summary>
-    ///     Initializes a new transaction
-    /// </summary>
-    /// <remarks>
-    ///     The transaction will be canceled when exceptions occur, exceptions are not handled by the method<br />
-    ///     Transaction groups aggregate a number of transactions<br />
-    ///     A transaction group can only be started when no transaction is active
-    /// </remarks>
-    [Obsolete("please use Modify extension instead")]
-    public static void CreateGroupTransaction(Document document, string transactionName, Action<Document> action)
-    {
-        var transaction = new TransactionGroup(document);
-        transaction.Start(transactionName);
-        try
-        {
-            action?.Invoke(document);
-            transaction.Assimilate();
-        }
-        finally
-        {
-            if (!transaction.HasEnded()) transaction.RollBack();
-            transaction.Dispose();
-        }
-    }
-
-    /// <summary>
-    ///     Initializes a new transaction
-    /// </summary>
-    /// <remarks>
-    ///     The transaction will be canceled when exceptions occur, exceptions are not handled by the method<br />
-    ///     Transaction groups aggregate a number of transactions<br />
-    ///     A transaction group can only be started when no transaction is active
-    /// </remarks>
-    [Obsolete("please use Modify extension instead")]
-    public static void CreateGroupTransaction<T>(Document document, string transactionName, T param, Action<Document, T> action)
-    {
-        var transaction = new TransactionGroup(document);
-        transaction.Start(transactionName);
-        try
-        {
-            action?.Invoke(document, param);
-            transaction.Assimilate();
-        }
-        finally
-        {
-            if (!transaction.HasEnded()) transaction.RollBack();
-            transaction.Dispose();
-        }
-    }
-
-    /// <summary>
-    ///     Initializes a new transaction
-    /// </summary>
-    /// <remarks>
-    ///     The transaction will be canceled when exceptions occur, exceptions are not handled by the method<br />
-    ///     Transaction groups aggregate a number of transactions<br />
-    ///     A transaction group can only be started when no transaction is active
-    /// </remarks>
-    [Obsolete("please use Modify extension instead")]
-    public static void CreateGroupTransaction<T0, T1>(Document document, string transactionName, T0 param0, T1 param1, Action<Document, T0, T1> action)
-    {
-        var transaction = new TransactionGroup(document);
-        transaction.Start(transactionName);
-        try
-        {
-            action?.Invoke(document, param0, param1);
-            transaction.Assimilate();
-        }
-        finally
-        {
-            if (!transaction.HasEnded()) transaction.RollBack();
-            transaction.Dispose();
-        }
-    }
-
-    /// <summary>
-    ///     Initializes a new transaction
-    /// </summary>
-    /// <remarks>
-    ///     The transaction will be canceled when exceptions occur, exceptions are not handled by the method<br />
-    ///     Transaction groups aggregate a number of transactions<br />
-    ///     A transaction group can only be started when no transaction is active
-    /// </remarks>
-    [Obsolete("please use Modify extension instead")]
-    public static void CreateGroupTransaction<T0, T1, T2>(Document document, string transactionName, T0 param0, T1 param1, T2 param2, Action<Document, T0, T1, T2> action)
-    {
-        var transaction = new TransactionGroup(document);
-        transaction.Start(transactionName);
-        try
-        {
-            action?.Invoke(document, param0, param1, param2);
-            transaction.Assimilate();
-        }
-        finally
-        {
-            if (!transaction.HasEnded()) transaction.RollBack();
-            transaction.Dispose();
-        }
-    }
-
-    #endregion
 }
 
 internal sealed class DocumentTransactionSettings : IDocumentTransactionSettings
@@ -620,6 +296,7 @@ internal sealed class GroupTransaction : IGroupTransaction
 /// <summary>
 ///     Contains settings for modifying the document
 /// </summary>
+[PublicAPI]
 public interface IDocumentTransactionSettings
 {
     /// <summary>
@@ -641,6 +318,7 @@ public interface IDocumentTransactionSettings
 /// <summary>
 ///     Contains settings that will be applied before the <see cref="ITransaction" /> starts
 /// </summary>
+[PublicAPI]
 public interface ITransactionSettings
 {
     /// <summary>Sets the transaction name</summary>
@@ -674,6 +352,7 @@ public interface ITransactionSettings
 ///     Contains settings that will be applied before the <see cref="ISubTransaction" /> starts
 /// </summary>
 /// <remarks>SubTransaction does not provide customization settings</remarks>
+[PublicAPI]
 public interface ISubTransactionSettings
 {
 }
@@ -681,6 +360,7 @@ public interface ISubTransactionSettings
 /// <summary>
 ///     Contains settings that will be applied before the <see cref="IGroupTransaction" /> starts
 /// </summary>
+[PublicAPI]
 public interface IGroupTransactionSettings
 {
     /// <summary>Sets the transaction group's name</summary>
@@ -707,6 +387,7 @@ public interface IGroupTransactionSettings
 ///     See the Document class methods IsReadOnly and IsModifiable for more details<br />
 ///     Transactions in linked documents are not permitted, for linked documents are not allowed to be modified
 /// </remarks>
+[PublicAPI]
 public interface ITransaction
 {
     /// <summary>Commits all changes made to the model during the transaction</summary>
@@ -742,6 +423,7 @@ public interface ITransaction
 ///     Sub-transactions may be nested inside each other, but with the restriction that every nested
 ///     sub-transaction is entirely contained (opened and closed) in the parent sub-transaction
 /// </remarks>
+[PublicAPI]
 public interface ISubTransaction
 {
     /// <summary>Commits all changes made to the model made during the sub-transaction</summary>
@@ -778,6 +460,7 @@ public interface ISubTransaction
 ///     Transaction groups aggregate a number of transactions<br />
 ///     A transaction group can only be started when no transaction is active
 /// </remarks>
+[PublicAPI]
 public interface IGroupTransaction
 {
     /// <summary>

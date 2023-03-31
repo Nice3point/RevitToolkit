@@ -4,6 +4,10 @@
 - New SaveSharedCoordinatesCallback
 - New ExternalDbApplication
 
+ExternalCommand:
+
+- New SuppressFailures method
+
 # Release 2023.0.12
 
 New runtime attributes: init, required keywords support

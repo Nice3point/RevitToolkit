@@ -68,6 +68,8 @@ public class Command : ExternalCommand
         RestoreDialogs();
         SuppressExceptions();
         SuppressExceptions(exception => Log.Fatal(exception, "Fatal exception"));
+        SuppressFailures();
+        RestoreFailures();
 
         var title = Document.Title;
         var viewName = ActiveView.Name;
@@ -294,16 +296,18 @@ private async Task GetWindowsCountAsync()
         var elementIds = uiDocument.Document.GetInstanceIds(BuiltInCategory.OST_Windows);
         uiDocument.Selection.SetElementIds(elementIds);
 
-        Debug.WriteLine($"Windows count {elementIds.Count}");
+        Debug.WriteLine("Windows selected");
         return elementIds.Count;
     });
 
+    Debug.WriteLine($"Windows count {windowsCount}");
     Debug.WriteLine("Command completed");
 }
 ```
 
 Debug output:
 ```text
+Windows selected
 Windows count 17
 Command completed
 ```

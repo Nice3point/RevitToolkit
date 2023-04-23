@@ -8,9 +8,8 @@ using Serilog;
 
 partial class Build
 {
-    readonly AbsolutePath ChangeLogPath = RootDirectory / "Changelog.md";
     [GitVersion(NoFetch = true)] readonly GitVersion GitVersion;
-    readonly Regex VersionRegex = new(@"(\d+\.)+\d+", RegexOptions.Compiled);
+
     [Parameter] string GitHubToken { get; set; }
 
     Target PublishGitHubRelease => _ => _
@@ -18,8 +17,7 @@ partial class Build
         .Requires(() => GitHubToken)
         .Requires(() => GitRepository)
         .Requires(() => GitVersion)
-        .OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
-        .OnlyWhenStatic(() => IsServerBuild)
+        .OnlyWhenStatic(() => GitRepository.IsOnMasterBranch() && IsServerBuild)
         .Executes(async () =>
         {
             GitHubTasks.GitHubClient = new GitHubClient(new ProductHeaderValue(Solution.Name))
@@ -30,10 +28,10 @@ partial class Build
             var gitHubName = GitRepository.GetGitHubName();
             var gitHubOwner = GitRepository.GetGitHubOwner();
             var artifacts = Directory.GetFiles(ArtifactsDirectory, "*");
-            var version = GetProductVersion(artifacts);
+            var version = VersionMap.Keys.Last();
 
             await CheckTagsAsync(gitHubOwner, gitHubName, version);
-            Log.Information("Detected Tag: {Version}", version);
+            Log.Information("Tag: {Version}", version);
 
             var newRelease = new NewRelease(version)
             {
@@ -52,11 +50,11 @@ partial class Build
     {
         if (!File.Exists(ChangeLogPath))
         {
-            Log.Warning("Can't find changelog file: {Log}", ChangeLogPath);
+            Log.Warning("Unable to locate the changelog file: {Log}", ChangeLogPath);
             return string.Empty;
         }
 
-        Log.Information("Detected Changelog: {Path}", ChangeLogPath);
+        Log.Information("Changelog: {Path}", ChangeLogPath);
 
         var logBuilder = new StringBuilder();
         var changelogLineRegex = new Regex($@"^.*({version})\S*\s?");
@@ -76,40 +74,24 @@ partial class Build
             logBuilder.AppendLine(truncatedLine);
         }
 
-        if (logBuilder.Length == 0) Log.Warning("There is no version entry in the changelog: {Version}", version);
+        if (logBuilder.Length == 0) Log.Warning("No version entry exists in the changelog: {Version}", version);
         return logBuilder.ToString();
     }
 
     static async Task CheckTagsAsync(string gitHubOwner, string gitHubName, string version)
     {
         var gitHubTags = await GitHubTasks.GitHubClient.Repository.GetAllTags(gitHubOwner, gitHubName);
-        if (gitHubTags.Select(tag => tag.Name).Contains(version)) throw new ArgumentException($"The repository already contains a Release with the tag: {version}");
+        if (gitHubTags.Select(tag => tag.Name).Contains(version))
+            throw new ArgumentException($"A Release with the specified tag already exists in the repository: {version}");
     }
 
-    string GetProductVersion(IEnumerable<string> artifacts)
-    {
-        var stringVersion = string.Empty;
-        var doubleVersion = 0d;
-        foreach (var file in artifacts)
-        {
-            var fileInfo = new FileInfo(file);
-            var match = VersionRegex.Matches(fileInfo.Name).Last();
-            if (!match.Success) continue;
-            var version = match.Value;
-            var parsedValue = double.Parse(version.Replace(".", ""));
-            if (parsedValue > doubleVersion)
-            {
-                doubleVersion = parsedValue;
-                stringVersion = version;
-            }
-        }
+    static async Task<Release> CreatedDraftAsync(string gitHubOwner, string gitHubName, NewRelease newRelease) =>
+        await GitHubTasks.GitHubClient.Repository.Release.Create(gitHubOwner, gitHubName, newRelease);
 
-        if (stringVersion.Equals(string.Empty)) throw new ArgumentException("Could not determine product version from artifacts.");
+    static async Task ReleaseDraftAsync(string gitHubOwner, string gitHubName, Release draft) =>
+        await GitHubTasks.GitHubClient.Repository.Release.Edit(gitHubOwner, gitHubName, draft.Id, new ReleaseUpdate {Draft = false});
 
-        return stringVersion;
-    }
-
-    static async Task UploadArtifactsAsync(Release createdRelease, IEnumerable<string> artifacts)
+    static async Task UploadArtifactsAsync(Release createdRelease, string[] artifacts)
     {
         foreach (var file in artifacts)
         {
@@ -121,13 +103,7 @@ partial class Build
             };
 
             await GitHubTasks.GitHubClient.Repository.Release.UploadAsset(createdRelease, releaseAssetUpload);
-            Log.Information("Added artifact: {Path}", file);
+            Log.Information("Artifact: {Path}", file);
         }
     }
-
-    static async Task<Release> CreatedDraftAsync(string gitHubOwner, string gitHubName, NewRelease newRelease) =>
-        await GitHubTasks.GitHubClient.Repository.Release.Create(gitHubOwner, gitHubName, newRelease);
-
-    static async Task ReleaseDraftAsync(string gitHubOwner, string gitHubName, Release draft) =>
-        await GitHubTasks.GitHubClient.Repository.Release.Edit(gitHubOwner, gitHubName, draft.Id, new ReleaseUpdate {Draft = false});
 }

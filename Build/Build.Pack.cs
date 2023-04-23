@@ -7,20 +7,11 @@ partial class Build
         .TriggeredBy(Compile)
         .Executes(() =>
         {
-            var configurations = GetConfigurations(BuildConfiguration);
-            configurations.ForEach(configuration =>
-            {
+            foreach (var configuration in GlobBuildConfigurations())
                 DotNetPack(settings => settings
                     .SetConfiguration(configuration)
-                    .SetVersion(GetPackVersion(configuration))
+                    .SetVersion(VersionMap[configuration])
                     .SetOutputDirectory(ArtifactsDirectory)
                     .SetVerbosity(DotNetVerbosity.Minimal));
-            });
         });
-
-    string GetPackVersion(string configuration)
-    {
-        if (VersionMap.TryGetValue(configuration, out var value)) return value;
-        throw new Exception($"Can't find pack version for configuration: {configuration}");
-    }
 }

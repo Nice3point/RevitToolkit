@@ -1,7 +1,12 @@
 partial class Build
 {
-    const string BuildConfiguration = "Release";
-    const string ArtifactsFolder = "output";
+    readonly AbsolutePath ArtifactsDirectory = RootDirectory / "output";
+    readonly AbsolutePath ChangeLogPath = RootDirectory / "Changelog.md";
+
+    readonly string[] Configurations =
+    {
+        "Release*"
+    };
 
     readonly Dictionary<string, string> VersionMap = new()
     {

@@ -12,8 +12,7 @@ partial class Build
 
     Target NuGetPush => _ => _
         .Requires(() => NugetApiKey)
-        .OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
-        .OnlyWhenStatic(() => IsLocalBuild)
+        .OnlyWhenStatic(() => IsLocalBuild && GitRepository.IsOnMainOrMasterBranch())
         .Executes(() =>
         {
             ArtifactsDirectory.GlobFiles("*.nupkg")
@@ -28,8 +27,7 @@ partial class Build
 
     Target NuGetDelete => _ => _
         .Requires(() => NugetApiKey)
-        .OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
-        .OnlyWhenStatic(() => IsLocalBuild)
+        .OnlyWhenStatic(() => IsLocalBuild && GitRepository.IsOnMainOrMasterBranch())
         .Executes(() =>
         {
             VersionMap.ForEach(map =>

@@ -27,7 +27,6 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 
 ### Table of contents
 
-* [Table of contents](#table-of-contents)
 * [External command](#external-command)
 * [External application](#external-application)
 * [External DB application](#external-db-application)

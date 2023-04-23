@@ -27,13 +27,25 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 
 ### Table of contents
 
-- [External command](#ExternalCommand)
-- [External application](#ExternalApplication)
-- [External events](#ExternalEvents)
-- [Options](#Options)
-- [Helpers](#Helpers)
-- [Decorators](#Decorators)
-- [Transaction utils](#TransactionUtils)
+
+* [<a id="ExternalCommand">External command</a>](#a-idexternalcommandexternal-commanda)
+* [<a id="ExternalApplication">External application</a>](#a-idexternalapplicationexternal-applicationa)
+* [<a id="ExternalDBApplication">External DB application</a>](#a-idexternaldbapplicationexternal-db-applicationa)
+* [<a id="ExternalEvents">External events</a>](#a-idexternaleventsexternal-eventsa)
+    * [ActionEventHandler](#actioneventhandler)
+    * [IdlingEventHandler](#idlingeventhandler)
+    * [AsyncEventHandler](#asynceventhandler)
+    * [AsyncEventHandler\<T>](#asynceventhandlert)
+* [<a id="Options">Options</a>](#a-idoptionsoptionsa)
+    * [FamilyLoadOptions](#familyloadoptions)
+    * [DuplicateTypeNamesHandler](#duplicatetypenameshandler)
+    * [SaveSharedCoordinatesCallback](#savesharedcoordinatescallback)
+    * [SelectionConfiguration](#selectionconfiguration)
+* [<a id="Helpers">Helpers</a>](#a-idhelpershelpersa)
+    * [ResolveHelper](#resolvehelper)
+* [<a id="Decorators">Decorators</a>](#a-iddecoratorsdecoratorsa)
+    * [DockablePaneProvider](#dockablepaneprovider)
+* [<a id="Transaction utils">TransactionUtils</a>](#a-idtransaction-utilstransactionutilsa)
 
 ### <a id="ExternalCommand">External command</a>
 

@@ -23,28 +23,29 @@ Packages are compiled for a specific version of Revit, to support different vers
 
 Package included by default in [Revit Templates](https://github.com/Nice3point/RevitTemplates).
 
-## Features
-
-### Table of contents
+## Table of contents
 
 * [External command](#external-command)
 * [External application](#external-application)
 * [External DB application](#external-db-application)
 * [External events](#external-events)
-  * [ActionEventHandler](#actioneventhandler)
-  * [IdlingEventHandler](#idlingeventhandler)
-  * [AsyncEventHandler](#asynceventhandler)
-  * [AsyncEventHandler\<T>](#asynceventhandlert)
+    * [ActionEventHandler](#actioneventhandler)
+    * [IdlingEventHandler](#idlingeventhandler)
+    * [AsyncEventHandler](#asynceventhandler)
+    * [AsyncEventHandler\<T>](#asynceventhandlert)
 * [Options](#options)
-  * [FamilyLoadOptions](#familyloadoptions)
-  * [DuplicateTypeNamesHandler](#duplicatetypenameshandler)
-  * [SaveSharedCoordinatesCallback](#savesharedcoordinatescallback)
-  * [SelectionConfiguration](#selectionconfiguration)
+    * [FamilyLoadOptions](#familyloadoptions)
+    * [DuplicateTypeNamesHandler](#duplicatetypenameshandler)
+    * [SaveSharedCoordinatesCallback](#savesharedcoordinatescallback)
+    * [SelectionConfiguration](#selectionconfiguration)
 * [Helpers](#helpers)
-  * [ResolveHelper](#resolvehelper)
+    * [ResolveHelper](#resolvehelper)
 * [Decorators](#decorators)
-  * [DockablePaneProvider](#dockablepaneprovider)
+    * [DockablePaneProvider](#dockablepaneprovider)
 * [Transaction utils](#transaction-utils)
+
+## Features
+
 ### External command
 
 The **ExternalCommand** class contains an implementation for IExternalCommand.
@@ -207,6 +208,7 @@ private void DeteleElement()
 ```
 
 Debug output:
+
 ```text
 Command completed
 Deleted
@@ -214,8 +216,8 @@ Deleted
 
 #### IdlingEventHandler
 
-With this handler you can queue delegates for method calls when Revit becomes available again. 
-Unsubscribing from the Idling event occurs immediately. Suitable for cases where you need to call code when Revit receives focus. 
+With this handler you can queue delegates for method calls when Revit becomes available again.
+Unsubscribing from the Idling event occurs immediately. Suitable for cases where you need to call code when Revit receives focus.
 For example, to display a window after loading a family into a project.
 
 ```c#
@@ -241,6 +243,7 @@ private void NotifyOnIdling()
 ```
 
 Debug output:
+
 ```text
 Command completed
 Idling
@@ -249,7 +252,7 @@ Idling
 #### AsyncEventHandler
 
 With this handler, you can wait for the external event to complete.
-The RaiseAsync method will return to its previous context after executing the method encapsulated in the delegate. 
+The RaiseAsync method will return to its previous context after executing the method encapsulated in the delegate.
 Suitable for cases where you need to maintain the sequence of code execution.
 
 Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context
@@ -277,6 +280,7 @@ private async Task DeleteDoorsAsync()
 ```
 
 Debug output:
+
 ```text
 Doors deleted
 Command completed
@@ -316,6 +320,7 @@ private async Task GetWindowsCountAsync()
 ```
 
 Debug output:
+
 ```text
 Windows selected
 Windows count 17

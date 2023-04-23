@@ -27,27 +27,26 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 
 ### Table of contents
 
-
-* [<a id="ExternalCommand">External command</a>](#a-idexternalcommandexternal-commanda)
-* [<a id="ExternalApplication">External application</a>](#a-idexternalapplicationexternal-applicationa)
-* [<a id="ExternalDBApplication">External DB application</a>](#a-idexternaldbapplicationexternal-db-applicationa)
-* [<a id="ExternalEvents">External events</a>](#a-idexternaleventsexternal-eventsa)
-    * [ActionEventHandler](#actioneventhandler)
-    * [IdlingEventHandler](#idlingeventhandler)
-    * [AsyncEventHandler](#asynceventhandler)
-    * [AsyncEventHandler\<T>](#asynceventhandlert)
-* [<a id="Options">Options</a>](#a-idoptionsoptionsa)
-    * [FamilyLoadOptions](#familyloadoptions)
-    * [DuplicateTypeNamesHandler](#duplicatetypenameshandler)
-    * [SaveSharedCoordinatesCallback](#savesharedcoordinatescallback)
-    * [SelectionConfiguration](#selectionconfiguration)
-* [<a id="Helpers">Helpers</a>](#a-idhelpershelpersa)
-    * [ResolveHelper](#resolvehelper)
-* [<a id="Decorators">Decorators</a>](#a-iddecoratorsdecoratorsa)
-    * [DockablePaneProvider](#dockablepaneprovider)
-* [<a id="Transaction utils">TransactionUtils</a>](#a-idtransaction-utilstransactionutilsa)
-
-### <a id="ExternalCommand">External command</a>
+* [Table of contents](#table-of-contents)
+* [External command](#external-command)
+* [External application](#external-application)
+* [External DB application](#external-db-application)
+* [External events](#external-events)
+  * [ActionEventHandler](#actioneventhandler)
+  * [IdlingEventHandler](#idlingeventhandler)
+  * [AsyncEventHandler](#asynceventhandler)
+  * [AsyncEventHandler\<T>](#asynceventhandlert)
+* [Options](#options)
+  * [FamilyLoadOptions](#familyloadoptions)
+  * [DuplicateTypeNamesHandler](#duplicatetypenameshandler)
+  * [SaveSharedCoordinatesCallback](#savesharedcoordinatescallback)
+  * [SelectionConfiguration](#selectionconfiguration)
+* [Helpers](#helpers)
+  * [ResolveHelper](#resolvehelper)
+* [Decorators](#decorators)
+  * [DockablePaneProvider](#dockablepaneprovider)
+* [Transaction utils](#transaction-utils)
+### External command
 
 The **ExternalCommand** class contains an implementation for IExternalCommand.
 
@@ -101,7 +100,7 @@ public class Command : ExternalCommand
 }
 ```
 
-### <a id="ExternalApplication">External application</a>
+### External application
 
 The ExternalApplication class contains an implementation for IExternalApplication.
 
@@ -147,7 +146,7 @@ public class Application : ExternalApplication
 }
 ```
 
-### <a id="ExternalDBApplication">External DB application</a>
+### External DB application
 
 The ExternalDBApplication class contains an implementation for IExternalDBApplication.
 
@@ -170,7 +169,7 @@ Override method **OnStartup()** to execute some tasks when Revit starts.
 
 Override method **OnShutdown()** to execute some tasks when Revit shuts down. You don't have to override this method if you don't plan to use it.
 
-### <a id="ExternalEvents">External events</a>
+### External events
 
 The **ExternalEventHandler** class is used to modify the document when using modeless windows. It contains an implementation of the IExternalEventHandler interface. You can create
 your
@@ -324,7 +323,7 @@ Windows count 17
 Command completed
 ```
 
-### <a id="Options">Options</a>
+### Options
 
 Toolkit provides implementation of various Revit interfaces, with the possibility of customization.
 
@@ -395,7 +394,7 @@ var selectionConfiguration = new SelectionConfiguration()
 uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
 ```
 
-### <a id="Helpers">Helpers</a>
+### Helpers
 
 Provides auxiliary components
 
@@ -409,7 +408,7 @@ window.Show();
 AppDomain.CurrentDomain.AssemblyResolve -= ResolveHelper.ResolveAssembly;
 ```
 
-### <a id="Decorators">Decorators</a>
+### Decorators
 
 #### DockablePaneProvider
 
@@ -430,7 +429,7 @@ DockablePaneProvider
     });
 ```
 
-### <a id="Transaction utils">TransactionUtils</a>
+### Transaction utils
 
 The TransactionManager gives you the ability to create transactions. You can write custom code in a lambda, and the method will take care of safely closing transactions in case of
 exceptions and cleaning up unmanaged resources.

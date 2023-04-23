@@ -14,9 +14,13 @@
         <PackageTags>revit;toolkit</PackageTags>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/Nice3point/RevitToolkit</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/Nice3point/RevitToolkit</PackageProjectUrl>
         <PackageIcon>images\PackageIcon.png</PackageIcon>
         <PackageLicenseFile>License.md</PackageLicenseFile>
         <PackageReleaseNotes>$([System.IO.File]::ReadAllText("$(SolutionDir)\.nuget\Changelog.md"))</PackageReleaseNotes>
+    </PropertyGroup>
+    <PropertyGroup>
+        <EnablePackageValidation>true</EnablePackageValidation>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     </PropertyGroup>
@@ -64,20 +68,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" Version="2022.*" />
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*-*" PrivateAssets="all" />
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-*" PrivateAssets="all" />
+        <PackageReference Include="JetBrains.Annotations" Version="2022.*"/>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*-*" PrivateAssets="all"/>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-*" PrivateAssets="all"/>
     </ItemGroup>
 
     <ItemGroup>
-        <Using Include="JetBrains.Annotations" />
-        <Using Include="System.Runtime.CompilerServices" />
-        <Using Remove="System.Net.Http" />
+        <Using Include="JetBrains.Annotations"/>
+        <Using Include="System.Runtime.CompilerServices"/>
+        <Using Remove="System.Net.Http"/>
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\.nuget\PackageIcon.png" Link="NuGet\PackageIcon.png" PackagePath="images\" Pack="true" />
-        <None Include="..\.nuget\Changelog.md" Link="NuGet\Changelog.md" PackagePath="\" Pack="false" />
-        <None Include="..\License.md" Link="NuGet\License.md" PackagePath="" Pack="true" />
+        <None Include="..\.nuget\PackageIcon.png" Link="NuGet\PackageIcon.png" PackagePath="images\" Pack="true"/>
+        <None Include="..\.nuget\Changelog.md" Link="NuGet\Changelog.md" PackagePath="\" Pack="false"/>
+        <None Include="..\License.md" Link="NuGet\License.md" PackagePath="" Pack="true"/>
     </ItemGroup>
 </Project>

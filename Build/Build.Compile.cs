@@ -25,23 +25,12 @@ partial class Build
     {
         var configurations = Solution.Configurations
             .Select(pair => pair.Key)
-            .Select(config =>
-            {
-                var platformIndex = config.LastIndexOf('|');
-                return config.Remove(platformIndex);
-            })
-            .Where(config =>
-            {
-                foreach (var wildcard in Configurations)
-                    if (FileSystemName.MatchesSimpleExpression(wildcard, config))
-                        return true;
-
-                return false;
-            })
+            .Select(config => config.Remove(config.LastIndexOf('|')))
+            .Where(config => Configurations.Any(wildcard => FileSystemName.MatchesSimpleExpression(wildcard, config)))
             .ToList();
 
         if (configurations.Count == 0)
-            throw new Exception($"The solution's configurations cannot be found using the specified patterns: {string.Join(" | ", Configurations)}");
+            throw new Exception($"No solution configurations have been found. Pattern: {string.Join(" | ", Configurations)}");
 
         return configurations;
     }

@@ -9,10 +9,9 @@ using Serilog;
 partial class Build
 {
     [GitVersion(NoFetch = true)] readonly GitVersion GitVersion;
-
     [Parameter] string GitHubToken { get; set; }
 
-    Target PublishGitHubRelease => _ => _
+    Target PublishGitHub => _ => _
         .TriggeredBy(Pack)
         .Requires(() => GitHubToken)
         .Requires(() => GitRepository)

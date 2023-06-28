@@ -12,7 +12,6 @@ partial class Build
 
     Target NuGetPush => _ => _
         .Requires(() => NugetApiKey)
-        .OnlyWhenStatic(() => IsLocalBuild && GitRepository.IsOnMainOrMasterBranch())
         .Executes(() =>
         {
             ArtifactsDirectory.GlobFiles("*.nupkg")
@@ -27,17 +26,24 @@ partial class Build
 
     Target NuGetDelete => _ => _
         .Requires(() => NugetApiKey)
-        .OnlyWhenStatic(() => IsLocalBuild && GitRepository.IsOnMainOrMasterBranch())
         .Executes(() =>
         {
-            VersionMap.ForEach(map =>
+            var versions = new List<string>
+            {
+                "2020.0.12",
+                "2021.0.12",
+                "2022.0.12",
+                "2023.0.12"
+            };
+
+            foreach (var version in versions)
             {
                 DotNetNuGetDelete(settings => settings
                     .SetPackage("Nice3point.Revit.Toolkit")
-                    .SetVersion(map.Value)
+                    .SetVersion(version)
                     .SetSource(NugetApiUrl)
                     .SetApiKey(NugetApiKey)
                     .EnableNonInteractive());
-            });
+            }
         });
 }

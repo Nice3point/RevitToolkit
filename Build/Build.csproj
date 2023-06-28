@@ -9,10 +9,9 @@
         <NukeRootDirectory>..</NukeRootDirectory>
         <NukeScriptDirectory>..</NukeScriptDirectory>
         <NukeTelemetryVersion>1</NukeTelemetryVersion>
-        <Configurations>Release;Debug</Configurations>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Nuke.Common" Version="6.3.0" />
+        <PackageReference Include="Nuke.Common" Version="7.0.2" />
     </ItemGroup>
 
     <ItemGroup>

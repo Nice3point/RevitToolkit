@@ -9,7 +9,6 @@ namespace RevitToolkit.Build.Tools;
 public class DotNetNuGetDeleteSettings : ToolSettings
 {
     public override string ProcessToolPath => base.ProcessToolPath ?? DotNetTasks.DotNetPath;
-    public override Action<OutputType, string> ProcessCustomLogger => DotNetTasks.DotNetLogger;
     public virtual string Package { get; internal set; }
     public virtual string Version { get; internal set; }
     public virtual string Source { get; internal set; }

@@ -4,9 +4,6 @@ using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
 using Nice3point.Revit.Toolkit.Helpers;
 
-// ReSharper disable MemberCanBePrivate.Global
-// ReSharper disable MemberCanBeProtected.Global
-
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>Class that supports addition of external applications to Revit. Is the entry point when loading an external application</summary>
@@ -17,6 +14,7 @@ namespace Nice3point.Revit.Toolkit.External;
 // ReSharper disable once InconsistentNaming
 public abstract class ExternalDBApplication : IExternalDBApplication
 {
+    private Application _application;
     private string _callerAssemblyDirectory;
 
     /// <summary>
@@ -30,7 +28,15 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.ApplicationServices.ControlledApplication" /> that is needed by an external application
     /// </summary>
-    public ControlledApplication Application { get; private set; }
+    public ControlledApplication ControlledApplication { get; private set; }
+
+    /// <summary>
+    ///     Reference to the <see cref="Autodesk.Revit.ApplicationServices.Application" /> that is needed by an external application
+    /// </summary>
+    public Application Application => _application ??= (Application) ControlledApplication
+        .GetType()
+        .GetField("m_application", BindingFlags.NonPublic | BindingFlags.Instance)!
+        .GetValue(ControlledApplication);
 
     /// <summary>Implement this method to execute some tasks when Autodesk Revit starts</summary>
     /// <param name="application">A handle to the application being started</param>
@@ -38,7 +44,8 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     [EditorBrowsable(EditorBrowsableState.Never)]
     public ExternalDBApplicationResult OnStartup(ControlledApplication application)
     {
-        Application = application;
+        ControlledApplication = application;
+        RevitContext.Application ??= Application;
         AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyOnStartup;
         try
         {

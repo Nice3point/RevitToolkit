@@ -9,14 +9,13 @@ namespace Nice3point.Revit.Toolkit.External;
 public abstract class ExternalEventHandler : IExternalEventHandler
 {
     private readonly ExternalEvent _externalEvent;
-    private readonly string _identifier;
+    private string _identifier;
 
     /// <summary>
     ///     Creates an instance of external event
     /// </summary>
     protected ExternalEventHandler()
     {
-        _identifier = GetType().Name;
         _externalEvent = ExternalEvent.Create(this);
     }
 
@@ -31,7 +30,7 @@ public abstract class ExternalEventHandler : IExternalEventHandler
     /// <returns>Event name</returns>
     public string GetName()
     {
-        return _identifier;
+        return _identifier ??= GetType().Name;
     }
 
     /// <summary>

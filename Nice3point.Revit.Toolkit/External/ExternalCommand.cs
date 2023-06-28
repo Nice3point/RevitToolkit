@@ -36,7 +36,7 @@ public abstract class ExternalCommand : IExternalCommand
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIApplication" /> that is needed by an external command
     /// </summary>
-    public UIApplication UiApplication { get; set; }
+    public UIApplication UiApplication => ExternalCommandData.Application;
 
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.ApplicationServices.Application" /> that is needed by an external command
@@ -96,7 +96,6 @@ public abstract class ExternalCommand : IExternalCommand
         ElementSet = elements;
         ErrorMessage = message;
         ExternalCommandData = commandData;
-        UiApplication = commandData.Application;
         AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyOnExecute;
 
         try

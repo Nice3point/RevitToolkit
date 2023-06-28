@@ -3,9 +3,6 @@ using System.Reflection;
 using Autodesk.Revit.UI;
 using Nice3point.Revit.Toolkit.Helpers;
 
-// ReSharper disable MemberCanBePrivate.Global
-// ReSharper disable MemberCanBeProtected.Global
-
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>Class that supports addition of external applications to Revit. Is the entry point when loading an external application</summary>
@@ -34,18 +31,19 @@ public abstract class ExternalApplication : IExternalApplication
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIApplication" /> that is needed by an external application
     /// </summary>
-    public UIApplication UiApplication => _uiApplication ??= (UIApplication) Application?
+    public UIApplication UiApplication => _uiApplication ??= (UIApplication) Application
         .GetType()
-        .GetField("m_uiapplication", BindingFlags.NonPublic | BindingFlags.Instance)?
+        .GetField("m_uiapplication", BindingFlags.NonPublic | BindingFlags.Instance)!
         .GetValue(Application);
 
     /// <summary>Implement this method to execute some tasks when Autodesk Revit starts</summary>
-    /// <param name="application">A handle to the application being started</param>
+    /// <param name="controlledApplication">A handle to the application being started</param>
     /// <returns>Indicates if the external application completes its work successfully</returns>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public Result OnStartup(UIControlledApplication application)
+    public Result OnStartup(UIControlledApplication controlledApplication)
     {
-        Application = application;
+        Application = controlledApplication;
+        RevitContext.UiApplication ??= UiApplication;
         AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyOnStartup;
         try
         {

@@ -2,7 +2,6 @@ using System.Text;
 using Nuke.Common.Git;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tools.Git;
-using Serilog;
 
 sealed partial class Build : NukeBuild
 {
@@ -17,7 +16,7 @@ sealed partial class Build : NukeBuild
 
     public static int Main() => Execute<Build>(x => x.Clean);
 
-    void ValidateVersion()
+    void ValidateRelease()
     {
         var tags = GitTasks.Git("describe --tags --abbrev=0", logInvocation: false, logOutput: false);
         if (tags.Count == 0) return;
@@ -26,7 +25,7 @@ sealed partial class Build : NukeBuild
         Log.Information("Version: {Version}", PublishVersion);
     }
 
-    StringBuilder ReadChangelog()
+    StringBuilder BuildChangelog()
     {
         const string separator = "# ";
 

@@ -3,12 +3,11 @@ using Nuke.Common.Git;
 using Nuke.Common.Tools.Git;
 using Nuke.Common.Tools.GitHub;
 using Octokit;
-using Serilog;
 
 sealed partial class Build
 {
     Target PublishGitHub => _ => _
-        .TriggeredBy(Pack)
+        .DependsOn(Pack)
         .Requires(() => GitHubToken)
         .Requires(() => GitRepository)
         .OnlyWhenStatic(() => IsServerBuild && GitRepository.IsOnMainOrMasterBranch())
@@ -22,10 +21,11 @@ sealed partial class Build
             var gitHubName = GitRepository.GetGitHubName();
             var gitHubOwner = GitRepository.GetGitHubOwner();
 
-            ValidateVersion();
+            ValidateRelease();
 
             var artifacts = Directory.GetFiles(ArtifactsDirectory, "*");
             var changelog = CreateGithubChangelog();
+            Assert.NotEmpty(artifacts, "No artifacts were found to create the Release");
 
             var newRelease = new NewRelease(PublishVersion)
             {
@@ -40,20 +40,11 @@ sealed partial class Build
 
     string CreateGithubChangelog()
     {
-        if (!File.Exists(ChangeLogPath))
-        {
-            Log.Error("Unable to locate the changelog file: {Log}", ChangeLogPath);
-            return string.Empty;
-        }
-
+        Assert.True(File.Exists(ChangeLogPath), $"Unable to locate the changelog file: {ChangeLogPath}");
         Log.Information("Changelog: {Path}", ChangeLogPath);
 
-        var changelog = ReadChangelog();
-        if (changelog.Length == 0)
-        {
-            Log.Error("No version entry exists in the changelog: {Version}", PublishVersion);
-            return string.Empty;
-        }
+        var changelog = BuildChangelog();
+        Assert.True(changelog.Length > 0, $"No version entry exists in the changelog: {Version}");
 
         WriteCompareUrl(changelog);
         return changelog.ToString();

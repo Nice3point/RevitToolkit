@@ -1,14 +1,15 @@
-﻿using Nuke.Common.Tools.DotNet;
-using Serilog;
+﻿using Nuke.Common.Git;
+using Nuke.Common.Tools.DotNet;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 partial class Build
 {
     Target Pack => _ => _
-        .TriggeredBy(Compile)
+        .DependsOn(Compile)
+        .OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
         .Executes(() =>
         {
-            ValidateVersion();
+            ValidateRelease();
 
             foreach (var configuration in GlobBuildConfigurations())
                 DotNetPack(settings => settings
@@ -27,20 +28,11 @@ partial class Build
 
     string CreateNugetChangelog()
     {
-        if (!File.Exists(ChangeLogPath))
-        {
-            Log.Error("Unable to locate the changelog file: {Log}", ChangeLogPath);
-            return string.Empty;
-        }
-
+        Assert.True(File.Exists(ChangeLogPath), $"Unable to locate the changelog file: {ChangeLogPath}");
         Log.Information("Changelog: {Path}", ChangeLogPath);
 
-        var changelog = ReadChangelog();
-        if (changelog.Length == 0)
-        {
-            Log.Error("No version entry exists in the changelog: {Version}", PublishVersion);
-            return string.Empty;
-        }
+        var changelog = BuildChangelog();
+        Assert.True(changelog.Length > 0, $"No version entry exists in the changelog: {Version}");
 
         return changelog.ToString();
     }

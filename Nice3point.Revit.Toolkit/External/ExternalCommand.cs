@@ -41,22 +41,22 @@ public abstract class ExternalCommand : IExternalCommand
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.ApplicationServices.Application" /> that is needed by an external command
     /// </summary>
-    public Application Application => UiApplication.Application;
+    public Application Application => ExternalCommandData.Application.Application;
 
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIDocument" /> that is needed by an external command
     /// </summary>
-    public UIDocument UiDocument => UiApplication.ActiveUIDocument;
+    public UIDocument UiDocument => ExternalCommandData.Application.ActiveUIDocument;
 
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.DB.Document" /> that is needed by an external command
     /// </summary>
-    public Document Document => UiApplication.ActiveUIDocument.Document;
+    public Document Document => ExternalCommandData.Application.ActiveUIDocument.Document;
 
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIDocument.ActiveView" /> that is needed by an external command
     /// </summary>
-    public View ActiveView => UiApplication.ActiveUIDocument.ActiveView;
+    public View ActiveView => ExternalCommandData.Application.ActiveUIDocument.ActiveView;
 
     /// <summary>
     ///     Informs Autodesk Revit of the status of your application after execution.

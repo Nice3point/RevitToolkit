@@ -101,6 +101,7 @@ public class DockablePaneProvider : IDockablePaneProvider, IDockablePaneProvider
 /// <summary>
 ///     Interface for the data passed to the <see cref="UIControlledApplication.RegisterDockablePane" /> method
 /// </summary>
+[PublicAPI]
 public interface IDockablePaneProviderTitle
 {
     /// <summary>
@@ -113,6 +114,7 @@ public interface IDockablePaneProviderTitle
 /// <summary>
 ///     Interface for the data passed to the <see cref="UIControlledApplication.RegisterDockablePane" /> method
 /// </summary>
+[PublicAPI]
 public interface IDockablePaneProviderId
 {
     /// <summary>
@@ -131,6 +133,7 @@ public interface IDockablePaneProviderId
 /// <summary>
 ///     Interface that the Revit UI will call during initialization of the user interface to gather information about add-in dockable pane windows
 /// </summary>
+[PublicAPI]
 public interface IDockablePaneProviderConfiguration
 {
     /// <summary>

@@ -31,19 +31,15 @@ public abstract class ExternalApplication : IExternalApplication
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIApplication" /> that is needed by an external application
     /// </summary>
-    public UIApplication UiApplication => _uiApplication ??= (UIApplication) Application
-        .GetType()
-        .GetField("m_uiapplication", BindingFlags.NonPublic | BindingFlags.Instance)!
-        .GetValue(Application);
+    public UIApplication UiApplication => Context.UiApplication;
 
     /// <summary>Implement this method to execute some tasks when Autodesk Revit starts</summary>
-    /// <param name="controlledApplication">A handle to the application being started</param>
+    /// <param name="application">A handle to the application being started</param>
     /// <returns>Indicates if the external application completes its work successfully</returns>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public Result OnStartup(UIControlledApplication controlledApplication)
+    public Result OnStartup(UIControlledApplication application)
     {
-        Application = controlledApplication;
-        RevitContext.UiApplication ??= UiApplication;
+        Application = application;
         AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyOnStartup;
         try
         {

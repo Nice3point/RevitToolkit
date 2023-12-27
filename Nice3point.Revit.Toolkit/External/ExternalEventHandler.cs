@@ -8,8 +8,8 @@ namespace Nice3point.Revit.Toolkit.External;
 [PublicAPI]
 public abstract class ExternalEventHandler : IExternalEventHandler
 {
-    private readonly ExternalEvent _externalEvent;
     private string _identifier;
+    private readonly ExternalEvent _externalEvent;
 
     /// <summary>
     ///     Creates an instance of external event

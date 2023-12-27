@@ -14,7 +14,6 @@ namespace Nice3point.Revit.Toolkit.External;
 // ReSharper disable once InconsistentNaming
 public abstract class ExternalDBApplication : IExternalDBApplication
 {
-    private Application _application;
     private string _callerAssemblyDirectory;
 
     /// <summary>
@@ -28,15 +27,7 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.ApplicationServices.ControlledApplication" /> that is needed by an external application
     /// </summary>
-    public ControlledApplication ControlledApplication { get; private set; }
-
-    /// <summary>
-    ///     Reference to the <see cref="Autodesk.Revit.ApplicationServices.Application" /> that is needed by an external application
-    /// </summary>
-    public Application Application => _application ??= (Application) ControlledApplication
-        .GetType()
-        .GetField("m_application", BindingFlags.NonPublic | BindingFlags.Instance)!
-        .GetValue(ControlledApplication);
+    public ControlledApplication Application { get; private set; }
 
     /// <summary>Implement this method to execute some tasks when Autodesk Revit starts</summary>
     /// <param name="application">A handle to the application being started</param>
@@ -44,8 +35,7 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     [EditorBrowsable(EditorBrowsableState.Never)]
     public ExternalDBApplicationResult OnStartup(ControlledApplication application)
     {
-        ControlledApplication = application;
-        RevitContext.Application ??= Application;
+        Application = application;
         AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyOnStartup;
         try
         {

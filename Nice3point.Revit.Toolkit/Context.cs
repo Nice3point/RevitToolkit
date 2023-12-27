@@ -117,17 +117,17 @@ public static class Context
         ThrowIfNotSupported(proxyType);
 
         const BindingFlags internalFlags = BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance;
-        var proxyConstructor = proxyType.GetConstructor(internalFlags, null, new[] {getApplicationMethod.ReturnType}, null);
+        var proxyConstructor = proxyType.GetConstructor(internalFlags, null, [getApplicationMethod.ReturnType], null);
         ThrowIfNotSupported(proxyConstructor);
 
-        var proxy = proxyConstructor.Invoke(new[] {getApplicationMethod.Invoke(null, null)});
+        var proxy = proxyConstructor.Invoke([getApplicationMethod.Invoke(null, null)]);
         ThrowIfNotSupported(proxy);
 
         var applicationType = typeof(Application);
-        var applicationConstructor = applicationType.GetConstructor(internalFlags, null, new Type[] {proxyType}, null);
+        var applicationConstructor = applicationType.GetConstructor(internalFlags, null, [proxyType], null);
         ThrowIfNotSupported(applicationConstructor);
 
-        var application = (Application) applicationConstructor.Invoke(new[] {proxy});
+        var application = (Application) applicationConstructor.Invoke([proxy]);
         ThrowIfNotSupported(proxy);
 
         Application = application;

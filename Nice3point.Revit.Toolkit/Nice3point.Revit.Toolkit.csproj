@@ -17,7 +17,6 @@
         <PackageProjectUrl>https://github.com/Nice3point/RevitToolkit</PackageProjectUrl>
         <PackageIcon>images\PackageIcon.png</PackageIcon>
         <PackageLicenseFile>License.md</PackageLicenseFile>
-        <PackageReleaseNotes>$([System.IO.File]::ReadAllText("$(SolutionDir)\.nuget\Changelog.md"))</PackageReleaseNotes>
     </PropertyGroup>
     <PropertyGroup>
         <EnablePackageValidation>true</EnablePackageValidation>
@@ -81,7 +80,6 @@
 
     <ItemGroup>
         <None Include="..\.nuget\PackageIcon.png" Link="NuGet\PackageIcon.png" PackagePath="images\" Pack="true"/>
-        <None Include="..\.nuget\Changelog.md" Link="NuGet\Changelog.md" PackagePath="\" Pack="false"/>
         <None Include="..\License.md" Link="NuGet\License.md" PackagePath="" Pack="true"/>
     </ItemGroup>
 </Project>

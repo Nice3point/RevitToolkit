@@ -2,7 +2,7 @@
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.DotNet;
 
-namespace RevitToolkit.Build.Tools;
+namespace RevitExtensions.Build.Tools;
 
 [PublicAPI]
 [Serializable]

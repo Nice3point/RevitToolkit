@@ -1,3 +1,48 @@
+# Release 2024.0.1
+
+- New **Context** class. Provides computed properties to retrieve Revit objects in the current session.
+
+    ```C#
+    var user = Context.Application.Username;
+    var title = Context.Document.Title;
+    Context.ActiveView = view;
+    ```
+
+  Supported properties: UiApplication, Application, UiDocument, Document, ActiveView, ActiveGraphicalView. 
+
+  Values are provided even outside the Revit context.
+
+- New **FrameworkElementCreator**. Creates FrameworkElements for the dock pane.
+
+    ```C#
+    DockablePaneProvider.Register(application)
+        .SetId(guid)
+        .SetTitle(title)
+        .SetConfiguration(data =>
+        {
+            data.FrameworkElementCreator = new FrameworkElementCreator<DockPaneView>();
+        });
+    ```
+    Available overloading with IServiceProvider, in case you use hosting.
+
+- **ResolveHelper** reworked. Now you need to specify a type to resolve dependencies. The directory where the type is defined will be used to search for dependencies.
+
+  Enabled by default for all ExternalCommand and ExternalApplication, so only needed for direct invocation in special cases.
+
+  The current version now disables all resolvers used in the domain to avoid conflicts, and to bypass cases where Revit loaded assemblies from another plugin's folder.
+
+  ```c#
+  try
+  {
+      ResolveHelper.BeginAssemblyResolve<DockView>();
+      window.Show();
+  }
+  finally
+  {
+      ResolveHelper.EndAssemblyResolve();
+  }
+  ```
+
 # Release 2024.0.0
 
 - Revit 2024 support

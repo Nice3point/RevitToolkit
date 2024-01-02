@@ -12,9 +12,6 @@ namespace Nice3point.Revit.Toolkit.External;
 [PublicAPI]
 public abstract class ExternalApplication : IExternalApplication
 {
-    private string _callerAssemblyDirectory;
-    private UIApplication _uiApplication;
-
     /// <summary>
     ///     Indicates if the external application completes its work successfully.
     /// </summary>
@@ -40,14 +37,14 @@ public abstract class ExternalApplication : IExternalApplication
     public Result OnStartup(UIControlledApplication application)
     {
         Application = application;
-        AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyOnStartup;
         try
         {
+            ResolveHelper.BeginAssemblyResolve(GetType());
             OnStartup();
         }
         finally
         {
-            AppDomain.CurrentDomain.AssemblyResolve -= ResolveAssemblyOnStartup;
+            ResolveHelper.EndAssemblyResolve();
         }
 
         return Result;
@@ -59,14 +56,14 @@ public abstract class ExternalApplication : IExternalApplication
     [EditorBrowsable(EditorBrowsableState.Never)]
     public Result OnShutdown(UIControlledApplication application)
     {
-        AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyOnShutdown;
         try
         {
+            ResolveHelper.BeginAssemblyResolve(GetType());
             OnShutdown();
         }
         finally
         {
-            AppDomain.CurrentDomain.AssemblyResolve -= ResolveAssemblyOnShutdown;
+            ResolveHelper.EndAssemblyResolve();
         }
 
         return Result.Succeeded;
@@ -86,15 +83,5 @@ public abstract class ExternalApplication : IExternalApplication
     /// </remarks>
     public virtual void OnShutdown()
     {
-    }
-
-    private Assembly ResolveAssemblyOnStartup(object sender, ResolveEventArgs args)
-    {
-        return ResolveHelper.ResolveAssembly(nameof(OnStartup), args, ref _callerAssemblyDirectory);
-    }
-
-    private Assembly ResolveAssemblyOnShutdown(object sender, ResolveEventArgs args)
-    {
-        return ResolveHelper.ResolveAssembly(nameof(OnShutdown), args, ref _callerAssemblyDirectory);
     }
 }

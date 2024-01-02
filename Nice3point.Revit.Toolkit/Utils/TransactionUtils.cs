@@ -148,25 +148,16 @@ internal sealed class GroupTransactionSettings : IGroupTransactionSettings
     }
 }
 
-internal sealed class Transaction : ITransaction
+internal sealed class Transaction(Document document, TransactionSettings settings) : ITransaction
 {
-    private readonly Document _document;
-    private readonly TransactionSettings _settings;
-
-    public Transaction(Document document, TransactionSettings settings)
-    {
-        _document = document;
-        _settings = settings;
-    }
-
     public void Commit(Action<Document, Autodesk.Revit.DB.Transaction> action)
     {
-        var transaction = new Autodesk.Revit.DB.Transaction(_document, _settings.Name);
-        _settings.InitializeHandler?.Invoke(transaction);
+        var transaction = new Autodesk.Revit.DB.Transaction(document, settings.Name);
+        settings.InitializeHandler?.Invoke(transaction);
         transaction.Start();
         try
         {
-            action?.Invoke(_document, transaction);
+            action?.Invoke(document, transaction);
             transaction.Commit();
         }
         finally
@@ -178,11 +169,11 @@ internal sealed class Transaction : ITransaction
 
     public void RollBack(Action<Document, Autodesk.Revit.DB.Transaction> action)
     {
-        var transaction = new Autodesk.Revit.DB.Transaction(_document, _settings.Name);
+        var transaction = new Autodesk.Revit.DB.Transaction(document, settings.Name);
         transaction.Start();
         try
         {
-            action?.Invoke(_document, transaction);
+            action?.Invoke(document, transaction);
         }
         finally
         {
@@ -192,22 +183,15 @@ internal sealed class Transaction : ITransaction
     }
 }
 
-internal sealed class SubTransaction : ISubTransaction
+internal sealed class SubTransaction(Document document) : ISubTransaction
 {
-    private readonly Document _document;
-
-    public SubTransaction(Document document)
-    {
-        _document = document;
-    }
-
     public void Commit(Action<Document, Autodesk.Revit.DB.SubTransaction> action)
     {
-        var transaction = new Autodesk.Revit.DB.SubTransaction(_document);
+        var transaction = new Autodesk.Revit.DB.SubTransaction(document);
         transaction.Start();
         try
         {
-            action?.Invoke(_document, transaction);
+            action?.Invoke(document, transaction);
             transaction.Commit();
         }
         finally
@@ -219,11 +203,11 @@ internal sealed class SubTransaction : ISubTransaction
 
     public void RollBack(Action<Document, Autodesk.Revit.DB.SubTransaction> action)
     {
-        var transaction = new Autodesk.Revit.DB.SubTransaction(_document);
+        var transaction = new Autodesk.Revit.DB.SubTransaction(document);
         transaction.Start();
         try
         {
-            action?.Invoke(_document, transaction);
+            action?.Invoke(document, transaction);
         }
         finally
         {
@@ -233,25 +217,16 @@ internal sealed class SubTransaction : ISubTransaction
     }
 }
 
-internal sealed class GroupTransaction : IGroupTransaction
+internal sealed class GroupTransaction(Document document, GroupTransactionSettings settings) : IGroupTransaction
 {
-    private readonly Document _document;
-    private readonly GroupTransactionSettings _settings;
-
-    public GroupTransaction(Document document, GroupTransactionSettings settings)
-    {
-        _document = document;
-        _settings = settings;
-    }
-
     public void Commit(Action<Document, TransactionGroup> action)
     {
-        var transaction = new TransactionGroup(_document, _settings.Name);
-        _settings.InitializeHandler?.Invoke(transaction);
+        var transaction = new TransactionGroup(document, settings.Name);
+        settings.InitializeHandler?.Invoke(transaction);
         transaction.Start();
         try
         {
-            action?.Invoke(_document, transaction);
+            action?.Invoke(document, transaction);
             transaction.Commit();
         }
         finally
@@ -263,11 +238,11 @@ internal sealed class GroupTransaction : IGroupTransaction
 
     public void RollBack(Action<Document, TransactionGroup> action)
     {
-        var transaction = new TransactionGroup(_document, _settings.Name);
+        var transaction = new TransactionGroup(document, settings.Name);
         transaction.Start();
         try
         {
-            action?.Invoke(_document, transaction);
+            action?.Invoke(document, transaction);
         }
         finally
         {
@@ -278,11 +253,11 @@ internal sealed class GroupTransaction : IGroupTransaction
 
     public void Assimilate(Action<Document, TransactionGroup> action)
     {
-        var transaction = new TransactionGroup(_document, _settings.Name);
+        var transaction = new TransactionGroup(document, settings.Name);
         transaction.Start();
         try
         {
-            action?.Invoke(_document, transaction);
+            action?.Invoke(document, transaction);
             transaction.Assimilate();
         }
         finally

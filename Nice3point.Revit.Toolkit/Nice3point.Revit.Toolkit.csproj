@@ -82,4 +82,10 @@
         <None Include="..\.nuget\PackageIcon.png" Link="NuGet\PackageIcon.png" PackagePath="images\" Pack="true"/>
         <None Include="..\License.md" Link="NuGet\License.md" PackagePath="" Pack="true"/>
     </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="PresentationFramework">
+        <HintPath>..\..\..\.cache\.nuget\packages\microsoft.netframework.referenceassemblies.net47\1.0.3\build\.NETFramework\v4.7\PresentationFramework.dll</HintPath>
+      </Reference>
+    </ItemGroup>
 </Project>

@@ -33,10 +33,12 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
     * [IdlingEventHandler](#idlingeventhandler)
     * [AsyncEventHandler](#asynceventhandler)
     * [AsyncEventHandler\<T>](#asynceventhandlert)
+* [Context](#context)
 * [Options](#options)
     * [FamilyLoadOptions](#familyloadoptions)
     * [DuplicateTypeNamesHandler](#duplicatetypenameshandler)
     * [SaveSharedCoordinatesCallback](#savesharedcoordinatescallback)
+    * [FrameworkElementCreator](#frameworkelementcreator)
     * [SelectionConfiguration](#selectionconfiguration)
 * [Helpers](#helpers)
     * [ResolveHelper](#resolvehelper)
@@ -88,7 +90,7 @@ public class Command : ExternalCommand
         var username = Application.Username;
         var selection = UiDocument.Selection;
         var windowHandle = UiApplication.MainWindowHandle;
-        
+
         if (title.Equals("Untitled"))
         {
             Result = Result.Cancelled;
@@ -327,6 +329,27 @@ Windows count 17
 Command completed
 ```
 
+### Context
+
+Provides computed properties to retrieve Revit objects in the current session. Values are provided even outside the Revit context.
+
+- Context.UiApplication;
+- Context.Application;
+- Context.UiDocument;
+- Context.Document;
+- Context.ActiveView;
+- Context.ActiveGraphicalView;
+- Context.ActiveView;
+
+Example:
+
+```C#
+Context.Document.Create.NewFamilyInstance();
+Context.ActiveView = view;
+```
+
+
+
 ### Options
 
 Toolkit provides implementation of various Revit interfaces, with the possibility of customization.
@@ -368,6 +391,21 @@ linkType.Unload(new SaveSharedCoordinatesCallback(type =>
 }));
 ```
 
+#### FrameworkElementCreator
+
+Creator of FrameworkElements for the Dock pane.
+
+```c#
+DockablePaneProvider.Register(application)
+    .SetId(guid)
+    .SetTitle(title)
+    .SetConfiguration(data =>
+    {
+        data.FrameworkElementCreator = new FrameworkElementCreator<DockPaneView>();
+        data.FrameworkElementCreator = new FrameworkElementCreator<DockPaneView>(serviceProvider);
+    });
+```
+
 #### SelectionConfiguration
 
 Creates a configuration for creating ISelectionFilter instances.
@@ -404,13 +442,21 @@ Provides auxiliary components
 
 #### ResolveHelper
 
-Provides handlers to resolve dependencies. Optimized assembly resolver is enabled by default for ExternalApplication and ExternalCommand
+Provides handlers to resolve dependencies.
 
 ```c#
-AppDomain.CurrentDomain.AssemblyResolve += ResolveHelper.ResolveAssembly;
-window.Show();
-AppDomain.CurrentDomain.AssemblyResolve -= ResolveHelper.ResolveAssembly;
+try
+{
+    ResolveHelper.BeginAssemblyResolve<DockView>();
+    window.Show();
+}
+finally
+{
+    ResolveHelper.EndAssemblyResolve();
+}
 ```
+
+Enabled by default for ExternalApplication, ExternalDBApplication and ExternalCommand
 
 ### Decorators
 

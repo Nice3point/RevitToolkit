@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using System.Reflection;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
 using Nice3point.Revit.Toolkit.Helpers;
@@ -14,8 +13,6 @@ namespace Nice3point.Revit.Toolkit.External;
 // ReSharper disable once InconsistentNaming
 public abstract class ExternalDBApplication : IExternalDBApplication
 {
-    private string _callerAssemblyDirectory;
-
     /// <summary>
     ///     Indicates if the external application completes its work successfully.
     /// </summary>
@@ -36,14 +33,14 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     public ExternalDBApplicationResult OnStartup(ControlledApplication application)
     {
         Application = application;
-        AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyOnStartup;
         try
         {
+            ResolveHelper.BeginAssemblyResolve(GetType());
             OnStartup();
         }
         finally
         {
-            AppDomain.CurrentDomain.AssemblyResolve -= ResolveAssemblyOnStartup;
+            ResolveHelper.EndAssemblyResolve();
         }
 
         return Result;
@@ -55,14 +52,14 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     [EditorBrowsable(EditorBrowsableState.Never)]
     public ExternalDBApplicationResult OnShutdown(ControlledApplication application)
     {
-        AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyOnShutdown;
         try
         {
+            ResolveHelper.BeginAssemblyResolve(GetType());
             OnShutdown();
         }
         finally
         {
-            AppDomain.CurrentDomain.AssemblyResolve -= ResolveAssemblyOnShutdown;
+            ResolveHelper.EndAssemblyResolve();
         }
 
         return ExternalDBApplicationResult.Succeeded;
@@ -82,15 +79,5 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     /// </remarks>
     public virtual void OnShutdown()
     {
-    }
-
-    private Assembly ResolveAssemblyOnStartup(object sender, ResolveEventArgs args)
-    {
-        return ResolveHelper.ResolveAssembly(nameof(OnStartup), args, ref _callerAssemblyDirectory);
-    }
-
-    private Assembly ResolveAssemblyOnShutdown(object sender, ResolveEventArgs args)
-    {
-        return ResolveHelper.ResolveAssembly(nameof(OnShutdown), args, ref _callerAssemblyDirectory);
     }
 }

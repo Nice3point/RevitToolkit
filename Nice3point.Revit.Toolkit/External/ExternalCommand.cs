@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using System.Reflection;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Events;
@@ -15,7 +14,6 @@ namespace Nice3point.Revit.Toolkit.External;
 [PublicAPI]
 public abstract class ExternalCommand : IExternalCommand
 {
-    private string _callerAssemblyDirectory;
     private Action<DialogBoxShowingEventArgs> _dialogBoxHandler;
     private int _dialogResultCode;
     private Action<Exception> _exceptionHandler;
@@ -96,10 +94,10 @@ public abstract class ExternalCommand : IExternalCommand
         ElementSet = elements;
         ErrorMessage = message;
         ExternalCommandData = commandData;
-        AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyOnExecute;
 
         try
         {
+            ResolveHelper.BeginAssemblyResolve(GetType());
             Execute();
         }
         catch (Exception exception)
@@ -119,10 +117,10 @@ public abstract class ExternalCommand : IExternalCommand
         }
         finally
         {
-            AppDomain.CurrentDomain.AssemblyResolve -= ResolveAssemblyOnExecute;
             message = ErrorMessage;
             RestoreFailures();
             RestoreDialogs();
+            ResolveHelper.EndAssemblyResolve();
         }
 
         return Result;
@@ -242,11 +240,6 @@ public abstract class ExternalCommand : IExternalCommand
     private void ResolveFailures(object sender, FailuresProcessingEventArgs args)
     {
         args.GetFailuresAccessor().DeleteAllWarnings();
-    }
-
-    private Assembly ResolveAssemblyOnExecute(object sender, ResolveEventArgs args)
-    {
-        return ResolveHelper.ResolveAssembly(nameof(Execute), args, ref _callerAssemblyDirectory);
     }
 }
 

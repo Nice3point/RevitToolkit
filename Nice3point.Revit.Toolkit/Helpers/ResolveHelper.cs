@@ -1,75 +1,94 @@
-﻿using System.Diagnostics;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace Nice3point.Revit.Toolkit.Helpers;
 
 /// <summary>
-///     Provides handlers to resolve dependencies
+///     Provides methods to resolve dependencies
 /// </summary>
+/// <example>
+/// 
+/// <code lang="csharp">
+///     try
+///     {
+///         var elementType = typeof(T);
+///         ResolveHelper.BeginAssemblyResolve(elementType);
+///         return (T)Activator.CreateInstance(elementType);
+///     }
+///     finally
+///     {
+///         ResolveHelper.EndAssemblyResolve();
+///     }
+///     </code>
+///     </example>
 [PublicAPI]
 public static class ResolveHelper
 {
+    private static string _moduleDirectory;
+    private static object _domainResolvers;
+
     /// <summary>
-    ///     Represents a method that handles the <see cref="System.AppDomain.AssemblyResolve" /> event of an <see cref="System.AppDomain" />
+    ///     Subscribes the current domain to resolve dependencies for the type.
     /// </summary>
-    /// <param name="sender">The source of the event</param>
-    /// <param name="args">The event data</param>
-    /// <returns>The assembly that resolves the type, assembly, or resource; or <see langword="null" /> if the assembly cannot be resolved</returns>
+    /// <typeparam name="T">Type, to search for dependencies in the directory where this type is defined</typeparam>
     /// <remarks>
-    ///     Optimized assembly resolver is enabled by default for
-    ///     <see cref="Nice3point.Revit.Toolkit.External.ExternalApplication" /> and <see cref="Nice3point.Revit.Toolkit.External.ExternalCommand" />
+    ///     Dependencies are searched in a directory of the specified type.
+    ///     At the time of dependency resolution, all other dependency resolution methods for the domain are disabled,
+    ///     this requires calling <see cref="EndAssemblyResolve"/> immediately after executing user code where dependency failures occur.
     /// </remarks>
-    public static Assembly ResolveAssembly(object sender, ResolveEventArgs args)
+    public static void BeginAssemblyResolve<T>()
     {
-        var frames = new StackTrace().GetFrames();
-        if (frames is null) return null;
-
-        var assemblyName = new AssemblyName(args.Name).Name;
-        var directoryHistory = new List<string>();
-
-        for (var i = 0; i < frames.Length; i++)
-        {
-            var frame = frames[i];
-            var method = frame.GetMethod();
-            if (method.DeclaringType is null) continue;
-
-            var assembliesDirectory = Path.GetDirectoryName(method.DeclaringType.Assembly.Location)!;
-            if (directoryHistory.Contains(assembliesDirectory)) continue;
-
-            directoryHistory.Add(assembliesDirectory);
-            var assemblies = Directory.EnumerateFiles(assembliesDirectory, "*.dll");
-            foreach (var assembly in assemblies)
-                if (assemblyName == Path.GetFileNameWithoutExtension(assembly))
-                    return Assembly.LoadFile(assembly);
-        }
-
-        return null;
+        BeginAssemblyResolve(typeof(T));
     }
 
-    internal static Assembly ResolveAssembly(string callerMethod, ResolveEventArgs arguments, ref string assembliesDirectory)
+    /// <summary>
+    ///     Subscribes the current domain to resolve dependencies for the type.
+    /// </summary>
+    /// <param name="type">Type, to search for dependencies in the directory where this type is defined</param>
+    /// <remarks>
+    ///     Dependencies are searched in a directory of the specified type.
+    ///     At the time of dependency resolution, all other dependency resolution methods for the domain are disabled,
+    ///     this requires calling <see cref="EndAssemblyResolve"/> immediately after executing user code where dependency failures occur.
+    /// </remarks>
+    public static void BeginAssemblyResolve(Type type)
     {
-        if (assembliesDirectory is null)
+        if (_domainResolvers is not null) return;
+
+        var domainType = AppDomain.CurrentDomain.GetType();
+        var resolversField = domainType.GetField("_AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
+        var resolvers = resolversField.GetValue(AppDomain.CurrentDomain);
+        resolversField.SetValue(AppDomain.CurrentDomain, null);
+
+        AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
+
+        _domainResolvers = resolvers;
+        _moduleDirectory = Path.GetDirectoryName(type.Module.FullyQualifiedName);
+    }
+
+    /// <summary>
+    ///     Unsubscribes the current domain to resolve dependencies for the type. 
+    /// </summary>
+    public static void EndAssemblyResolve()
+    {
+        if (_domainResolvers is null) return;
+
+        var domainType = AppDomain.CurrentDomain.GetType();
+        var resolversField = domainType.GetField("_AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
+        resolversField.SetValue(AppDomain.CurrentDomain, _domainResolvers);
+
+        _domainResolvers = null;
+        _moduleDirectory = null;
+    }
+
+    private static Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
+    {
+        var assemblyName = new AssemblyName(args.Name).Name;
+        foreach (var assembly in Directory.EnumerateFiles(_moduleDirectory, "*.dll"))
         {
-            var frames = new StackTrace().GetFrames();
-            if (frames is not null)
-                foreach (var frame in frames)
-                {
-                    var method = frame.GetMethod();
-                    if (method.Name == callerMethod && method.IsVirtual && method.DeclaringType is not null)
-                    {
-                        assembliesDirectory = Path.GetDirectoryName(method.DeclaringType.Assembly.Location)!;
-                        break;
-                    }
-                }
-
-            if (assembliesDirectory is null) return null;
-        }
-
-        var assemblyName = new AssemblyName(arguments.Name).Name;
-        var assemblies = Directory.EnumerateFiles(assembliesDirectory, "*.dll");
-        foreach (var assembly in assemblies)
             if (assemblyName == Path.GetFileNameWithoutExtension(assembly))
+            {
                 return Assembly.LoadFile(assembly);
+            }
+        }
 
         return null;
     }

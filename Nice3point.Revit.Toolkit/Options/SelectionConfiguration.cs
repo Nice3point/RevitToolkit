@@ -38,16 +38,10 @@ public class SelectionConfiguration
     /// </summary>
     public ISelectionFilterConfiguration Allow => _filter;
 
-    private class SelectionFilterInternal : ISelectionFilter, ISelectionFilterConfiguration
+    private class SelectionFilterInternal(SelectionConfiguration selectionConfiguration) : ISelectionFilter, ISelectionFilterConfiguration
     {
-        private readonly SelectionConfiguration _selectionConfiguration;
         private Func<Element, bool> _elementHandler;
         private Func<Reference, XYZ, bool> _referenceHandler;
-
-        public SelectionFilterInternal(SelectionConfiguration selectionConfiguration)
-        {
-            _selectionConfiguration = selectionConfiguration;
-        }
 
         public bool AllowElement(Element elem)
         {
@@ -62,13 +56,13 @@ public class SelectionConfiguration
         public SelectionConfiguration Element(Func<Element, bool> elementHandler)
         {
             _elementHandler = elementHandler;
-            return _selectionConfiguration;
+            return selectionConfiguration;
         }
 
         public SelectionConfiguration Reference(Func<Reference, XYZ, bool> referenceHandler)
         {
             _referenceHandler = referenceHandler;
-            return _selectionConfiguration;
+            return selectionConfiguration;
         }
     }
 }

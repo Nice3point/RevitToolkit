@@ -25,7 +25,7 @@ public static class Context
     /// <summary>
     ///     Represents the Autodesk Revit Application, providing access to documents, options and other application wide data and settings.
     /// </summary>
-    public static Application Application { get; }
+    public static Application Application => UiApplication.Application;
 
     /// <summary>
     ///     An object that represents an Autodesk Revit project opened in the Revit user interface.
@@ -130,7 +130,6 @@ public static class Context
         var application = (Application) applicationConstructor.Invoke([proxy]);
         ThrowIfNotSupported(proxy);
 
-        Application = application;
         UiApplication = new UIApplication(application);
     }
 

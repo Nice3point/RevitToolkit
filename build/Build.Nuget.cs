@@ -9,6 +9,7 @@ partial class Build
     const string NugetApiUrl = "https://api.nuget.org/v3/index.json";
 
     Target NuGetPush => _ => _
+        .DependsOn(Pack)
         .Requires(() => NugetApiKey)
         .OnlyWhenStatic(() => IsLocalBuild && GitRepository.IsOnMainOrMasterBranch())
         .Executes(() =>

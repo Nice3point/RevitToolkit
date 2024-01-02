@@ -31,7 +31,7 @@ public static class TransactionManager
     public static ITransaction Modify(this Document document, [InstantHandle] Func<IDocumentTransactionSettings, ITransactionSettings> settings)
     {
         var transactionSettings = settings?.Invoke(new DocumentTransactionSettings());
-        return new Transaction(document, (TransactionSettings) transactionSettings);
+        return new Transaction(document, (TransactionSettings)transactionSettings);
     }
 
     /// <summary>
@@ -60,7 +60,7 @@ public static class TransactionManager
     public static IGroupTransaction Modify(this Document document, [InstantHandle] Func<IDocumentTransactionSettings, IGroupTransactionSettings> settings)
     {
         var transactionSettings = settings?.Invoke(new DocumentTransactionSettings());
-        return new GroupTransaction(document, (GroupTransactionSettings) transactionSettings);
+        return new GroupTransaction(document, (GroupTransactionSettings)transactionSettings);
     }
 }
 
@@ -328,9 +328,7 @@ public interface ITransactionSettings
 /// </summary>
 /// <remarks>SubTransaction does not provide customization settings</remarks>
 [PublicAPI]
-public interface ISubTransactionSettings
-{
-}
+public interface ISubTransactionSettings;
 
 /// <summary>
 ///     Contains settings that will be applied before the <see cref="IGroupTransaction" /> starts

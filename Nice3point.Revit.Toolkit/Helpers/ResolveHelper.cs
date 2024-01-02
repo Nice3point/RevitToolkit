@@ -6,20 +6,19 @@ namespace Nice3point.Revit.Toolkit.Helpers;
 ///     Provides methods to resolve dependencies
 /// </summary>
 /// <example>
-/// 
-/// <code lang="csharp">
-///     try
-///     {
-///         var elementType = typeof(T);
-///         ResolveHelper.BeginAssemblyResolve(elementType);
-///         return (T)Activator.CreateInstance(elementType);
-///     }
-///     finally
-///     {
-///         ResolveHelper.EndAssemblyResolve();
-///     }
-///     </code>
-///     </example>
+///     <code lang="csharp">
+/// try
+/// {
+///     var elementType = typeof(T);
+///     ResolveHelper.BeginAssemblyResolve(elementType);
+///     return (T)Activator.CreateInstance(elementType);
+/// }
+/// finally
+/// {
+///     ResolveHelper.EndAssemblyResolve();
+/// }
+/// </code>
+/// </example>
 [PublicAPI]
 public static class ResolveHelper
 {
@@ -33,7 +32,7 @@ public static class ResolveHelper
     /// <remarks>
     ///     Dependencies are searched in a directory of the specified type.
     ///     At the time of dependency resolution, all other dependency resolution methods for the domain are disabled,
-    ///     this requires calling <see cref="EndAssemblyResolve"/> immediately after executing user code where dependency failures occur.
+    ///     this requires calling <see cref="EndAssemblyResolve" /> immediately after executing user code where dependency failures occur.
     /// </remarks>
     public static void BeginAssemblyResolve<T>()
     {
@@ -47,7 +46,7 @@ public static class ResolveHelper
     /// <remarks>
     ///     Dependencies are searched in a directory of the specified type.
     ///     At the time of dependency resolution, all other dependency resolution methods for the domain are disabled,
-    ///     this requires calling <see cref="EndAssemblyResolve"/> immediately after executing user code where dependency failures occur.
+    ///     this requires calling <see cref="EndAssemblyResolve" /> immediately after executing user code where dependency failures occur.
     /// </remarks>
     public static void BeginAssemblyResolve(Type type)
     {
@@ -65,7 +64,7 @@ public static class ResolveHelper
     }
 
     /// <summary>
-    ///     Unsubscribes the current domain to resolve dependencies for the type. 
+    ///     Unsubscribes the current domain to resolve dependencies for the type.
     /// </summary>
     public static void EndAssemblyResolve()
     {

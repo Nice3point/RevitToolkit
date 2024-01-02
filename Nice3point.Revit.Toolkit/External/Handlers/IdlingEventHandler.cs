@@ -30,7 +30,7 @@ public class IdlingEventHandler : ExternalEventHandler
 
     private void HandleIdling(object sender, IdlingEventArgs e)
     {
-        var uiApplication = (UIApplication) sender;
+        var uiApplication = (UIApplication)sender;
         uiApplication.Idling -= HandleIdling;
 
         try

@@ -3,7 +3,7 @@
 namespace Nice3point.Revit.Toolkit.Options;
 
 /// <summary>
-///    Callback that may be used to control Revit when trying to unload or reload a Revit link with changes in shared coordinates
+///     Callback that may be used to control Revit when trying to unload or reload a Revit link with changes in shared coordinates
 /// </summary>
 [PublicAPI]
 public class SaveSharedCoordinatesCallback : ISaveSharedCoordinatesCallback
@@ -38,11 +38,11 @@ public class SaveSharedCoordinatesCallback : ISaveSharedCoordinatesCallback
     }
 
     /// <summary>
-    ///    Determines whether Revit should save the link, not save the link, or discard shared positioning entirely
+    ///     Determines whether Revit should save the link, not save the link, or discard shared positioning entirely
     /// </summary>
     /// <param name="link">The Revit link which has modified shared coordinates</param>
     /// <returns>
-    ///    The options when saving a linked file which has been modified in-memory by shared coordinates operations
+    ///     The options when saving a linked file which has been modified in-memory by shared coordinates operations
     /// </returns>
     public SaveModifiedLinksOptions GetSaveModifiedLinksOption(RevitLinkType link)
     {

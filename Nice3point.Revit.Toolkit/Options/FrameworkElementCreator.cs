@@ -22,7 +22,7 @@ public class FrameworkElementCreator<T> : IFrameworkElementCreator where T : Fra
     /// <summary>
     ///     Factory to create an instance of a FrameworkElement based on its type using IServiceProvider
     /// </summary>
-    /// <param name="serviceProvider">Instance of the <see cref="IServiceProvider"/>.</param>
+    /// <param name="serviceProvider">Instance of the <see cref="IServiceProvider" />.</param>
     public FrameworkElementCreator(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;

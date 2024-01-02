@@ -392,9 +392,7 @@ linkType.Unload(new SaveSharedCoordinatesCallback(type =>
 Creator of FrameworkElements for the Dock pane.
 
 ```c#
-DockablePaneProvider.Register(application)
-    .SetId(guid)
-    .SetTitle(title)
+DockablePaneProvider.Register(application, guid, title)
     .SetConfiguration(data =>
     {
         data.FrameworkElementCreator = new FrameworkElementCreator<DockPaneView>();
@@ -455,6 +453,8 @@ finally
 Enabled by default for ExternalApplication, ExternalDBApplication and ExternalCommand
 
 ### Decorators
+
+Simplified implementation of Revit raw api classes
 
 #### DockablePaneProvider
 

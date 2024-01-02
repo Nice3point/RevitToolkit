@@ -389,7 +389,7 @@ linkType.Unload(new SaveSharedCoordinatesCallback(type =>
 
 #### FrameworkElementCreator
 
-Creator of FrameworkElements for the Dock pane.
+Creator of FrameworkElements for the dockable pane.
 
 ```c#
 DockablePaneProvider.Register(application, guid, title)
@@ -454,7 +454,7 @@ Enabled by default for ExternalApplication, ExternalDBApplication and ExternalCo
 
 ### Decorators
 
-Simplified implementation of Revit raw api classes
+Simplified implementation of raw Revit classes
 
 #### DockablePaneProvider
 

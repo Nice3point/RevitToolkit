@@ -13,10 +13,10 @@
 
         VersionMap = new()
         {
-            { "Release R20", "2020.0.11" },
-            { "Release R21", "2021.0.11" },
-            { "Release R22", "2022.0.11" },
-            { "Release R23", "2023.0.11" },
+            { "Release R20", "2020.1.1" },
+            { "Release R21", "2021.1.1" },
+            { "Release R22", "2022.1.1" },
+            { "Release R23", "2023.1.1" },
             { "Release R24", "2024.0.1" }
         };
     }

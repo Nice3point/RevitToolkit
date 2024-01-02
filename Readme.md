@@ -341,14 +341,10 @@ Provides computed properties to retrieve Revit objects in the current session. V
 - Context.ActiveGraphicalView;
 - Context.ActiveView;
 
-Example:
-
 ```C#
 Context.Document.Create.NewFamilyInstance();
 Context.ActiveView = view;
 ```
-
-
 
 ### Options
 

@@ -83,8 +83,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\.nuget\PackageIcon.png" Link="NuGet\PackageIcon.png" PackagePath="images\" Pack="true"/>
-        <None Include="..\License.md" Link="NuGet\License.md" PackagePath="" Pack="true"/>
+        <None Include="..\..\.nuget\PackageIcon.png" Link="NuGet\PackageIcon.png" PackagePath="images\" Pack="true"/>
+        <None Include="..\..\License.md" Link="NuGet\License.md" PackagePath="" Pack="true"/>
     </ItemGroup>
 
 </Project>

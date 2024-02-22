@@ -51,6 +51,12 @@ public static class ResolveHelper
     public static void BeginAssemblyResolve(Type type)
     {
         if (_domainResolvers is not null) return;
+        
+        // https://learn.microsoft.com/en-us/dotnet/api/system.reflection.module.fullyqualifiedname?view=netframework-4.8
+        if (type.Module.FullyQualifiedName.Equals("<Unknown>"))
+        {
+            throw new NotSupportedException("Type was load by raw assembly.");
+        }
 
         var domainType = AppDomain.CurrentDomain.GetType();
         var resolversField = domainType.GetField("_AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;

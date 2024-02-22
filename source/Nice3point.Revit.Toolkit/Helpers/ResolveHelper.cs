@@ -81,14 +81,7 @@ public static class ResolveHelper
     private static Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
     {
         var assemblyName = new AssemblyName(args.Name).Name;
-        foreach (var assembly in Directory.EnumerateFiles(_moduleDirectory, "*.dll"))
-        {
-            if (assemblyName == Path.GetFileNameWithoutExtension(assembly))
-            {
-                return Assembly.LoadFile(assembly);
-            }
-        }
-
-        return null;
+        var assemblyPath = Path.Combine(_moduleDirectory, assemblyName + ".dll");
+        return File.Exists(assemblyPath) ? Assembly.LoadFrom(assemblyPath) : null;
     }
 }

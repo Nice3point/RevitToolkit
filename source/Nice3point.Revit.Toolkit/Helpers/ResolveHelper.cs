@@ -55,7 +55,7 @@ public static class ResolveHelper
         // https://learn.microsoft.com/en-us/dotnet/api/system.reflection.module.fullyqualifiedname?view=netframework-4.8
         if (type.Module.FullyQualifiedName.Equals("<Unknown>"))
         {
-            throw new NotSupportedException("Type was load by raw assembly.");
+            return;
         }
 
         var domainType = AppDomain.CurrentDomain.GetType();

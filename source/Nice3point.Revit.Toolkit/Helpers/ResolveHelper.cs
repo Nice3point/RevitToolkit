@@ -52,6 +52,7 @@ public static class ResolveHelper
     {
         if (_domainResolvers is not null) return;
         
+        // when module was loaded by refAssembly (binary) FullyQualifiedName equal "<Unknown>"
         // https://learn.microsoft.com/en-us/dotnet/api/system.reflection.module.fullyqualifiedname?view=netframework-4.8
         if (type.Module.FullyQualifiedName.Equals("<Unknown>"))
         {

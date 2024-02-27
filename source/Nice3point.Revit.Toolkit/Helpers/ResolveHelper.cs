@@ -54,10 +54,7 @@ public static class ResolveHelper
         
         // when module was loaded by refAssembly (binary) FullyQualifiedName equal "<Unknown>"
         // https://learn.microsoft.com/en-us/dotnet/api/system.reflection.module.fullyqualifiedname?view=netframework-4.8
-        if (type.Module.FullyQualifiedName.Equals("<Unknown>"))
-        {
-            return;
-        }
+        if (type.Module.FullyQualifiedName.Equals("<Unknown>")) return;
 
         var domainType = AppDomain.CurrentDomain.GetType();
         var resolversField = domainType.GetField("_AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;

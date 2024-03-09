@@ -39,6 +39,8 @@ partial class Build
 
     static string EscapeMsBuild(string value)
     {
-        return value.Replace(";", "%3B").Replace(",", "%2C");
+        return value
+            .Replace(";", "%3B")
+            .Replace(",", "%2C");
     }
 }

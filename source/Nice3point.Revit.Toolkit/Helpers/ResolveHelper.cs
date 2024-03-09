@@ -51,20 +51,17 @@ public static class ResolveHelper
     public static void BeginAssemblyResolve(Type type)
     {
         if (_domainResolvers is not null) return;
-        
-        // when module was loaded by refAssembly (binary) FullyQualifiedName equal "<Unknown>"
-        // https://learn.microsoft.com/en-us/dotnet/api/system.reflection.module.fullyqualifiedname?view=netframework-4.8
-        if (type.Module.FullyQualifiedName.Equals("<Unknown>")) return;
+        if (type.Module.FullyQualifiedName == "<Unknown>") return;
 
         var domainType = AppDomain.CurrentDomain.GetType();
         var resolversField = domainType.GetField("_AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
         var resolvers = resolversField.GetValue(AppDomain.CurrentDomain);
         resolversField.SetValue(AppDomain.CurrentDomain, null);
 
-        AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
-
         _domainResolvers = resolvers;
         _moduleDirectory = Path.GetDirectoryName(type.Module.FullyQualifiedName);
+
+        AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
     }
 
     /// <summary>
@@ -85,7 +82,9 @@ public static class ResolveHelper
     private static Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
     {
         var assemblyName = new AssemblyName(args.Name).Name;
-        var assemblyPath = Path.Combine(_moduleDirectory, assemblyName + ".dll");
-        return File.Exists(assemblyPath) ? Assembly.LoadFrom(assemblyPath) : null;
+        var assemblyPath = Path.Combine(_moduleDirectory, $"{assemblyName}.dll");
+        if (!File.Exists(assemblyPath)) return null;
+
+        return Assembly.LoadFrom(assemblyPath);
     }
 }

@@ -51,16 +51,18 @@ sealed partial class Build : NukeBuild
         return changelog;
     }
 
-    static void TrimEmptyLines(StringBuilder changelog)
+    static void TrimEmptyLines(StringBuilder builder)
     {
-        while (changelog[^1] == '\r' || changelog[^1] == '\n')
+        if (builder.Length == 0) return;
+        
+        while (builder[^1] == '\r' || builder[^1] == '\n')
         {
-            changelog.Remove(changelog.Length - 1, 1);
+            builder.Remove(builder.Length - 1, 1);
         }
 
-        while (changelog[0] == '\r' || changelog[0] == '\n')
+        while (builder[0] == '\r' || builder[0] == '\n')
         {
-            changelog.Remove(0, 1);
+            builder.Remove(0, 1);
         }
     }
 }

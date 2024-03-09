@@ -1,3 +1,9 @@
+# Release 2025.0.0
+
+- Revit 2025 support
+- Optimize assembly resolve by @dosymep
+- Fix resolve raw assembly by @dosymep
+
 # Release 2024.0.1
 
 - New **Context** class.

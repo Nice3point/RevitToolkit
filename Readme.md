@@ -1,6 +1,6 @@
 <h3 align="center"><img src="https://user-images.githubusercontent.com/20504884/180418145-8a82f8ff-3649-4b80-a092-d67e9385e893.png" width="500px"></h3>
 
-# That your Revit API could be more flexible now
+# Make Revit API more flexible now
 
 <p align="center">
   <a href="https://www.nuget.org/packages/Nice3point.Revit.Toolkit"><img src="https://img.shields.io/nuget/v/Nice3point.Revit.Toolkit?style=for-the-badge"></a>

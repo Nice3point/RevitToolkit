@@ -1,5 +1,8 @@
 ﻿using System.IO;
 using System.Reflection;
+#if NETCOREAPP
+using System.Runtime.Loader;
+#endif
 
 namespace Nice3point.Revit.Toolkit.Helpers;
 
@@ -54,10 +57,17 @@ public static class ResolveHelper
         if (_domainResolvers is not null) return;
         if (type.Module.FullyQualifiedName == "<Unknown>") return;
 
+#if NETCOREAPP
+        var loadContextType = typeof(AssemblyLoadContext);
+        var resolversField = loadContextType.GetField("AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;
+        var resolvers = resolversField.GetValue(null);
+        resolversField.SetValue(null, null);
+#else
         var domainType = AppDomain.CurrentDomain.GetType();
         var resolversField = domainType.GetField("_AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
         var resolvers = resolversField.GetValue(AppDomain.CurrentDomain);
         resolversField.SetValue(AppDomain.CurrentDomain, null);
+#endif
 
         _domainResolvers = resolvers;
         _moduleDirectory = Path.GetDirectoryName(type.Module.FullyQualifiedName);
@@ -72,9 +82,15 @@ public static class ResolveHelper
     {
         if (_domainResolvers is null) return;
 
+#if NETCOREAPP
+        var loadContextType = typeof(AssemblyLoadContext);
+        var resolversField = loadContextType.GetField("AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;
+        resolversField.SetValue(null, _domainResolvers);
+#else
         var domainType = AppDomain.CurrentDomain.GetType();
         var resolversField = domainType.GetField("_AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
         resolversField.SetValue(AppDomain.CurrentDomain, _domainResolvers);
+#endif
 
         _domainResolvers = null;
         _moduleDirectory = null;

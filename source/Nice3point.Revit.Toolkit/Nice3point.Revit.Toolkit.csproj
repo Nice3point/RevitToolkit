@@ -18,6 +18,7 @@
         <PackageProjectUrl>https://github.com/Nice3point/RevitToolkit</PackageProjectUrl>
         <PackageIcon>images\PackageIcon.png</PackageIcon>
         <PackageLicenseFile>License.md</PackageLicenseFile>
+        <PackageReadmeFile>Readme.md</PackageReadmeFile>
     </PropertyGroup>
     <PropertyGroup>
         <EnablePackageValidation>true</EnablePackageValidation>
@@ -75,8 +76,11 @@
 
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" Version="2023.*"/>
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*-preview-*" PrivateAssets="all"/>
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-preview-*" PrivateAssets="all"/>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*-*" PrivateAssets="all" Condition="!$(Configuration.Contains('R25'))"/>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-*" PrivateAssets="all" Condition="!$(Configuration.Contains('R25'))"/>
+        
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*-preview-*" PrivateAssets="all" Condition="$(Configuration.Contains('R25'))"/>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-preview-*" PrivateAssets="all" Condition="$(Configuration.Contains('R25'))"/>
     </ItemGroup>
 
     <ItemGroup>

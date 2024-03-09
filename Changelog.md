@@ -1,3 +1,7 @@
+# Release 2025.0.0-preview.1.1
+
+- Fix assembly resolver for Revit 2025
+
 # Release 2025.0.0-preview.1.0
 
 - Revit 2025 support

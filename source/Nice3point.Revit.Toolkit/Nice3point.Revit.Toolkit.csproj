@@ -76,11 +76,8 @@
 
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" Version="2023.*"/>
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*-*" PrivateAssets="all" Condition="!$(Configuration.Contains('R25'))"/>
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-*" PrivateAssets="all" Condition="!$(Configuration.Contains('R25'))"/>
-        
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*-preview-*" PrivateAssets="all" Condition="$(Configuration.Contains('R25'))"/>
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-preview-*" PrivateAssets="all" Condition="$(Configuration.Contains('R25'))"/>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*-*" PrivateAssets="all" />
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-*" PrivateAssets="all" />
     </ItemGroup>
 
     <ItemGroup>

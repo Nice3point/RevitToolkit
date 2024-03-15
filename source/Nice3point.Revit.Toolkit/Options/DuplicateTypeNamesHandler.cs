@@ -12,6 +12,7 @@ namespace Nice3point.Revit.Toolkit.Options;
 public class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
 {
     private readonly DuplicateTypeAction _duplicateTypeAction;
+    private DuplicateTypeNamesHandlerArgs _duplicateArguments;
 
     /// <summary>
     ///     Creates a new handler with <see cref="DuplicateTypeAction.UseDestinationTypes" /> by default
@@ -42,6 +43,17 @@ public class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
     }
 
     /// <summary>
+    ///     Creates a new handler
+    /// </summary>
+    /// <param name="actionHandler">
+    ///     Encapsulates a method on a structure that provides information about an attempt to copy types with names that already exist in the destination document
+    /// </param>
+    public DuplicateTypeNamesHandler(Func<DuplicateTypeNamesHandlerArgs, DuplicateTypeAction> actionHandler)
+    {
+        _duplicateTypeAction = actionHandler(_duplicateArguments);
+    }
+
+    /// <summary>
     ///     Called when the destination document contains types with the same names as the types being copied
     /// </summary>
     /// <param name="args">The information about the types with duplicate names</param>
@@ -51,6 +63,7 @@ public class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
     [EditorBrowsable(EditorBrowsableState.Never)]
     public DuplicateTypeAction OnDuplicateTypeNamesFound(DuplicateTypeNamesHandlerArgs args)
     {
+        _duplicateArguments = args;
         return _duplicateTypeAction;
     }
 }

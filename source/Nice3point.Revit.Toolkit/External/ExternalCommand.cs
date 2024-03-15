@@ -14,12 +14,14 @@ namespace Nice3point.Revit.Toolkit.External;
 [PublicAPI]
 public abstract class ExternalCommand : IExternalCommand
 {
-    private Action<DialogBoxShowingEventArgs> _dialogBoxHandler;
-    private int _dialogResultCode;
-    private Action<Exception> _exceptionHandler;
     private bool _suppressFailures;
-    private SuppressDialog _suppressDialog;
+
     private SuppressException _suppressException;
+    private Action<Exception> _exceptionHandler;
+
+    private int _dialogResultCode;
+    private SuppressDialog _suppressDialog;
+    private Action<DialogBoxShowingEventArgs> _dialogBoxHandler;
 
     /// <summary>
     ///     Element set indicating problem elements to display in the failure dialog. This will be used only if the command status was "Failed".
@@ -34,27 +36,27 @@ public abstract class ExternalCommand : IExternalCommand
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIApplication" /> that is needed by an external command
     /// </summary>
-    public UIApplication UiApplication => ExternalCommandData.Application;
+    public UIApplication UiApplication => Context.UiApplication;
 
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.ApplicationServices.Application" /> that is needed by an external command
     /// </summary>
-    public Application Application => ExternalCommandData.Application.Application;
+    public Application Application => Context.Application;
 
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIDocument" /> that is needed by an external command
     /// </summary>
-    public UIDocument UiDocument => ExternalCommandData.Application.ActiveUIDocument;
+    public UIDocument UiDocument => Context.UiDocument;
 
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.DB.Document" /> that is needed by an external command
     /// </summary>
-    public Document Document => ExternalCommandData.Application.ActiveUIDocument.Document;
+    public Document Document => Context.Document;
 
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIDocument.ActiveView" /> that is needed by an external command
     /// </summary>
-    public View ActiveView => ExternalCommandData.Application.ActiveUIDocument.ActiveView;
+    public View ActiveView => Context.ActiveView;
 
     /// <summary>
     ///     Informs Autodesk Revit of the status of your application after execution.

@@ -1,14 +1,17 @@
-<h3 align="center"><img src="https://user-images.githubusercontent.com/20504884/180418145-8a82f8ff-3649-4b80-a092-d67e9385e893.png" width="500px"></h3>
-
-# Make Revit API more flexible now
-
 <p align="center">
-  <a href="https://www.nuget.org/packages/Nice3point.Revit.Toolkit"><img src="https://img.shields.io/nuget/v/Nice3point.Revit.Toolkit?style=for-the-badge"></a>
-  <a href="https://www.nuget.org/packages/Nice3point.Revit.Toolkit"><img src="https://img.shields.io/nuget/dt/Nice3point.Revit.Toolkit?style=for-the-badge"></a>
-  <a href="https://github.com/Nice3point/RevitToolkit/commits/develop"><img src="https://img.shields.io/github/last-commit/Nice3point/RevitToolkit/develop?style=for-the-badge"></a>
+    <picture>
+        <source media="(prefers-color-scheme: dark)" width="750" srcset="https://github.com/Nice3point/RevitToolkit/assets/20504884/852aba24-118f-4908-949d-2e0c019c83da">
+        <img alt="RevitLookup" width="750" src="https://github.com/Nice3point/RevitToolkit/assets/20504884/c59042df-b9b5-4829-9417-006912781cf2">
+    </picture>
 </p>
 
-The lightweight library provides a modern interface for working with the Revit API. This package aims to offer as much flexibility as possible, so developers are free to choose
+## Make Revit API more flexible
+
+[![Nuget](https://img.shields.io/nuget/v/Nice3point.Revit.Toolkit?style=for-the-badge)](https://www.nuget.org/packages/Nice3point.Revit.Toolkit)
+[![Downloads](https://img.shields.io/nuget/dt/Nice3point.Revit.Toolkit?style=for-the-badge)](https://www.nuget.org/packages/Nice3point.Revit.Toolkit)
+[![Last Commit](https://img.shields.io/github/last-commit/Nice3point/RevitToolkit/develop?style=for-the-badge)](https://github.com/Nice3point/RevitToolkit/commits/develop)
+
+This library provides a modern interface for working with the Revit API. This package aims to offer as much flexibility as possible, so developers are free to choose
 which components to use.
 
 ## Installation
@@ -367,7 +370,7 @@ Provides a handler of duplicate type names encountered during a paste operation
 ```c#
 var options = new CopyPasteOptions();
 options.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler());
-options.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler(() => DuplicateTypeAction.Abort));
+options.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler(args => DuplicateTypeAction.Abort));
 options.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler(DuplicateTypeAction.UseDestinationTypes));
 ElementTransformUtils.CopyElements(source, elementIds, destination, null, options);
 ```

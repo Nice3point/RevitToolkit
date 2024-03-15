@@ -16,7 +16,7 @@ partial class Build
                     .SetConfiguration(configuration)
                     .SetVersion(GetPackVersion(configuration))
                     .SetOutputDirectory(ArtifactsDirectory)
-                    .SetVerbosity(DotNetVerbosity.Minimal)
+                    .SetVerbosity(DotNetVerbosity.minimal)
                     .SetPackageReleaseNotes(CreateNugetChangelog()));
         });
 

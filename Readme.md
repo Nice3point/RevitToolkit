@@ -16,7 +16,7 @@ which components to use.
 
 ## Installation
 
-You can install Extensions as a [nuget package](https://www.nuget.org/packages/Nice3point.Revit.Toolkit).
+You can install Toolkit as a [nuget package](https://www.nuget.org/packages/Nice3point.Revit.Toolkit).
 
 Packages are compiled for a specific version of Revit, to support different versions of libraries in one project, use RevitVersion property.
 
@@ -53,7 +53,7 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 
 ### External command
 
-The **ExternalCommand** class contains an implementation for IExternalCommand.
+The **ExternalCommand** class contains an implementation for `IExternalCommand`.
 
 ```c#
 [Transaction(TransactionMode.Manual)]
@@ -65,7 +65,7 @@ public class Command : ExternalCommand
 }
 ```
 
-ExternalCommand contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
+**ExternalCommand** contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
 
 Override method **Execute()** to implement and external command within Revit.
 
@@ -79,17 +79,8 @@ public class Command : ExternalCommand
 {
     public override void Execute()
     {
-        SuppressDialogs();
-        SuppressDialogs(args => args.OverrideResult(2));
-        RestoreDialogs();
-        SuppressExceptions();
-        SuppressExceptions(exception => Log.Fatal(exception, "Fatal exception"));
-        SuppressFailures();
-        RestoreFailures();
-
         var title = Document.Title;
         var viewName = ActiveView.Name;
-        var view = ExternalCommandData.View;
         var username = Application.Username;
         var selection = UiDocument.Selection;
         var windowHandle = UiApplication.MainWindowHandle;
@@ -100,16 +91,21 @@ public class Command : ExternalCommand
             return;
         }
 
-        throw new Exception("Something went wrong");
+        SuppressDialogs();
+        SuppressDialogs(args => args.OverrideResult(2));
+        RestoreDialogs();
+
+        SuppressFailures();
+        RestoreFailures();
     }
 }
 ```
 
 ### External application
 
-The ExternalApplication class contains an implementation for IExternalApplication.
+The **ExternalApplication** class contains an implementation for `IExternalApplication`.
 
-ExternalApplication contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
+**ExternalApplication** contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
 
 ```c#
 public class Application : ExternalApplication
@@ -128,14 +124,14 @@ Override method **OnStartup()** to execute some tasks when Revit starts.
 
 Override method **OnShutdown()** to execute some tasks when Revit shuts down. You don't have to override this method if you don't plan to use it.
 
-Data available when executing an external command is accessible by properties. Additionally, a hidden **UiApplication** property is available.
+Data available when executing an external command is accessible by properties.
 
 ```c#
 public class Application : ExternalApplication
 {
     public override void OnStartup()
     {
-        var userName = UiApplication.Application.Username;
+        var userName = Context.Application.Username;
         if (userName != "Nice3point")
         {
             //If Result is overridden, the OnShutdown() method will not be called
@@ -153,9 +149,9 @@ public class Application : ExternalApplication
 
 ### External DB application
 
-The ExternalDBApplication class contains an implementation for IExternalDBApplication.
+The **ExternalDBApplication** class contains an implementation for `IExternalDBApplication`.
 
-ExternalDBApplication contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
+**ExternalDBApplication** contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
 
 ```c#
 public class Application : ExternalDBApplication
@@ -176,15 +172,15 @@ Override method **OnShutdown()** to execute some tasks when Revit shuts down. Yo
 
 ### External events
 
-The **ExternalEventHandler** class is used to modify the document when using modeless windows. It contains an implementation of the IExternalEventHandler interface. You can create
-your
-own handlers by deriving from this class.
+The **ExternalEventHandler** class is used to modify the document when using modeless windows. 
+It contains an implementation of the `IExternalEventHandler` interface. 
+You can create your own handlers by deriving from this class.
 
 To avoid closures and increase performance, use generic overloads and pass data through parameters.
 
 #### ActionEventHandler
 
-With this handler you can queue delegates for method calls
+With this handler, you can queue delegates for method calls:
 
 ```c#
 public ViewModel
@@ -221,8 +217,9 @@ Deleted
 
 #### IdlingEventHandler
 
-With this handler you can queue delegates for method calls when Revit becomes available again.
-Unsubscribing from the Idling event occurs immediately. Suitable for cases where you need to call code when Revit receives focus.
+With this handler, you can queue delegates for method calls when Revit becomes available again.
+Unsubscribing from the Idling event occurs immediately. 
+Suitable for cases where you need to call code when Revit receives focus.
 For example, to display a window after loading a family into a project.
 
 ```c#
@@ -257,7 +254,7 @@ Idling
 #### AsyncEventHandler
 
 With this handler, you can wait for the external event to complete.
-The RaiseAsync method will return to its previous context after executing the method encapsulated in the delegate.
+The **RaiseAsync** method will return to its previous context after executing the method encapsulated in the delegate.
 Suitable for cases where you need to maintain the sequence of code execution.
 
 Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context
@@ -294,7 +291,7 @@ Command completed
 #### AsyncEventHandler\<T>
 
 With this handler, you can wait for the external event to complete with the return value from the method encapsulated in the delegate.
-The RaiseAsync method will return to its previous context after executing.
+The **RaiseAsync** method will return to its previous context after executing.
 Suitable for cases where you need to maintain the sequence of code execution.
 
 Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context
@@ -351,7 +348,7 @@ Context.ActiveView = view;
 
 ### Options
 
-Toolkit provides implementation of various Revit interfaces, with the possibility of customization.
+The Toolkit provides implementation of various Revit interfaces, with the possibility of customization.
 
 #### FamilyLoadOptions
 
@@ -392,7 +389,7 @@ linkType.Unload(new SaveSharedCoordinatesCallback(type =>
 
 #### FrameworkElementCreator
 
-Creator of FrameworkElements for the dockable pane.
+Creator of **FrameworkElements** for the dockable pane.
 
 ```c#
 DockablePaneProvider.Register(application, guid, title)
@@ -407,7 +404,7 @@ DockablePaneProvider.Register(application, guid, title)
 
 Creates a configuration for creating ISelectionFilter instances.
 
-By default, all elements are allowed to be selected:
+By default, all elements are allowed for selection:
 
 ```c#
 var selectionConfiguration = new SelectionConfiguration();
@@ -453,7 +450,7 @@ finally
 }
 ```
 
-Enabled by default for ExternalApplication, ExternalDBApplication and ExternalCommand
+Enabled by default for **ExternalCommand**, **ExternalApplication** and **ExternalDBApplication**.
 
 ### Decorators
 
@@ -480,7 +477,7 @@ DockablePaneProvider
 
 ### Transaction utils
 
-The TransactionManager gives you the ability to create transactions. You can write custom code in a lambda, and the method will take care of safely closing transactions in case of
+The TransactionManager allows you to create transactions. You can write custom code in a lambda, and the method will take care of safely closing transactions in case of
 exceptions and cleaning up unmanaged resources.
 
 Modification of the document, without specifying settings, the implementation already contains the name, and may not be specified:
@@ -525,22 +522,6 @@ document.Modify(settings => settings.Transaction
     {
         document.Delete(new ElementId(69));
     });
-
-document.Modify(settings => settings.GroupTransaction.DisableModalHandling()).Assimilate((document, transaction) =>
-{
-    document.Modify().Commit((document2, transaction2) =>
-    {
-        document2.Delete(new ElementId(69));
-    });
-
-    document.Modify().Commit((document2, transaction2) =>
-    {
-        document2.Modify(settings => settings.SubTransaction).Commit((document3, subTransaction) =>
-        {
-            document3.Delete(new ElementId(96));
-        });
-    });
-});
 ```
 
 ## Symbol server
@@ -550,8 +531,3 @@ In this case, you can use [symbol servers](https://docs.microsoft.com/en-us/wind
 Then, you can point your debugger to the symbol server to resolve symbol names.
 
 The symbols for this package are available at https://symbols.nuget.org/download/symbols
-
-## Technology Sponsors
-
-Thanks to [JetBrains](https://jetbrains.com) for providing licenses for [Rider](https://jetbrains.com/rider) and [dotUltimate](https://www.jetbrains.com/dotnet/) tools, which both
-make open-source development a real pleasure!

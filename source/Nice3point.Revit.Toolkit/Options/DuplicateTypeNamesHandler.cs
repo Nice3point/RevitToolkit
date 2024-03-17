@@ -37,17 +37,6 @@ public class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
     /// <param name="actionHandler">
     ///     Encapsulates a method on a structure that provides information about an attempt to copy types with names that already exist in the destination document
     /// </param>
-    public DuplicateTypeNamesHandler(Func<DuplicateTypeAction> actionHandler)
-    {
-        _duplicateTypeAction = actionHandler();
-    }
-
-    /// <summary>
-    ///     Creates a new handler
-    /// </summary>
-    /// <param name="actionHandler">
-    ///     Encapsulates a method on a structure that provides information about an attempt to copy types with names that already exist in the destination document
-    /// </param>
     public DuplicateTypeNamesHandler(Func<DuplicateTypeNamesHandlerArgs, DuplicateTypeAction> actionHandler)
     {
         _duplicateTypeAction = actionHandler(_duplicateArguments);

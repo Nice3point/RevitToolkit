@@ -1,3 +1,8 @@
+# Release 2025.0.0-preview.2.0
+
+- New package icon
+- Add new DuplicateTypeNamesHandler overload
+
 # Release 2025.0.0-preview.1.1
 
 - Fix assembly resolver for Revit 2025

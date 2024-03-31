@@ -1,11 +1,12 @@
-﻿using Nuke.Common.Git;
+﻿using System.IO.Enumeration;
+using Nuke.Common.Git;
 using Nuke.Common.Tools.DotNet;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 partial class Build
 {
     Target Pack => _ => _
-        .DependsOn(Compile)
+        .DependsOn(Clean)
         .OnlyWhenStatic(() => IsLocalBuild || GitRepository.IsOnMainOrMasterBranch())
         .Executes(() =>
         {
@@ -42,5 +43,17 @@ partial class Build
         return value
             .Replace(";", "%3B")
             .Replace(",", "%2C");
+    }
+    
+    List<string> GlobBuildConfigurations()
+    {
+        var configurations = Solution.Configurations
+            .Select(pair => pair.Key)
+            .Select(config => config.Remove(config.LastIndexOf('|')))
+            .Where(config => Configurations.Any(wildcard => FileSystemName.MatchesSimpleExpression(wildcard, config)))
+            .ToList();
+
+        Assert.NotEmpty(configurations, $"No solution configurations have been found. Pattern: {string.Join(" | ", Configurations)}");
+        return configurations;
     }
 }

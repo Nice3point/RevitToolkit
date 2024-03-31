@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using Autodesk.Revit.ApplicationServices;
-using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 
 namespace Nice3point.Revit.Toolkit;
@@ -38,7 +37,7 @@ public static class Context
     ///         active project and hence the active document which is available from the UIApplication object.
     ///     </p>
     ///     Obtain the database level Document (which contains interfaces not related to the UI) via the
-    ///     Document property.  If you have a database level Document and need to access it from the UI, you can
+    ///     Document property. If you have a database level Document and need to access it from the UI, you can
     ///     construct a new UIDocument from that object (the document must be open and visible in the UI to allow the methods to
     ///     work successfully).
     /// </remarks>

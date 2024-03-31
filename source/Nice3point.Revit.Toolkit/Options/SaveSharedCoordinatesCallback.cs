@@ -1,6 +1,4 @@
-﻿using Autodesk.Revit.DB;
-
-namespace Nice3point.Revit.Toolkit.Options;
+﻿namespace Nice3point.Revit.Toolkit.Options;
 
 /// <summary>
 ///     Callback that may be used to control Revit when trying to unload or reload a Revit link with changes in shared coordinates

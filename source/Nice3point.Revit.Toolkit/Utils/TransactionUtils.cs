@@ -1,6 +1,4 @@
-﻿using Autodesk.Revit.DB;
-
-namespace Nice3point.Revit.Toolkit.Utils;
+﻿namespace Nice3point.Revit.Toolkit.Utils;
 
 /// <summary>
 ///     Provides control over transactions

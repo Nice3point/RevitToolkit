@@ -11,8 +11,8 @@
 [![Downloads](https://img.shields.io/nuget/dt/Nice3point.Revit.Toolkit?style=for-the-badge)](https://www.nuget.org/packages/Nice3point.Revit.Toolkit)
 [![Last Commit](https://img.shields.io/github/last-commit/Nice3point/RevitToolkit/develop?style=for-the-badge)](https://github.com/Nice3point/RevitToolkit/commits/develop)
 
-This library provides a modern interface for working with the Revit API. This package aims to offer as much flexibility as possible, so developers are free to choose
-which components to use.
+This library provides a modern interface for working with the Revit API. 
+Package contains interfaces implementation frequently encountered in revit, aiming to provide as much flexibility as possible, so developers are free to choose which components to use.
 
 ## Installation
 
@@ -172,11 +172,10 @@ Override method **OnShutdown()** to execute some tasks when Revit shuts down. Yo
 
 ### External events
 
-The **ExternalEventHandler** class is used to modify the document when using modeless windows. 
-It contains an implementation of the `IExternalEventHandler` interface. 
-You can create your own handlers by deriving from this class.
+**EventHandler** classes contains an implementation for `IExternalEventHandler`.
 
-To avoid closures and increase performance, use generic overloads and pass data through parameters.
+It is used to modify the document when using modeless windows. 
+You can create your own handlers by deriving from this class.
 
 #### ActionEventHandler
 
@@ -257,7 +256,7 @@ With this handler, you can wait for the external event to complete.
 The **RaiseAsync** method will return to its previous context after executing the method encapsulated in the delegate.
 Suitable for cases where you need to maintain the sequence of code execution.
 
-Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context
+Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context.
 
 ```c#
 public ViewModel
@@ -331,7 +330,8 @@ Command completed
 
 ### Context
 
-Provides computed properties to retrieve Revit objects in the current session. Values are provided even outside the Revit context.
+Provides computed properties to retrieve Revit objects in the current session. 
+Values are provided even outside the Revit context.
 
 - Context.UiApplication;
 - Context.Application;
@@ -352,6 +352,7 @@ The Toolkit provides implementation of various Revit interfaces, with the possib
 
 #### FamilyLoadOptions
 
+Contains an implementation for `IFamilyLoadOptions`.
 Provides a handler for loading families
 
 ```c#
@@ -362,7 +363,8 @@ document.LoadFamily(fileName, UIDocument.GetRevitUIFamilyLoadOptions(), out var 
 
 #### DuplicateTypeNamesHandler
 
-Provides a handler of duplicate type names encountered during a paste operation
+Contains an implementation for `IDuplicateTypeNamesHandler`.
+Provides a handler of duplicate type names encountered during a paste operation.
 
 ```c#
 var options = new CopyPasteOptions();
@@ -374,10 +376,11 @@ ElementTransformUtils.CopyElements(source, elementIds, destination, null, option
 
 #### SaveSharedCoordinatesCallback
 
-Provides a handler for control Revit when trying to unload or reload a Revit link with changes in shared coordinates
+Contains an implementation for `ISaveSharedCoordinatesCallback`.
+Provides a handler for control Revit when trying to unload or reload a Revit link with changes in shared coordinates.
 
 ```c#
-var linkType = elementId.ToElement<RevitLinkType>(RevitApi.Document);
+var linkType = elementId.ToElement<RevitLinkType>(Context.Document);
 linkType.Unload(new SaveSharedCoordinatesCallback());
 linkType.Unload(new SaveSharedCoordinatesCallback(SaveModifiedLinksOptions.DoNotSaveLinks));
 linkType.Unload(new SaveSharedCoordinatesCallback(type =>
@@ -389,6 +392,7 @@ linkType.Unload(new SaveSharedCoordinatesCallback(type =>
 
 #### FrameworkElementCreator
 
+Contains an implementation for `IFrameworkElementCreator`.
 Creator of **FrameworkElements** for the dockable pane.
 
 ```c#
@@ -402,7 +406,8 @@ DockablePaneProvider.Register(application, guid, title)
 
 #### SelectionConfiguration
 
-Creates a configuration for creating ISelectionFilter instances.
+Contains an implementation for `ISelectionFilter`.
+Creates a configuration for creating Selection Filters.
 
 By default, all elements are allowed for selection:
 

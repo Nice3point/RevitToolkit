@@ -1,3 +1,7 @@
+# Release 2025.0.0-preview.2.1
+
+- Add msbuild tasks package
+
 # Release 2025.0.0-preview.2.0
 
 - New package icon

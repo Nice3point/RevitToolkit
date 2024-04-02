@@ -25,7 +25,6 @@
 
     <PropertyGroup>
         <Optimize>true</Optimize>
-        <DebugType>none</DebugType>
         <IsPackable>true</IsPackable>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>

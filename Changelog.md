@@ -1,19 +1,7 @@
-# Release 2025.0.0-preview.2.1
-
-- Add msbuild tasks package
-
-# Release 2025.0.0-preview.2.0
-
-- New package icon
-- Add new DuplicateTypeNamesHandler overload
-
-# Release 2025.0.0-preview.1.1
-
-- Fix assembly resolver for Revit 2025
-
-# Release 2025.0.0-preview.1.0
+# Release 2025.0.0
 
 - Revit 2025 support
+- Add new DuplicateTypeNamesHandler overload
 - Optimize assembly resolve by @dosymep
 - Fix resolve raw assembly by @dosymep
 

@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    
+
     <PropertyGroup>
         <UseWpf>true</UseWpf>
         <LangVersion>latest</LangVersion>
@@ -8,7 +8,7 @@
         <Configurations>Debug R20;Debug R21;Debug R22;Debug R23;Debug R24;Debug R25</Configurations>
         <Configurations>$(Configurations);Release R20;Release R21;Release R22;Release R23;Release R24;Release R25</Configurations>
     </PropertyGroup>
-    
+
     <PropertyGroup>
         <PackageType>Dependency</PackageType>
         <PackageId>Nice3point.Revit.Toolkit</PackageId>
@@ -22,12 +22,14 @@
         <PackageLicenseFile>License.md</PackageLicenseFile>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
     </PropertyGroup>
-    
+
     <PropertyGroup>
+        <Optimize>true</Optimize>
+        <DebugType>none</DebugType>
         <IsPackable>true</IsPackable>
-        <EnablePackageValidation>true</EnablePackageValidation>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
         <DefineConstants>$(DefineConstants);JETBRAINS_ANNOTATIONS</DefineConstants>
     </PropertyGroup>
 
@@ -53,21 +55,17 @@
     </PropertyGroup>
     <PropertyGroup Condition="$(Configuration.Contains('R25'))">
         <RevitVersion>2025</RevitVersion>
-        <TargetFramework>net8.0-windows</TargetFramework> 
+        <TargetFramework>net8.0-windows</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" Version="2023.*"/>
-        <PackageReference Include="Nice3point.Revit.Build.Tasks" Version="*-*" PrivateAssets="All"/>
-        
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*-*" PrivateAssets="all" Condition="$(RevitVersion) &lt; '2025'"/>
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-*" PrivateAssets="all" Condition="$(RevitVersion) &lt; '2025'"/>
-
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2025.0.0-preview.3.240313" PrivateAssets="all" Condition="$(RevitVersion) == '2025'"/>
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2025.0.0-preview.3.240313" PrivateAssets="all" Condition="$(RevitVersion) == '2025'"/>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" PrivateAssets="all"/>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" PrivateAssets="all"/>
     </ItemGroup>
 
     <ItemGroup>
+        <Using Include="Autodesk.Revit.DB"/>
         <Using Include="JetBrains.Annotations"/>
         <Using Include="System.Runtime.CompilerServices"/>
         <Using Remove="System.Net.Http"/>
@@ -78,5 +76,5 @@
         <None Include="..\..\License.md" Link="NuGet\License.md" PackagePath="" Pack="true"/>
         <None Include="..\..\Readme.md" Link="NuGet\Readme.md" PackagePath="" Pack="true"/>
     </ItemGroup>
-
+    
 </Project>

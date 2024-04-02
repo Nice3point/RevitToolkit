@@ -7,7 +7,10 @@
             CleanDirectory(ArtifactsDirectory);
 
             foreach (var project in Solution.AllProjects.Where(project => project != Solution.Build))
+            {
                 CleanDirectory(project.Directory / "bin");
+                CleanDirectory(project.Directory / "obj");
+            }
         });
 
     static void CleanDirectory(AbsolutePath path)

@@ -92,13 +92,26 @@ public abstract class ExternalCommand : IExternalCommand
     [EditorBrowsable(EditorBrowsableState.Never)]
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
+        var currentType = GetType();
+
+#if NETCOREAPP
+        if (!AddinLoadContext.CheckAccess(currentType))
+        {
+            var dependenciesProvider = AddinLoadContext.GetDependenciesProvider(currentType);
+            var instance = dependenciesProvider.CreateInstance(currentType);
+            return AddinLoadContext.ExecuteCommand(instance, commandData, ref message, elements);
+        }
+#endif
+
         ElementSet = elements;
         ErrorMessage = message;
         ExternalCommandData = commandData;
 
         try
         {
-            ResolveHelper.BeginAssemblyResolve(GetType());
+#if !NETCOREAPP
+            ResolveHelper.BeginAssemblyResolve(currentType);
+#endif
             Execute();
         }
         catch (Exception exception)
@@ -121,7 +134,9 @@ public abstract class ExternalCommand : IExternalCommand
             message = ErrorMessage;
             RestoreFailures();
             RestoreDialogs();
+#if !NETCOREAPP
             ResolveHelper.EndAssemblyResolve();
+#endif
         }
 
         return Result;

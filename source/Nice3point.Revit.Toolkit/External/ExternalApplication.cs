@@ -11,6 +11,10 @@ namespace Nice3point.Revit.Toolkit.External;
 [PublicAPI]
 public abstract class ExternalApplication : IExternalApplication
 {
+#if NETCOREAPP
+    private object _isolatedInstance;
+#endif
+
     /// <summary>
     ///     Indicates if the external application completes its work successfully.
     /// </summary>
@@ -35,16 +39,32 @@ public abstract class ExternalApplication : IExternalApplication
     [EditorBrowsable(EditorBrowsableState.Never)]
     public Result OnStartup(UIControlledApplication application)
     {
+        var currentType = GetType();
+
+#if NETCOREAPP
+        if (!AddinLoadContext.CheckAccess(currentType))
+        {
+            var dependenciesProvider = AddinLoadContext.GetDependenciesProvider(currentType);
+            _isolatedInstance = dependenciesProvider.CreateInstance(currentType);
+            return AddinLoadContext.Invoke<Result>(_isolatedInstance, nameof(OnStartup), application);
+        }
+#endif
+
         Application = application;
+
+#if NETCOREAPP
+        OnStartup();
+#else
         try
         {
-            ResolveHelper.BeginAssemblyResolve(GetType());
+            ResolveHelper.BeginAssemblyResolve(currentType);
             OnStartup();
         }
         finally
         {
             ResolveHelper.EndAssemblyResolve();
         }
+#endif
 
         return Result;
     }
@@ -55,15 +75,26 @@ public abstract class ExternalApplication : IExternalApplication
     [EditorBrowsable(EditorBrowsableState.Never)]
     public Result OnShutdown(UIControlledApplication application)
     {
+        var currentType = GetType();
+
+#if NETCOREAPP
+        if (!AddinLoadContext.CheckAccess(currentType))
+        {
+            return AddinLoadContext.Invoke<Result>(_isolatedInstance, nameof(OnShutdown), application);
+        }
+
+        OnShutdown();
+#else
         try
         {
-            ResolveHelper.BeginAssemblyResolve(GetType());
+            ResolveHelper.BeginAssemblyResolve(currentType);
             OnShutdown();
         }
         finally
         {
             ResolveHelper.EndAssemblyResolve();
         }
+#endif
 
         return Result.Succeeded;
     }

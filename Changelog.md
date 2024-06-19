@@ -1,3 +1,10 @@
+# Release 2025.0.1-preview.1.0
+
+- Added isolated plugin dependency container. 
+
+   **ExternalCommand**, **ExternalApplication**, **ExternalDbApplication**, **FrameworkElementCreator** now run in a separate context. 
+   This allows running plugins with incompatible library versions. Revit 2025 and higher
+
 # Release 2025.0.0
 
 - Revit 2025 support

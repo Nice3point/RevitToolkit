@@ -1,9 +1,48 @@
-# Release 2025.0.1-preview.1.0
+# Release 2025.0.1
 
-- Added isolated plugin dependency container. 
+## Add-in dependencies isolation
 
-   **ExternalCommand**, **ExternalApplication**, **ExternalDbApplication**, **FrameworkElementCreator** now run in a separate context. 
-   This allows running plugins with incompatible library versions. Revit 2025 and higher
+This release introduces an isolated plugin dependency container using .NET **AssemblyLoadContext**.
+This feature allows plugins to run in a separate, isolated context, ensuring
+independent operation and preventing conflicts from incompatible library versions. 
+This enhancement is available for Revit 2025 and higher, addressing the limitations of Revit's traditional plugin loading mechanism, which loads plugins by path without native support for isolation.
+
+![изображение](https://github.com/jeremytammik/RevitLookup/assets/20504884/d1e160a2-36ef-43ad-a384-fdcc15b0106e)
+
+**How It Works:**
+
+The core functionality centers on **AssemblyLoadContext**, which creates an isolated container for each plugin. 
+When a plugin is loaded, it is assigned a unique **AssemblyLoadContext** instance, encapsulating the plugin and its dependencies to prevent interference with other plugins or the main application. 
+
+To use this isolation feature, developers must inherit their classes from:
+- ExternalCommand
+- ExternalApplication
+- ExternalDbApplication
+- ExternalCommandAvailability
+
+These classes contain the built-in isolation mechanism under the hood.
+Plugins using interfaces such as **IExternalCommand** will not benefit from this isolation and will run in the default context.
+
+**Limitations:**
+
+- The isolated plugin context feature is available starting with Revit 2025. 
+- For older Revit versions, this library uses a **ResolveHelper** to help load dependencies from the plugin's folder, but does not protect against conflicts arising from incompatible packages.
+- Additionally, plugins that do not inherit from the specified classes will not be isolated and may experience compatibility issues if they rely on the default context.
+
+## Improvements
+
+- Added **ExternalCommandAvailability** class.
+
+    It involves isolating dependencies.
+    If your implementation does not include dependencies, use the IExternalCommandAvailability interface to reduce memory allocation
+- Added **AvailableCommandController** class. 
+
+    ExternalCommandAvailability implementation. 
+    Controller providing permanent accessibility for ExternalCommand invocation. Usage:
+    ```C#
+    panel.AddPushButton<StartupCommand>("Execute")
+        .SetAvailabilityController<AvailableCommandController>()
+    ```
 
 # Release 2025.0.0
 

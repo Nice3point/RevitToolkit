@@ -75,5 +75,5 @@
         <None Include="..\..\License.md" Link="NuGet\License.md" PackagePath="" Pack="true"/>
         <None Include="..\..\Readme.md" Link="NuGet\Readme.md" PackagePath="" Pack="true"/>
     </ItemGroup>
-    
+
 </Project>

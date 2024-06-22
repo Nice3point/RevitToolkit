@@ -28,9 +28,7 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     /// </summary>
     public ControlledApplication Application { get; private set; }
 
-    /// <summary>Implement this method to execute some tasks when Autodesk Revit starts</summary>
-    /// <param name="application">A handle to the application being started</param>
-    /// <returns>Indicates if the external application completes its work successfully</returns>
+    /// <summary>Callback invoked by Revit. Not used to be called in user code</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public ExternalDBApplicationResult OnStartup(ControlledApplication application)
     {
@@ -62,9 +60,7 @@ public abstract class ExternalDBApplication : IExternalDBApplication
         return Result;
     }
 
-    /// <summary>Implement this method to execute some tasks when Autodesk Revit shuts down</summary>
-    /// <param name="application">A handle to the application being shut down</param>
-    /// <returns>Indicates if the external application completes its work successfully</returns>
+    /// <summary>Callback invoked by Revit. Not used to be called in user code</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public ExternalDBApplicationResult OnShutdown(ControlledApplication application)
     {

@@ -1,8 +1,8 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using Autodesk.Revit.UI;
-using JetBrains.Annotations;
+#if (!NETCOREAPP)
 using Nice3point.Revit.Toolkit.Helpers;
+#endif
 
 namespace Nice3point.Revit.Toolkit.Options;
 
@@ -44,14 +44,7 @@ public class FrameworkElementCreator<T> : IFrameworkElementCreator where T : Fra
             return (FrameworkElement)_serviceProvider.GetService(elementType);
         }
 
-        if (AddinLoadContext.CheckAccess(elementType))
-        {
-            return (FrameworkElement)Activator.CreateInstance(elementType);
-        }
-        
-        var dependenciesProvider = AddinLoadContext.GetDependenciesProvider(elementType);
-        return (FrameworkElement)dependenciesProvider.CreateInstance(elementType);
-
+        return (FrameworkElement)Activator.CreateInstance(elementType);
 #else
         try
         {

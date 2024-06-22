@@ -13,9 +13,7 @@ public sealed class AsyncEventHandler : ExternalEventHandler
     private Action<UIApplication> _action;
     private TaskCompletionSource<bool> _resultTask;
 
-    /// <summary>
-    ///     This method is called to handle the external event
-    /// </summary>
+    /// <summary>Callback invoked by Revit. Not used to be called in user code</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override void Execute(UIApplication uiApplication)
     {

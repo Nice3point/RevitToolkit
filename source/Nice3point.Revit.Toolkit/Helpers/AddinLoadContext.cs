@@ -15,7 +15,7 @@ internal sealed class AddinLoadContext : AssemblyLoadContext
     ///     Add-ins contexts storage
     /// </summary>
     private static readonly Dictionary<string, AddinLoadContext> DependenciesProviders = new(1);
-    
+
     private readonly AssemblyDependencyResolver _resolver;
 
     private AddinLoadContext(Type type, string addinName) : base(addinName)
@@ -62,6 +62,18 @@ internal sealed class AddinLoadContext : AssemblyLoadContext
         var assemblyLocation = type.Assembly.Location;
         var assembly = LoadFromAssemblyPath(assemblyLocation);
         return assembly.CreateInstance(type.FullName!)!;
+    }
+
+    /// <summary>
+    ///     Execute method in the separated context
+    /// </summary>
+    /// <remarks>Reference types are not supported</remarks>
+    public static void Invoke(object instance, string methodName, params object[] args)
+    {
+        var instanceType = instance.GetType();
+        var methodParameterTypes = args.Select(arg => arg.GetType()).ToArray();
+        var method = instanceType.GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance, null, methodParameterTypes, null)!;
+        method.Invoke(instance, args);
     }
 
     /// <summary>

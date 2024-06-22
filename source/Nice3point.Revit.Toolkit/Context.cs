@@ -126,7 +126,7 @@ public static class Context
         var applicationConstructor = applicationType.GetConstructor(internalFlags, null, [proxyType], null);
         ThrowIfNotSupported(applicationConstructor);
 
-        var application = (Application) applicationConstructor.Invoke([proxy]);
+        var application = (Application)applicationConstructor.Invoke([proxy]);
         ThrowIfNotSupported(proxy);
 
         UiApplication = new UIApplication(application);

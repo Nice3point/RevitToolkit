@@ -56,11 +56,10 @@ public class DockablePaneProvider : IDockablePaneProvider, IDockablePaneProvider
     /// <param name="application">The UIControlledApplication</param>
     public static IDockablePaneProviderId Register(UIControlledApplication application)
     {
-        var provider = new DockablePaneProvider
+        return new DockablePaneProvider
         {
             _application = application
         };
-        return provider;
     }
 
     /// <summary>
@@ -71,13 +70,12 @@ public class DockablePaneProvider : IDockablePaneProvider, IDockablePaneProvider
     /// <param name="title">String to use for the pane caption</param>
     public static IDockablePaneProviderConfiguration Register(UIControlledApplication application, Guid id, string title)
     {
-        var provider = new DockablePaneProvider
+        return new DockablePaneProvider
         {
             _application = application,
             _id = new DockablePaneId(id),
             _title = title
         };
-        return provider;
     }
 
     /// <summary>
@@ -88,13 +86,12 @@ public class DockablePaneProvider : IDockablePaneProvider, IDockablePaneProvider
     /// <param name="title">String to use for the pane caption</param>
     public static IDockablePaneProviderConfiguration Register(UIControlledApplication application, DockablePaneId id, string title)
     {
-        var provider = new DockablePaneProvider
+        return new DockablePaneProvider
         {
             _application = application,
             _id = id,
             _title = title
         };
-        return provider;
     }
 }
 

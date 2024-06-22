@@ -1,9 +1,12 @@
 ﻿using Autodesk.Revit.UI;
+#if NETCOREAPP
+using Nice3point.Revit.Toolkit.Helpers;
+#endif
 
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
-///     Provide the implementation for a accessibility check for a Revit add-in External Command
+///     Provide the implementation for an accessibility check for a Revit add-in External Command
 /// </summary>
 [PublicAPI]
 public abstract class ExternalCommandAvailability : IExternalCommandAvailability

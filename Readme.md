@@ -36,6 +36,8 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
     * [IdlingEventHandler](#idlingeventhandler)
     * [AsyncEventHandler](#asynceventhandler)
     * [AsyncEventHandler\<T>](#asynceventhandlert)
+* [External Command Availability](#external-command-availability)
+    * [AvailableCommandController](#availablecommandcontroller)
 * [Context](#context)
 * [Options](#options)
     * [FamilyLoadOptions](#familyloadoptions)
@@ -64,8 +66,6 @@ public class Command : ExternalCommand
     }
 }
 ```
-
-**ExternalCommand** contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
 
 Override method **Execute()** to implement and external command within Revit.
 
@@ -101,11 +101,14 @@ public class Command : ExternalCommand
 }
 ```
 
+**ExternalCommand** contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
+
+Starting with Revit 2025, ExternalCommand uses **AssemblyLoadContext** to isolate dependencies.
+This feature allows plugins to run in a separate, isolated context, ensuring independent operation and preventing conflicts from incompatible library versions
+
 ### External application
 
 The **ExternalApplication** class contains an implementation for `IExternalApplication`.
-
-**ExternalApplication** contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
 
 ```c#
 public class Application : ExternalApplication
@@ -147,11 +150,14 @@ public class Application : ExternalApplication
 }
 ```
 
+**ExternalApplication** contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
+
+Starting with Revit 2025, ExternalApplication uses **AssemblyLoadContext** to isolate dependencies.
+This feature allows plugins to run in a separate, isolated context, ensuring independent operation and preventing conflicts from incompatible library versions
+
 ### External DB application
 
 The **ExternalDBApplication** class contains an implementation for `IExternalDBApplication`.
-
-**ExternalDBApplication** contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
 
 ```c#
 public class Application : ExternalDBApplication
@@ -169,6 +175,11 @@ public class Application : ExternalDBApplication
 Override method **OnStartup()** to execute some tasks when Revit starts.
 
 Override method **OnShutdown()** to execute some tasks when Revit shuts down. You don't have to override this method if you don't plan to use it.
+
+**ExternalDBApplication** contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
+
+Starting with Revit 2025, ExternalApplication uses **ExternalDBApplication** to isolate dependencies.
+This feature allows plugins to run in a separate, isolated context, ensuring independent operation and preventing conflicts from incompatible library versions
 
 ### External events
 
@@ -326,6 +337,24 @@ Debug output:
 Windows selected
 Windows count 17
 Command completed
+```
+
+### External Command Availability
+
+**ExternalCommandAvailability** classes contains an implementation for `IExternalCommandAvailability`.
+
+It provides the implementation for an accessibility check for a Revit add-in External Command.
+
+Starting with Revit 2025, ExternalCommandAvailability uses **AssemblyLoadContext** to isolate dependencies.
+If your implementation does not include dependencies, use the **IExternalCommandAvailability** interface to reduce memory allocation
+
+#### AvailableCommandController
+
+Controller providing permanent accessibility for External Command invocation. This means that it will always be available for execution, even when no Document is open
+
+```C#
+panel.AddPushButton<StartupCommand>("Execute")
+    .SetAvailabilityController<AvailableCommandController>()
 ```
 
 ### Context

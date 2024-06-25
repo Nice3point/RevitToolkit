@@ -178,7 +178,7 @@ Override method **OnShutdown()** to execute some tasks when Revit shuts down. Yo
 
 **ExternalDBApplication** contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
 
-Starting with Revit 2025, ExternalApplication uses **ExternalDBApplication** to isolate dependencies.
+Starting with Revit 2025, ExternalDBApplication uses **AssemblyLoadContext** to isolate dependencies.
 This feature allows plugins to run in a separate, isolated context, ensuring independent operation and preventing conflicts from incompatible library versions
 
 ### External events
@@ -509,51 +509,26 @@ DockablePaneProvider
     });
 ```
 
-### Transaction utils
+### Add-ins Dependency Isolation
 
-The TransactionManager allows you to create transactions. You can write custom code in a lambda, and the method will take care of safely closing transactions in case of
-exceptions and cleaning up unmanaged resources.
+This library enables running plugins in an isolated context using .NET [AssemblyLoadContext](https://learn.microsoft.com/en-us/dotnet/core/dependency-loading/understanding-assemblyloadcontext). 
+Each plugin executes independently, preventing conflicts from incompatible library versions. 
+This functionality is available for Revit 2025 and higher.
 
-Modification of the document, without specifying settings, the implementation already contains the name, and may not be specified:
+How It Works:
+The core functionality centers on **AssemblyLoadContext**, which creates an isolated container for each plugin.
+When a plugin is loaded, it is assigned a unique **AssemblyLoadContext** instance, encapsulating the plugin and its dependencies to prevent interference with other plugins or the main application.
 
-```c#
-document.Modify().Commit((document, transaction) =>
-{
-    document.Delete(new ElementId(69));
-});
+To use this isolation feature, developers must inherit their classes from:
+- ExternalCommand
+- ExternalApplication
+- ExternalDbApplication
+- ExternalCommandAvailability
 
-//The same, with an explicit indication of the transaction:
-document.Modify(settings => settings.Transaction).Commit((document, transaction) =>
-{
-    document.Delete(new ElementId(69));
-});
-```
+These classes contain the built-in isolation mechanism under the hood.
+Plugins using interfaces such as **IExternalCommand** will not benefit from this isolation and will run in the default context.
 
-You can also create sub-transactions or groups of transactions:
-
-```c#
-document.Modify(settings => settings.SubTransaction).Commit((document, transaction) =>
-{
-    document.Delete(new ElementId(69));
-});
-
-document.Modify(settings => settings.GroupTransaction).Commit((document, transaction) =>
-{
-    transaction.RollBack();
-});
-```
-
-You can apply various settings to modify a document:
-
-```c#
-
-document.Modify(settings => settings.Transaction
-        .SetName("Deleting element 69")
-        .DisableModalHandling()
-        .EnableClearAfterRollback()
-        .EnableDelayedMiniWarnings())
-    .Commit((document, transaction) =>
-    {
-        document.Delete(new ElementId(69));
-    });
-```
+Limitations:
+- The isolated context feature is available starting with Revit 2025.
+- For older Revit versions, this library uses a **ResolveHelper** to help load dependencies from the plugin's folder, but does not protect against conflicts arising from incompatible packages.
+- Additionally, plugins that do not inherit from the specified classes will not be isolated and may experience compatibility issues if they rely on the default context.

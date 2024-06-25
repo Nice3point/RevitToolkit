@@ -36,7 +36,7 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
     * [IdlingEventHandler](#idlingeventhandler)
     * [AsyncEventHandler](#asynceventhandler)
     * [AsyncEventHandler\<T>](#asynceventhandlert)
-* [External Command Availability](#external-command-availability)
+* [External Command Availability](#externalcommandavailability)
     * [AvailableCommandController](#availablecommandcontroller)
 * [Context](#context)
 * [Options](#options)
@@ -55,7 +55,7 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 
 ### ExternalCommand
 
-Contains an implementation for **ExternalCommand**.
+Contains an implementation for **IExternalCommand**.
 
 ```c#
 [Transaction(TransactionMode.Manual)]
@@ -101,10 +101,10 @@ public class Command : ExternalCommand
 }
 ```
 
-**ExternalCommand** contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
+**ExternalCommand** contains the logic for resolving dependencies. 
+Now you may not encounter a `FileNotFoundException`. Dependencies are searched in the plugin folder.
 
-Starting with Revit 2025, ExternalCommand uses **AssemblyLoadContext** to isolate dependencies.
-This feature allows plugins to run in a separate, isolated context, ensuring independent operation and preventing conflicts from incompatible library versions
+Starting with Revit 2025, **ExternalCommand** is executed in an isolated context, providing independent execution and preventing conflicts due to incompatible library versions.
 
 ### ExternalApplication
 
@@ -150,10 +150,10 @@ public class Application : ExternalApplication
 }
 ```
 
-**ExternalApplication** contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
+**ExternalApplication** contains the logic for resolving dependencies.
+Now you may not encounter a `FileNotFoundException`. Dependencies are searched in the plugin folder.
 
-Starting with Revit 2025, ExternalApplication uses **AssemblyLoadContext** to isolate dependencies.
-This feature allows plugins to run in a separate, isolated context, ensuring independent operation and preventing conflicts from incompatible library versions
+Starting with Revit 2025, **ExternalApplication** is executed in an isolated context, providing independent execution and preventing conflicts due to incompatible library versions.
 
 ### ExternalDBApplication
 
@@ -176,10 +176,10 @@ Override method **OnStartup()** to execute some tasks when Revit starts.
 
 Override method **OnShutdown()** to execute some tasks when Revit shuts down. You don't have to override this method if you don't plan to use it.
 
-**ExternalDBApplication** contains the logic for resolving dependencies. Now you may not encounter a FileNotFoundException. Dependencies are searched in the plugin folder.
+**ExternalDBApplication** contains the logic for resolving dependencies.
+Now you may not encounter a `FileNotFoundException`. Dependencies are searched in the plugin folder.
 
-Starting with Revit 2025, ExternalDBApplication uses **AssemblyLoadContext** to isolate dependencies.
-This feature allows plugins to run in a separate, isolated context, ensuring independent operation and preventing conflicts from incompatible library versions
+Starting with Revit 2025, **ExternalDBApplication** is executed in an isolated context, providing independent execution and preventing conflicts due to incompatible library versions.
 
 ### External events
 
@@ -339,7 +339,7 @@ Windows count 17
 Command completed
 ```
 
-### External Command Availability
+### ExternalCommandAvailability
 
 Contains an implementation for **IExternalCommandAvailability**.
 

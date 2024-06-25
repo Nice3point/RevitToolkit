@@ -28,9 +28,9 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 
 ## Table of contents
 
-* [External command](#external-command)
-* [External application](#external-application)
-* [External DB application](#external-db-application)
+* [External command](#externalcommand)
+* [External application](#externalapplication)
+* [External DB application](#externaldbapplication)
 * [External events](#external-events)
     * [ActionEventHandler](#actioneventhandler)
     * [IdlingEventHandler](#idlingeventhandler)
@@ -45,17 +45,17 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
     * [SaveSharedCoordinatesCallback](#savesharedcoordinatescallback)
     * [FrameworkElementCreator](#frameworkelementcreator)
     * [SelectionConfiguration](#selectionconfiguration)
-* [Helpers](#helpers)
-    * [ResolveHelper](#resolvehelper)
 * [Decorators](#decorators)
     * [DockablePaneProvider](#dockablepaneprovider)
-* [Add-ins Dependency Isolation](#add-ins-dependency-isolation)
+* [Helpers](#helpers)
+    * [ResolveHelper](#resolvehelper)
+    * [Add-ins Dependency Isolation](#add-ins-dependency-isolation)
 
 ## Features
 
-### External command
+### ExternalCommand
 
-The **ExternalCommand** class contains an implementation for `IExternalCommand`.
+Contains an implementation for **ExternalCommand**.
 
 ```c#
 [Transaction(TransactionMode.Manual)]
@@ -106,9 +106,9 @@ public class Command : ExternalCommand
 Starting with Revit 2025, ExternalCommand uses **AssemblyLoadContext** to isolate dependencies.
 This feature allows plugins to run in a separate, isolated context, ensuring independent operation and preventing conflicts from incompatible library versions
 
-### External application
+### ExternalApplication
 
-The **ExternalApplication** class contains an implementation for `IExternalApplication`.
+Contains an implementation for **IExternalApplication**.
 
 ```c#
 public class Application : ExternalApplication
@@ -155,9 +155,9 @@ public class Application : ExternalApplication
 Starting with Revit 2025, ExternalApplication uses **AssemblyLoadContext** to isolate dependencies.
 This feature allows plugins to run in a separate, isolated context, ensuring independent operation and preventing conflicts from incompatible library versions
 
-### External DB application
+### ExternalDBApplication
 
-The **ExternalDBApplication** class contains an implementation for `IExternalDBApplication`.
+Contains an implementation for **IExternalDBApplication**.
 
 ```c#
 public class Application : ExternalDBApplication
@@ -183,7 +183,7 @@ This feature allows plugins to run in a separate, isolated context, ensuring ind
 
 ### External events
 
-**EventHandler** classes contains an implementation for `IExternalEventHandler`.
+Contains an implementations for **IExternalEventHandler**.
 
 It is used to modify the document when using modeless windows. 
 You can create your own handlers by deriving from this class.
@@ -341,9 +341,9 @@ Command completed
 
 ### External Command Availability
 
-**ExternalCommandAvailability** classes contains an implementation for `IExternalCommandAvailability`.
+Contains an implementation for **IExternalCommandAvailability**.
 
-It provides the implementation for an accessibility check for a Revit add-in External Command.
+It provides the accessibility check for a Revit add-in External Command.
 
 Starting with Revit 2025, ExternalCommandAvailability uses **AssemblyLoadContext** to isolate dependencies.
 If your implementation does not include dependencies, use the **IExternalCommandAvailability** interface to reduce memory allocation
@@ -381,7 +381,7 @@ The Toolkit provides implementation of various Revit interfaces, with the possib
 
 #### FamilyLoadOptions
 
-Contains an implementation for `IFamilyLoadOptions`.
+Contains an implementation for **IFamilyLoadOptions**.
 Provides a handler for loading families
 
 ```c#
@@ -392,7 +392,7 @@ document.LoadFamily(fileName, UIDocument.GetRevitUIFamilyLoadOptions(), out var 
 
 #### DuplicateTypeNamesHandler
 
-Contains an implementation for `IDuplicateTypeNamesHandler`.
+Contains an implementation for **IDuplicateTypeNamesHandler**.
 Provides a handler of duplicate type names encountered during a paste operation.
 
 ```c#
@@ -405,7 +405,7 @@ ElementTransformUtils.CopyElements(source, elementIds, destination, null, option
 
 #### SaveSharedCoordinatesCallback
 
-Contains an implementation for `ISaveSharedCoordinatesCallback`.
+Contains an implementation for **ISaveSharedCoordinatesCallback**.
 Provides a handler for control Revit when trying to unload or reload a Revit link with changes in shared coordinates.
 
 ```c#
@@ -421,8 +421,8 @@ linkType.Unload(new SaveSharedCoordinatesCallback(type =>
 
 #### FrameworkElementCreator
 
-Contains an implementation for `IFrameworkElementCreator`.
-Creator of **FrameworkElements** for the dockable pane.
+Contains an implementation for **IFrameworkElementCreator**.
+Creator of `FrameworkElements` for the dockable pane.
 
 ```c#
 DockablePaneProvider.Register(application, guid, title)
@@ -435,7 +435,7 @@ DockablePaneProvider.Register(application, guid, title)
 
 #### SelectionConfiguration
 
-Contains an implementation for `ISelectionFilter`.
+Contains an implementation for **ISelectionFilter**.
 Creates a configuration for creating Selection Filters.
 
 By default, all elements are allowed for selection:
@@ -464,28 +464,6 @@ var selectionConfiguration = new SelectionConfiguration()
 uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
 ```
 
-### Helpers
-
-Provides auxiliary components
-
-#### ResolveHelper
-
-Provides handlers to resolve dependencies.
-
-```c#
-try
-{
-    ResolveHelper.BeginAssemblyResolve<DockView>();
-    window.Show();
-}
-finally
-{
-    ResolveHelper.EndAssemblyResolve();
-}
-```
-
-Enabled by default for **ExternalCommand**, **ExternalApplication** and **ExternalDBApplication**.
-
 ### Decorators
 
 Simplified implementation of raw Revit classes
@@ -509,7 +487,31 @@ DockablePaneProvider
     });
 ```
 
-### Add-ins Dependency Isolation
+### Helpers
+
+Provides auxiliary components
+
+#### ResolveHelper
+
+Provides handlers to resolve dependencies for Revit 2024 and older.
+
+```c#
+try
+{
+    ResolveHelper.BeginAssemblyResolve<DockView>();
+    window.Show();
+}
+finally
+{
+    ResolveHelper.EndAssemblyResolve();
+}
+```
+
+Enabled by default for `ExternalCommand`, `ExternalApplication` and `ExternalDBApplication`.
+
+#### Add-ins Dependency Isolation
+
+Provides dependency isolation for Revit 2025 and earlier.
 
 This library enables running plugins in an isolated context using .NET [AssemblyLoadContext](https://learn.microsoft.com/en-us/dotnet/core/dependency-loading/understanding-assemblyloadcontext). 
 Each plugin executes independently, preventing conflicts from incompatible library versions. 

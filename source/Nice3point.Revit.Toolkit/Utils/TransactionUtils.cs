@@ -4,6 +4,7 @@
 ///     Provides control over transactions
 /// </summary>
 [PublicAPI]
+[Obsolete("This API will be removed in future package versions. Create transactions manually")]
 public static class TransactionManager
 {
     /// <summary>

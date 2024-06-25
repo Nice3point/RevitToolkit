@@ -516,8 +516,8 @@ Each plugin executes independently, preventing conflicts from incompatible libra
 
 How It Works:
 
-The core functionality centers on **AssemblyLoadContext**, which creates an isolated container for each plugin.
-When a plugin is loaded, it is assigned a unique **AssemblyLoadContext** instance, encapsulating the plugin and its dependencies to prevent interference with other plugins or the main application.
+The core functionality centers on `AssemblyLoadContext`, which creates an isolated container for each plugin.
+When a plugin is loaded, it is assigned a unique `AssemblyLoadContext` instance, encapsulating the plugin and its dependencies to prevent interference with other plugins or the main application.
 
 To use this isolation feature, developers must inherit their classes from:
 - ExternalCommand
@@ -526,10 +526,10 @@ To use this isolation feature, developers must inherit their classes from:
 - ExternalCommandAvailability
 
 These classes contain the built-in isolation mechanism under the hood.
-Plugins using interfaces such as **IExternalCommand** will not benefit from this isolation and will run in the default context.
+Plugins using interfaces such as `IExternalCommand` will not benefit from this isolation and will run in the default context.
 
 Limitations:
 
 - The isolated context feature is available starting with Revit 2025.
-- For older Revit versions, this library uses a **ResolveHelper** to help load dependencies from the plugin's folder, but does not protect against conflicts arising from incompatible packages.
+- For older Revit versions, this library uses a `ResolveHelper` to help load dependencies from the plugin's folder, but does not protect against conflicts arising from incompatible packages.
 - Additionally, plugins that do not inherit from the specified classes will not be isolated and may experience compatibility issues if they rely on the default context.

@@ -49,7 +49,7 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
     * [ResolveHelper](#resolvehelper)
 * [Decorators](#decorators)
     * [DockablePaneProvider](#dockablepaneprovider)
-* [Transaction utils](#transaction-utils)
+* [Add-ins Dependency Isolation](#add-ins-dependency-isolation)
 
 ## Features
 

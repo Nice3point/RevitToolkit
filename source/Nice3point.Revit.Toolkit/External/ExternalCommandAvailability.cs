@@ -33,7 +33,7 @@ public abstract class ExternalCommandAvailability : IExternalCommandAvailability
 #if NETCOREAPP
         if (_isolatedInstance is not null)
         {
-            return AddinLoadContext.Invoke<bool>(_isolatedInstance, nameof(IsCommandAvailable), applicationData, selectedCategories);
+            return AddinLoadContext.Invoke(_isolatedInstance, nameof(IsCommandAvailable), applicationData, selectedCategories);
         }
 
         var currentType = GetType();
@@ -43,7 +43,7 @@ public abstract class ExternalCommandAvailability : IExternalCommandAvailability
             var dependenciesProvider = AddinLoadContext.GetDependenciesProvider(currentType);
             _isolatedInstance = dependenciesProvider.CreateInstance(currentType);
 
-            return AddinLoadContext.Invoke<bool>(_isolatedInstance, nameof(IsCommandAvailable), applicationData, selectedCategories);
+            return AddinLoadContext.Invoke(_isolatedInstance, nameof(IsCommandAvailable), applicationData, selectedCategories);
         }
 
         return SetCommandAvailability(applicationData, selectedCategories);

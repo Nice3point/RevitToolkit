@@ -83,7 +83,7 @@ public abstract class ExternalCommand : IExternalCommand
         {
             var dependenciesProvider = AddinLoadContext.GetDependenciesProvider(currentType);
             var instance = dependenciesProvider.CreateInstance(currentType);
-            return AddinLoadContext.ExecuteCommand(instance, commandData, ref message, elements);
+            return AddinLoadContext.Invoke(instance, commandData, ref message, elements);
         }
 #endif
 

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
+using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.UI;
 
 namespace Nice3point.Revit.Toolkit.Helpers;
@@ -17,6 +18,7 @@ internal sealed class AddinLoadContext : AssemblyLoadContext
     private static readonly Dictionary<string, AddinLoadContext> DependenciesProviders = new(1);
 
     private readonly AssemblyDependencyResolver _resolver;
+    private const BindingFlags MethodSearchFlags = BindingFlags.Public | BindingFlags.Instance;
 
     private AddinLoadContext(Type type, string addinName) : base(addinName)
     {
@@ -35,10 +37,11 @@ internal sealed class AddinLoadContext : AssemblyLoadContext
     /// </summary>
     public static AddinLoadContext GetDependenciesProvider(Type type)
     {
+        // Assembly location used as context name and the unique provider key
         var addinRoot = Path.GetDirectoryName(type.Assembly.Location)!;
-        var addinName = Path.GetFileName(addinRoot)!;
         if (DependenciesProviders.TryGetValue(addinRoot, out var provider)) return provider;
 
+        var addinName = Path.GetFileName(addinRoot)!;
         provider = new AddinLoadContext(type, addinName);
         DependenciesProviders.Add(addinRoot, provider);
 
@@ -65,35 +68,53 @@ internal sealed class AddinLoadContext : AssemblyLoadContext
     }
 
     /// <summary>
-    ///     Execute method in the separated context
+    ///     Execute ExternalApplication in the separated context
     /// </summary>
-    /// <remarks>Reference types are not supported</remarks>
-    public static void Invoke(object instance, string methodName, params object[] args)
+    public static Result Invoke(object instance, string methodName, UIControlledApplication application)
     {
         var instanceType = instance.GetType();
-        var methodParameterTypes = args.Select(arg => arg.GetType()).ToArray();
-        var method = instanceType.GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance, null, methodParameterTypes, null)!;
-        method.Invoke(instance, args);
+        var method = instanceType.GetMethod(methodName, MethodSearchFlags, null, [typeof(UIControlledApplication)], null)!;
+        return (Result)method.Invoke(instance, [application])!;
     }
 
     /// <summary>
-    ///     Execute method in the separated context
+    ///     Execute ExternalDbApplication in the separated context
     /// </summary>
-    /// <remarks>Reference types are not supported</remarks>
-    public static T Invoke<T>(object instance, string methodName, params object[] args)
+    public static ExternalDBApplicationResult Invoke(object instance, string methodName, ControlledApplication application)
     {
         var instanceType = instance.GetType();
-        var methodParameterTypes = args.Select(arg => arg.GetType()).ToArray();
-        var method = instanceType.GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance, null, methodParameterTypes, null)!;
-        return (T)method.Invoke(instance, args);
+        var method = instanceType.GetMethod(methodName, MethodSearchFlags, null, [typeof(ControlledApplication)], null)!;
+        return (ExternalDBApplicationResult)method.Invoke(instance, [application])!;
+    }
+
+    /// <summary>
+    ///     Execute ExternalCommandAvailability in the separated context
+    /// </summary>
+    public static bool Invoke(object instance, string methodName, UIApplication applicationData, CategorySet selectedCategories)
+    {
+        var instanceType = instance.GetType();
+
+        Type[] methodParameterTypes =
+        [
+            typeof(UIApplication),
+            typeof(CategorySet)
+        ];
+
+        object[] methodParameters =
+        [
+            applicationData,
+            selectedCategories
+        ];
+
+        var method = instanceType.GetMethod(methodName, MethodSearchFlags, null, methodParameterTypes, null)!;
+        return (bool)method.Invoke(instance, methodParameters)!;
     }
 
     /// <summary>
     ///     Execute IExternalCommand in the separated context
     /// </summary>
-    public static Result ExecuteCommand(object command, ExternalCommandData commandData, ref string message, ElementSet elements)
+    public static Result Invoke(object command, ExternalCommandData commandData, ref string message, ElementSet elements)
     {
-        const BindingFlags searchFlags = BindingFlags.Public | BindingFlags.Instance;
         var instanceType = command.GetType();
 
         Type[] methodParameterTypes =
@@ -110,7 +131,7 @@ internal sealed class AddinLoadContext : AssemblyLoadContext
             elements
         ];
 
-        var method = instanceType.GetMethod(nameof(IExternalCommand.Execute), searchFlags, null, methodParameterTypes, null)!;
+        var method = instanceType.GetMethod(nameof(IExternalCommand.Execute), MethodSearchFlags, null, methodParameterTypes, null)!;
         var result = (Result)method.Invoke(command, methodParameters)!;
         message = (string)methodParameters[1];
         return result;

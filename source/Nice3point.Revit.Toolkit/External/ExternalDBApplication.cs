@@ -39,7 +39,7 @@ public abstract class ExternalDBApplication : IExternalDBApplication
         {
             var dependenciesProvider = AddinLoadContext.GetDependenciesProvider(currentType);
             _isolatedInstance = dependenciesProvider.CreateInstance(currentType);
-            return AddinLoadContext.Invoke<ExternalDBApplicationResult>(_isolatedInstance, nameof(OnStartup), application);
+            return AddinLoadContext.Invoke(_isolatedInstance, nameof(OnStartup), application);
         }
 #endif
 
@@ -69,7 +69,7 @@ public abstract class ExternalDBApplication : IExternalDBApplication
 #if NETCOREAPP
         if (!AddinLoadContext.CheckAccess(currentType))
         {
-            return AddinLoadContext.Invoke<ExternalDBApplicationResult>(_isolatedInstance, nameof(OnShutdown), application);
+            return AddinLoadContext.Invoke(_isolatedInstance, nameof(OnShutdown), application);
         }
 
         OnShutdown();

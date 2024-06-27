@@ -44,7 +44,7 @@ public abstract class ExternalApplication : IExternalApplication
         {
             var dependenciesProvider = AddinLoadContext.GetDependenciesProvider(currentType);
             _isolatedInstance = dependenciesProvider.CreateInstance(currentType);
-            return AddinLoadContext.Invoke<Result>(_isolatedInstance, nameof(OnStartup), application);
+            return AddinLoadContext.Invoke(_isolatedInstance, nameof(OnStartup), application);
         }
 #endif
 
@@ -76,7 +76,7 @@ public abstract class ExternalApplication : IExternalApplication
 #if NETCOREAPP
         if (!AddinLoadContext.CheckAccess(currentType))
         {
-            return AddinLoadContext.Invoke<Result>(_isolatedInstance, nameof(OnShutdown), application);
+            return AddinLoadContext.Invoke(_isolatedInstance, nameof(OnShutdown), application);
         }
 
         OnShutdown();

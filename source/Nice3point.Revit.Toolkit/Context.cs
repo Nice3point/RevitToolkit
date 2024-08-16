@@ -20,13 +20,16 @@ public static class Context
     private static int? _suppressDialogCode;
     private static Action<DialogBoxShowingEventArgs>? _suppressDialogHandler;
 
+    private static MethodInfo _apiCallDepthManagerMethod;
+    private static MethodInfo _isRevitInApiModeMethod;
+
     static Context()
     {
         const BindingFlags staticFlags = BindingFlags.NonPublic | BindingFlags.Static;
-        var dbAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.GetName().Name == "RevitDBAPI");
-        ThrowIfNotSupported(dbAssembly);
-
-        var getApplicationMethod = dbAssembly!.ManifestModule.GetMethods(staticFlags).FirstOrDefault(info => info.Name == "RevitApplication.getApplication_");
+        var apiAssembly = AppDomain.CurrentDomain.GetAssemblies().First(assembly => assembly.GetName().Name == "APIUIAPI");
+        var dbAssembly = AppDomain.CurrentDomain.GetAssemblies().First(assembly => assembly.GetName().Name == "RevitDBAPI");
+        
+        var getApplicationMethod = dbAssembly.ManifestModule.GetMethods(staticFlags).FirstOrDefault(info => info.Name == "RevitApplication.getApplication_");
         ThrowIfNotSupported(getApplicationMethod);
 
         var proxyType = dbAssembly.DefinedTypes.FirstOrDefault(info => info.FullName == "Autodesk.Revit.Proxy.ApplicationServices.ApplicationProxy");
@@ -46,6 +49,12 @@ public static class Context
         var application = (Application)applicationConstructor!.Invoke([proxy]);
         ThrowIfNotSupported(proxy);
 
+        _apiCallDepthManagerMethod = apiAssembly.ManifestModule.GetMethods(staticFlags).First(info => info.Name == "APICallDepthManager.singletonfactory");
+        ThrowIfNotSupported(_apiCallDepthManagerMethod);
+        
+        _isRevitInApiModeMethod = apiAssembly.ManifestModule.GetMethods(staticFlags).First(info => info.Name == "APICallDepthManager.isRevitInAPIMode");
+        ThrowIfNotSupported(_isRevitInApiModeMethod);
+        
         UiApplication = new UIApplication(application);
     }
 
@@ -121,6 +130,21 @@ public static class Context
     ///     Returns <see langword="null" /> if this document doesn't represent the active document.
     /// </remarks>
     public static View? ActiveGraphicalView => UiApplication.ActiveUIDocument.ActiveGraphicalView;
+    
+    /// <summary>
+    ///     Determines whether Revit is in API mode or not
+    /// </summary>
+    /// <remarks>
+    ///     A direct API call should be used if Revit is currently within an API context, otherwise API calls should be handled by <see cref="Autodesk.Revit.UI.IExternalEventHandler"/>
+    /// </remarks>
+    public static bool IsRevitInApiMode
+    {
+        get
+        {
+            var apiCallDepthManager = _apiCallDepthManagerMethod.Invoke(null, null);
+            return (bool) _isRevitInApiModeMethod.Invoke(null, [apiCallDepthManager])!;
+        }
+    }
 
     /// <summary>
     ///     Suppresses the display of the Revit error and warning messages during transaction
@@ -216,7 +240,7 @@ public static class Context
         _suppressFailures = false;
         Application.FailuresProcessing -= ResolveFailures;
     }
-
+    
     private static void ResolveDialogBox(object? sender, DialogBoxShowingEventArgs args)
     {
         if (_suppressDialogCode.HasValue)

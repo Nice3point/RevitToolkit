@@ -15,7 +15,7 @@ namespace Nice3point.Revit.Toolkit.External.Handlers;
 [PublicAPI]
 public class IdlingEventHandler : ExternalEventHandler
 {
-    private Action<UIApplication> _action;
+    private Action<UIApplication>? _action;
 
     /// <summary>Callback invoked by Revit. Not used to be called in user code</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -26,14 +26,14 @@ public class IdlingEventHandler : ExternalEventHandler
         uiApplication.Idling += HandleIdling;
     }
 
-    private void HandleIdling(object sender, IdlingEventArgs e)
+    private void HandleIdling(object? sender, IdlingEventArgs e)
     {
-        var uiApplication = (UIApplication)sender;
+        var uiApplication = (UIApplication)sender!;
         uiApplication.Idling -= HandleIdling;
 
         try
         {
-            _action(uiApplication);
+            _action!(uiApplication);
         }
         finally
         {
@@ -51,7 +51,7 @@ public class IdlingEventHandler : ExternalEventHandler
     ///     edit modes are currently active in Revit, which is the same policy
     ///     like the one that applies to evoking external commands
     /// </remarks>
-    public void Raise([NotNull] Action<UIApplication> action)
+    public void Raise(Action<UIApplication> action)
     {
         if (_action is null) _action = action;
         else _action += action;

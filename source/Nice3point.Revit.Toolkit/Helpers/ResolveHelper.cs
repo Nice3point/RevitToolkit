@@ -26,8 +26,8 @@ namespace Nice3point.Revit.Toolkit.Helpers;
 [PublicAPI]
 public static class ResolveHelper
 {
-    private static string _moduleDirectory;
-    private static object _domainResolvers;
+    private static string? _moduleDirectory;
+    private static object? _domainResolvers;
 
     /// <summary>
     ///     Subscribes the current domain to resolve dependencies for the type.
@@ -96,10 +96,10 @@ public static class ResolveHelper
         _moduleDirectory = null;
     }
 
-    private static Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
+    private static Assembly? OnAssemblyResolve(object? sender, ResolveEventArgs args)
     {
         var assemblyName = new AssemblyName(args.Name).Name;
-        var assemblyPath = Path.Combine(_moduleDirectory, $"{assemblyName}.dll");
+        var assemblyPath = Path.Combine(_moduleDirectory!, $"{assemblyName}.dll");
         if (!File.Exists(assemblyPath)) return null;
 
         return Assembly.LoadFrom(assemblyPath);

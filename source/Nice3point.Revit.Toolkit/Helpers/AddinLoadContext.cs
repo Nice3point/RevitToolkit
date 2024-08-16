@@ -26,7 +26,7 @@ internal sealed class AddinLoadContext : AssemblyLoadContext
         _resolver = new AssemblyDependencyResolver(addinLocation);
     }
 
-    protected override Assembly Load(AssemblyName assemblyName)
+    protected override Assembly? Load(AssemblyName assemblyName)
     {
         var assemblyPath = _resolver.ResolveAssemblyToPath(assemblyName);
         return assemblyPath is not null ? LoadFromAssemblyPath(assemblyPath) : null;
@@ -41,7 +41,7 @@ internal sealed class AddinLoadContext : AssemblyLoadContext
         var addinRoot = Path.GetDirectoryName(type.Assembly.Location)!;
         if (DependenciesProviders.TryGetValue(addinRoot, out var provider)) return provider;
 
-        var addinName = Path.GetFileName(addinRoot)!;
+        var addinName = Path.GetFileName(addinRoot);
         provider = new AddinLoadContext(type, addinName);
         DependenciesProviders.Add(addinRoot, provider);
 

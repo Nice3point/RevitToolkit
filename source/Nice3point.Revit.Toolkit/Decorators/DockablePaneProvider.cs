@@ -8,10 +8,12 @@ namespace Nice3point.Revit.Toolkit.Decorators;
 [PublicAPI]
 public class DockablePaneProvider : IDockablePaneProvider, IDockablePaneProviderId, IDockablePaneProviderTitle, IDockablePaneProviderConfiguration
 {
+#nullable disable //Nullable values controlled by Fluent API
     private UIControlledApplication _application;
     private DockablePaneId _id;
     private Action<DockablePaneProviderData> _setupHandler;
     private string _title;
+#nullable restore
 
     private DockablePaneProvider()
     {

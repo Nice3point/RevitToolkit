@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using Autodesk.Revit.ApplicationServices;
-using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using Nice3point.Revit.Toolkit.Helpers;
@@ -13,24 +12,17 @@ namespace Nice3point.Revit.Toolkit.External;
 [PublicAPI]
 public abstract class ExternalCommand : IExternalCommand
 {
-    private bool _suppressFailures;
-
-    private SuppressException _suppressException;
-    private Action<Exception> _exceptionHandler;
-
-    private int _dialogResultCode;
-    private SuppressDialog _suppressDialog;
-    private Action<DialogBoxShowingEventArgs> _dialogBoxHandler;
+    private bool _suppressExceptions;
 
     /// <summary>
     ///     Element set indicating problem elements to display in the failure dialog. This will be used only if the command status was "Failed".
     /// </summary>
-    public ElementSet ElementSet { get; private set; }
+    public ElementSet ElementSet { get; private set; } = default!;
 
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.ExternalCommandData" /> that is needed by an external command
     /// </summary>
-    public ExternalCommandData ExternalCommandData { get; private set; }
+    public ExternalCommandData ExternalCommandData { get; private set; } = default!;
 
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIApplication" /> that is needed by an external command
@@ -55,7 +47,7 @@ public abstract class ExternalCommand : IExternalCommand
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIDocument.ActiveView" /> that is needed by an external command
     /// </summary>
-    public View ActiveView => Context.ActiveView;
+    public View ActiveView => Context.ActiveView!;
 
     /// <summary>
     ///     Informs Autodesk Revit of the status of your application after execution.
@@ -98,26 +90,22 @@ public abstract class ExternalCommand : IExternalCommand
 #endif
             Execute();
         }
-        catch (Exception exception)
+        catch
         {
-            switch (_suppressException)
+            if (_suppressExceptions)
             {
-                case SuppressException.Full:
-                    message = ErrorMessage;
-                    return Result.Failed;
-                case SuppressException.Handler:
-                    _exceptionHandler?.Invoke(exception);
-                    message = ErrorMessage;
-                    return Result.Failed;
+                //We must cancel the command because the Failed result shows Error dialog
+                return Result.Cancelled;
             }
 
+            Result = Result.Failed;
             throw;
         }
         finally
         {
             message = ErrorMessage;
-            RestoreFailures();
-            RestoreDialogs();
+            Context.RestoreFailures();
+            Context.RestoreDialogs();
 #if !NETCOREAPP
             ResolveHelper.EndAssemblyResolve();
 #endif
@@ -134,127 +122,46 @@ public abstract class ExternalCommand : IExternalCommand
     /// <summary>
     ///     Suppresses exceptions in external command
     /// </summary>
-    /// <remarks>Does not affect the output of the ErrorMessage</remarks>
+    /// <remarks>
+    ///     Removes unhandled exception messages that include stackTrace<br />
+    ///     Shows Error dialog if an ErrorMessage is provided
+    /// </remarks>
+    [Obsolete("SuppressExceptions will be removed in the next Major version")]
     public void SuppressExceptions()
     {
-        _suppressException = SuppressException.Full;
-    }
-
-    /// <summary>
-    ///     Suppresses exceptions in external command
-    /// </summary>
-    /// <remarks>Does not affect the output of the ErrorMessage</remarks>
-    public void SuppressExceptions(Action<Exception> handler)
-    {
-        _suppressException = SuppressException.Handler;
-        _exceptionHandler = handler;
+        _suppressExceptions = true;
     }
 
     /// <summary>
     ///     Suppresses failures in external command
     /// </summary>
     /// <remarks>Deletes all FailureMessages of severity "Warning"</remarks>
-    public void SuppressFailures()
-    {
-        if (_suppressFailures) return;
-
-        _suppressFailures = true;
-        Application.FailuresProcessing += ResolveFailures;
-    }
+    [Obsolete("SuppressFailures will be removed in the next Major version, use Context.SuppressFailures() instead")]
+    public void SuppressFailures() => Context.SuppressFailures();
 
     /// <summary>
     ///     Suppresses the display of dialog box or a message box
     /// </summary>
     /// <param name="result">The result code you wish the Revit dialog to return</param>
-    /// <remarks>
-    ///     The range of valid result values depends on the type of dialog as follows:
-    ///     <list type="number">
-    ///         <item>
-    ///             DialogBox: Any non-zero value will cause a dialog to be dismissed.
-    ///         </item>
-    ///         <item>
-    ///             MessageBox: Standard Message Box IDs, such as IDOK and IDCANCEL, are accepted.
-    ///             For all possible IDs, refer to the Windows API documentation.
-    ///             The ID used must be relevant to the buttons in a message box.
-    ///         </item>
-    ///         <item>
-    ///             TaskDialog: Standard Message Box IDs and Revit Custom IDs are accepted,
-    ///             depending on the buttons used in a dialog. Standard buttons, such as OK
-    ///             and Cancel, have standard IDs described in Windows API documentation.
-    ///             Buttons with custom text have custom IDs with incremental values
-    ///             starting at 1001 for the left-most or top-most button in a task dialog.
-    ///         </item>
-    ///     </list>
-    /// </remarks>
-    public void SuppressDialogs(int result = 1)
-    {
-        if (_suppressDialog == SuppressDialog.None) UiApplication.DialogBoxShowing += ResolveDialogBox;
-        _suppressDialog = SuppressDialog.ResultCode;
-        _dialogResultCode = result;
-    }
+    [Obsolete("SuppressExceptions will be removed in the next Major version, use Context.SuppressDialogs() instead")]
+    public void SuppressDialogs(int result = 1) => Context.SuppressDialogs(result);
 
     /// <summary>
     ///     Suppresses the display of dialog box or a message box
     /// </summary>
     /// <param name="handler">Dialog handler</param>
-    public void SuppressDialogs(Action<DialogBoxShowingEventArgs> handler)
-    {
-        if (_suppressDialog == SuppressDialog.None) UiApplication.DialogBoxShowing += ResolveDialogBox;
-        _suppressDialog = SuppressDialog.Handler;
-        _dialogBoxHandler = handler;
-    }
+    [Obsolete("SuppressExceptions will be removed in the next Major version, use Context.SuppressDialogs() instead")]
+    public void SuppressDialogs(Action<DialogBoxShowingEventArgs> handler) => Context.SuppressDialogs(handler);
 
     /// <summary>
     ///     Restores display of dialog box or a message box
     /// </summary>
-    public void RestoreDialogs()
-    {
-        if (_suppressDialog != SuppressDialog.None) UiApplication.DialogBoxShowing -= ResolveDialogBox;
-        _suppressDialog = SuppressDialog.None;
-    }
+    [Obsolete("SuppressExceptions will be removed in the next Major version, use Context.RestoreDialogs() instead")]
+    public void RestoreDialogs() => Context.RestoreDialogs();
 
     /// <summary>
     ///     Restores failure handling
     /// </summary>
-    public void RestoreFailures()
-    {
-        if (_suppressFailures == false) return;
-
-        Application.FailuresProcessing -= ResolveFailures;
-        _suppressFailures = false;
-    }
-
-    private void ResolveDialogBox(object sender, DialogBoxShowingEventArgs args)
-    {
-        switch (_suppressDialog)
-        {
-            case SuppressDialog.ResultCode:
-                args.OverrideResult(_dialogResultCode);
-                break;
-            case SuppressDialog.Handler:
-                _dialogBoxHandler?.Invoke(args);
-                break;
-        }
-    }
-
-    private void ResolveFailures(object sender, FailuresProcessingEventArgs args)
-    {
-        args.GetFailuresAccessor().DeleteAllWarnings();
-    }
-}
-
-[PublicAPI]
-internal enum SuppressDialog
-{
-    None,
-    ResultCode,
-    Handler
-}
-
-[PublicAPI]
-internal enum SuppressException
-{
-    None,
-    Full,
-    Handler
+    [Obsolete("SuppressExceptions will be removed in the next Major version, use Context.RestoreFailures() instead")]
+    public void RestoreFailures() => Context.RestoreFailures();
 }

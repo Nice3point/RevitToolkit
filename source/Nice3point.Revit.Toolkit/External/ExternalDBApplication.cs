@@ -13,7 +13,7 @@ namespace Nice3point.Revit.Toolkit.External;
 public abstract class ExternalDBApplication : IExternalDBApplication
 {
 #if NETCOREAPP
-    private object _isolatedInstance;
+    private object? _isolatedInstance;
 #endif
     /// <summary>
     ///     Indicates if the external application completes its work successfully.
@@ -26,7 +26,7 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.ApplicationServices.ControlledApplication" /> that is needed by an external application
     /// </summary>
-    public ControlledApplication Application { get; private set; }
+    public ControlledApplication Application { get; private set; } = default!;
 
     /// <summary>Callback invoked by Revit. Not used to be called in user code</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -69,7 +69,7 @@ public abstract class ExternalDBApplication : IExternalDBApplication
 #if NETCOREAPP
         if (!AddinLoadContext.CheckAccess(currentType))
         {
-            return AddinLoadContext.Invoke(_isolatedInstance, nameof(OnShutdown), application);
+            return AddinLoadContext.Invoke(_isolatedInstance!, nameof(OnShutdown), application);
         }
 
         OnShutdown();

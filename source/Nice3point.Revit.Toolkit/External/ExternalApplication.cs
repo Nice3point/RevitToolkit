@@ -12,7 +12,7 @@ namespace Nice3point.Revit.Toolkit.External;
 public abstract class ExternalApplication : IExternalApplication
 {
 #if NETCOREAPP
-    private object _isolatedInstance;
+    private object? _isolatedInstance;
 #endif
 
     /// <summary>
@@ -26,7 +26,7 @@ public abstract class ExternalApplication : IExternalApplication
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIControlledApplication" /> that is needed by an external application
     /// </summary>
-    public UIControlledApplication Application { get; private set; }
+    public UIControlledApplication Application { get; private set; } = default!;
 
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIApplication" /> that is needed by an external application
@@ -76,7 +76,7 @@ public abstract class ExternalApplication : IExternalApplication
 #if NETCOREAPP
         if (!AddinLoadContext.CheckAccess(currentType))
         {
-            return AddinLoadContext.Invoke(_isolatedInstance, nameof(OnShutdown), application);
+            return AddinLoadContext.Invoke(_isolatedInstance!, nameof(OnShutdown), application);
         }
 
         OnShutdown();

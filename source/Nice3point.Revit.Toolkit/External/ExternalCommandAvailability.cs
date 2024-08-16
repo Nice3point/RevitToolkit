@@ -12,7 +12,7 @@ namespace Nice3point.Revit.Toolkit.External;
 public abstract class ExternalCommandAvailability : IExternalCommandAvailability
 {
 #if NETCOREAPP
-    private object _isolatedInstance;
+    private object? _isolatedInstance;
 #endif
 
     /// <summary> Implement this method to provide control over whether your external command is enabled or disabled. </summary>

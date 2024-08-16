@@ -6,7 +6,7 @@
 [PublicAPI]
 public class SaveSharedCoordinatesCallback : ISaveSharedCoordinatesCallback
 {
-    private readonly Func<RevitLinkType, SaveModifiedLinksOptions> _handler;
+    private readonly Func<RevitLinkType, SaveModifiedLinksOptions>? _handler;
     private readonly SaveModifiedLinksOptions _options;
 
     /// <summary>

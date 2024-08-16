@@ -9,7 +9,7 @@ namespace Nice3point.Revit.Toolkit.External.Handlers;
 [PublicAPI]
 public class ActionEventHandler : ExternalEventHandler
 {
-    private Action<UIApplication> _action;
+    private Action<UIApplication>? _action;
 
     /// <summary>Callback invoked by Revit. Not used to be called in user code</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -37,7 +37,7 @@ public class ActionEventHandler : ExternalEventHandler
     ///     edit modes are currently active in Revit, which is the same policy
     ///     like the one that applies to evoking external commands
     /// </remarks>
-    public void Raise([NotNull] Action<UIApplication> action)
+    public void Raise(Action<UIApplication> action)
     {
         if (_action is null) _action = action;
         else _action += action;

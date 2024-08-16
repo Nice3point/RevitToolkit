@@ -12,7 +12,7 @@ namespace Nice3point.Revit.Toolkit.Options;
 [PublicAPI]
 public class FrameworkElementCreator<T> : IFrameworkElementCreator where T : FrameworkElement
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceProvider? _serviceProvider;
 
     /// <summary>
     ///     Factory to create an instance of a FrameworkElement based on its type
@@ -34,17 +34,17 @@ public class FrameworkElementCreator<T> : IFrameworkElementCreator where T : Fra
     ///     Method called to create the FrameworkElement.
     /// </summary>
     /// <returns>Created FrameworkElement.</returns>
-    public FrameworkElement CreateFrameworkElement()
+    public FrameworkElement? CreateFrameworkElement()
     {
         var elementType = typeof(T);
 
 #if NETCOREAPP
         if (_serviceProvider is not null)
         {
-            return (FrameworkElement)_serviceProvider.GetService(elementType);
+            return (FrameworkElement?)_serviceProvider.GetService(elementType);
         }
 
-        return (FrameworkElement)Activator.CreateInstance(elementType);
+        return (FrameworkElement?)Activator.CreateInstance(elementType);
 #else
         try
         {

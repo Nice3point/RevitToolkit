@@ -39,8 +39,8 @@ public class SelectionConfiguration
 
     private class SelectionFilterInternal(SelectionConfiguration selectionConfiguration) : ISelectionFilter, ISelectionFilterConfiguration
     {
-        private Func<Element, bool> _elementHandler;
-        private Func<Reference, XYZ, bool> _referenceHandler;
+        private Func<Element, bool>? _elementHandler;
+        private Func<Reference, XYZ, bool>? _referenceHandler;
 
         public bool AllowElement(Element elem)
         {

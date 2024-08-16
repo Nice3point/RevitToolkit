@@ -29,7 +29,7 @@ public static class TransactionManager
     [Pure]
     public static ITransaction Modify(this Document document, [InstantHandle] Func<IDocumentTransactionSettings, ITransactionSettings> settings)
     {
-        var transactionSettings = settings?.Invoke(new DocumentTransactionSettings());
+        var transactionSettings = settings.Invoke(new DocumentTransactionSettings());
         return new Transaction(document, (TransactionSettings)transactionSettings);
     }
 
@@ -58,7 +58,7 @@ public static class TransactionManager
     [Pure]
     public static IGroupTransaction Modify(this Document document, [InstantHandle] Func<IDocumentTransactionSettings, IGroupTransactionSettings> settings)
     {
-        var transactionSettings = settings?.Invoke(new DocumentTransactionSettings());
+        var transactionSettings = settings.Invoke(new DocumentTransactionSettings());
         return new GroupTransaction(document, (GroupTransactionSettings)transactionSettings);
     }
 }
@@ -66,13 +66,13 @@ public static class TransactionManager
 internal sealed class DocumentTransactionSettings : IDocumentTransactionSettings
 {
     public ITransactionSettings Transaction => new TransactionSettings();
-    public ISubTransactionSettings SubTransaction => null;
+    public ISubTransactionSettings? SubTransaction => null;
     public IGroupTransactionSettings GroupTransaction => new GroupTransactionSettings();
 }
 
 internal sealed class TransactionSettings : ITransactionSettings
 {
-    private string _name;
+    private string? _name;
 
     public string Name
     {
@@ -80,7 +80,7 @@ internal sealed class TransactionSettings : ITransactionSettings
         private set => _name = value;
     }
 
-    public Action<Autodesk.Revit.DB.Transaction> InitializeHandler { get; private set; }
+    public Action<Autodesk.Revit.DB.Transaction>? InitializeHandler { get; private set; }
 
     public ITransactionSettings SetName(string name)
     {
@@ -124,7 +124,7 @@ internal sealed class TransactionSettings : ITransactionSettings
 
 internal sealed class GroupTransactionSettings : IGroupTransactionSettings
 {
-    private string _name;
+    private string? _name;
 
     public string Name
     {
@@ -132,9 +132,9 @@ internal sealed class GroupTransactionSettings : IGroupTransactionSettings
         private set => _name = value;
     }
 
-    public Action<TransactionGroup> InitializeHandler { get; private set; }
+    public Action<TransactionGroup>? InitializeHandler { get; private set; }
 
-    public IGroupTransactionSettings SetName([NotNull] string name)
+    public IGroupTransactionSettings SetName(string name)
     {
         Name = name;
         return this;
@@ -149,7 +149,7 @@ internal sealed class GroupTransactionSettings : IGroupTransactionSettings
 
 internal sealed class Transaction(Document document, TransactionSettings settings) : ITransaction
 {
-    public void Commit(Action<Document, Autodesk.Revit.DB.Transaction> action)
+    public void Commit(Action<Document, Autodesk.Revit.DB.Transaction>? action)
     {
         var transaction = new Autodesk.Revit.DB.Transaction(document, settings.Name);
         settings.InitializeHandler?.Invoke(transaction);
@@ -166,7 +166,7 @@ internal sealed class Transaction(Document document, TransactionSettings setting
         }
     }
 
-    public void RollBack(Action<Document, Autodesk.Revit.DB.Transaction> action)
+    public void RollBack(Action<Document, Autodesk.Revit.DB.Transaction>? action)
     {
         var transaction = new Autodesk.Revit.DB.Transaction(document, settings.Name);
         transaction.Start();
@@ -184,7 +184,7 @@ internal sealed class Transaction(Document document, TransactionSettings setting
 
 internal sealed class SubTransaction(Document document) : ISubTransaction
 {
-    public void Commit(Action<Document, Autodesk.Revit.DB.SubTransaction> action)
+    public void Commit(Action<Document, Autodesk.Revit.DB.SubTransaction>? action)
     {
         var transaction = new Autodesk.Revit.DB.SubTransaction(document);
         transaction.Start();
@@ -200,7 +200,7 @@ internal sealed class SubTransaction(Document document) : ISubTransaction
         }
     }
 
-    public void RollBack(Action<Document, Autodesk.Revit.DB.SubTransaction> action)
+    public void RollBack(Action<Document, Autodesk.Revit.DB.SubTransaction>? action)
     {
         var transaction = new Autodesk.Revit.DB.SubTransaction(document);
         transaction.Start();
@@ -218,7 +218,7 @@ internal sealed class SubTransaction(Document document) : ISubTransaction
 
 internal sealed class GroupTransaction(Document document, GroupTransactionSettings settings) : IGroupTransaction
 {
-    public void Commit(Action<Document, TransactionGroup> action)
+    public void Commit(Action<Document, TransactionGroup>? action)
     {
         var transaction = new TransactionGroup(document, settings.Name);
         settings.InitializeHandler?.Invoke(transaction);
@@ -235,7 +235,7 @@ internal sealed class GroupTransaction(Document document, GroupTransactionSettin
         }
     }
 
-    public void RollBack(Action<Document, TransactionGroup> action)
+    public void RollBack(Action<Document, TransactionGroup>? action)
     {
         var transaction = new TransactionGroup(document, settings.Name);
         transaction.Start();
@@ -256,7 +256,7 @@ internal sealed class GroupTransaction(Document document, GroupTransactionSettin
         transaction.Start();
         try
         {
-            action?.Invoke(document, transaction);
+            action.Invoke(document, transaction);
             transaction.Assimilate();
         }
         finally
@@ -281,7 +281,7 @@ public interface IDocumentTransactionSettings
     /// <summary>
     ///     Provides access for <see cref="ISubTransactionSettings" />
     /// </summary>
-    public ISubTransactionSettings SubTransaction { get; }
+    public ISubTransactionSettings? SubTransaction { get; }
 
     /// <summary>
     ///     Provides access for <see cref="IGroupTransactionSettings" />

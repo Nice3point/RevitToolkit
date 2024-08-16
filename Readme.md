@@ -325,7 +325,7 @@ Interface to global information about an application environment.
 
 It allows access to application-specific data, as well as up-calls for application-level operations such as dialog and failure handling.
 
-List of available application properties:
+List of available environment properties:
 
 - Context.Application;
 - Context.UiApplication;
@@ -333,14 +333,32 @@ List of available application properties:
 - Context.UiDocument;
 - Context.ActiveView;
 - Context.ActiveGraphicalView;
+- Context.IsRevitInApiMode;
 
-**Context** provides data from any Revit context:
+**Context** data can be accessed from any application execution location:
 
 ```C#
 public void Execute()
 {
     Context.Document.Delete(elementId);
     Context.ActiveView = view;
+}
+```
+
+If your application can run in a separate thread or use API requests in an asynchronous context, perform an **IsRevitInApiMode** check.
+A direct API call should be used if Revit is currently within an API context, otherwise API calls should be handled by `IExternalEventHandler`:
+
+```C#
+public void Execute()
+{
+    if (Context.IsRevitInApiMode)
+    {
+        Execute();
+    }
+    else
+    {
+        ActionEventHandler.Raise(application => Execute());
+    }
 }
 ```
 

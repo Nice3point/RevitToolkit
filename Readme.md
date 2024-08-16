@@ -29,28 +29,31 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 
 ## Table of contents
 
-* [External command](#externalcommand)
-* [External application](#externalapplication)
-* [External DB application](#externaldbapplication)
+* [ExternalCommand](#externalcommand)
+* [ExternalApplication](#externalapplication)
+* [ExternalDBApplication](#externaldbapplication)
 * [External events](#external-events)
-    * [ActionEventHandler](#actioneventhandler)
-    * [IdlingEventHandler](#idlingeventhandler)
-    * [AsyncEventHandler](#asynceventhandler)
-    * [AsyncEventHandler\<T>](#asynceventhandlert)
-* [External command availability](#externalcommandavailability)
-    * [AvailableCommandController](#availablecommandcontroller)
+  * [ActionEventHandler](#actioneventhandler)
+  * [IdlingEventHandler](#idlingeventhandler)
+  * [AsyncEventHandler](#asynceventhandler)
+  * [AsyncEventHandler\<T>](#asynceventhandlert)
+* [ExternalCommandAvailability](#externalcommandavailability)
+  * [AvailableCommandController](#availablecommandcontroller)
 * [Context](#context)
 * [Options](#options)
-    * [FamilyLoadOptions](#familyloadoptions)
-    * [DuplicateTypeNamesHandler](#duplicatetypenameshandler)
-    * [SaveSharedCoordinatesCallback](#savesharedcoordinatescallback)
-    * [FrameworkElementCreator](#frameworkelementcreator)
-    * [SelectionConfiguration](#selectionconfiguration)
+  * [FamilyLoadOptions](#familyloadoptions)
+  * [DuplicateTypeNamesHandler](#duplicatetypenameshandler)
+  * [SaveSharedCoordinatesCallback](#savesharedcoordinatescallback)
+  * [FrameworkElementCreator](#frameworkelementcreator)
+  * [SelectionConfiguration](#selectionconfiguration)
 * [Decorators](#decorators)
-    * [DockablePaneProvider](#dockablepaneprovider)
+  * [DockablePaneProvider](#dockablepaneprovider)
 * [Helpers](#helpers)
-    * [ResolveHelper](#resolvehelper)
-    * [Add-ins Dependency Isolation](#add-ins-dependency-isolation)
+  * [ResolveHelper](#resolvehelper)
+  * [Add-ins Dependency Isolation](#add-ins-dependency-isolation)
+* [Samples](#samples)
+  * [External command flow control](#external-command-flow-control)
+  * [External application flow control](#external-application-flow-control)
 
 ## Features
 
@@ -59,7 +62,7 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 Contains an implementation for **IExternalCommand**.
 
 Override method **Execute()** to implement and external command within Revit.
-Data available when executing an external command is accessible by properties.
+Data available when executing an external command is accessible by properties:
 
 ```c#
 [Transaction(TransactionMode.Manual)]
@@ -89,7 +92,7 @@ Override method **OnStartup()** to execute some tasks when Revit starts.
 
 Override method **OnShutdown()** to execute some tasks when Revit shuts down. You don't have to override this method if you don't plan to use it.
 
-Data available when executing an external command is accessible by properties.
+Data available when executing an external application is accessible by properties:
 
 ```c#
 public class Application : ExternalApplication
@@ -304,7 +307,7 @@ Contains an implementation for **IExternalCommandAvailability**.
 
 It provides the accessibility check for a Revit add-in External Command.
 
-Starting with Revit 2025, ExternalCommandAvailability uses **AssemblyLoadContext** to isolate dependencies.
+Starting with Revit 2025, **ExternalCommandAvailability** is executed in an isolated context, providing independent execution and preventing conflicts due to incompatible library versions.
 If your implementation does not include dependencies, use the **IExternalCommandAvailability** interface to reduce memory allocation
 
 #### AvailableCommandController
@@ -331,7 +334,7 @@ List of available application properties:
 - Context.ActiveView;
 - Context.ActiveGraphicalView;
 
-Context provides resources from any Revit context:
+**Context** provides data from any Revit context:
 
 ```C#
 public void Execute()
@@ -346,9 +349,9 @@ You can also access the application's global handlers for dialog and failure man
 ```C#
 try
 {
-    SuppressDialogs();
-    SuppressDialogs(resultCode: 2);
-    SuppressDialogs(args =>
+    Context.SuppressDialogs();
+    Context.SuppressDialogs(resultCode: 2);
+    Context.SuppressDialogs(args =>
     {
         var result = args.DialogId == "TaskDialog_ModelUpdater" ? TaskDialogResult.Ok : TaskDialogResult.Close;
         args.OverrideResult((int)result);
@@ -358,7 +361,7 @@ try
 }
 finally
 {
-    RestoreDialogs();
+    Context.RestoreDialogs();
 }
 ```
 
@@ -371,14 +374,14 @@ However, if you want to cancel the transaction and undo all failed changes, pass
 ```C#
 try
 {
-    SuppressFailures();
-    SuppressFailures(resolveErrors: false);
+    Context.SuppressFailures();
+    Context.SuppressFailures(resolveErrors: false);
     
     //User transactions
 }
 finally
 {
-    RestoreFailures();
+    Context.RestoreFailures();
 }
 ```
 
@@ -552,7 +555,7 @@ Limitations:
 #### External command flow control
 
 Automatic transaction management without displaying additional dialogs to the user in case of an error.
-Can be used to use Modal windows when errors and dialogs change modal mode to non-modal mode:
+Can be used to use Modal windows when errors and dialogs change modal mode to modeless:
 
 ```c#
 [Transaction(TransactionMode.Manual)]
@@ -619,14 +622,14 @@ public class Command : ExternalCommand
 #### External application flow control
 
 Adding a button to the Revit ribbon based on the username. 
-IExternalApplication does not provide access to Application, but you can use the Context class to access the environment data to get the username:
+`IExternalApplication` does not provide access to `Application`, but you can use the **Context** class to access the environment data to get the username:
 
 ```c#                                                                                
 public class Application : ExternalApplication                                       
 {                                                                                    
     public override void OnStartup()                                                 
     {                                                                                
-        var panel = Application.CreatePanel(Commands, "RevitAddin");
+        var panel = Application.CreatePanel("Commands", "RevitAddin");
         panel.AddPushButton<Command>("Execute");
         
         var userName = Context.Application.Username;                                 

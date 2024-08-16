@@ -11,8 +11,9 @@
 [![Downloads](https://img.shields.io/nuget/dt/Nice3point.Revit.Toolkit?style=for-the-badge)](https://www.nuget.org/packages/Nice3point.Revit.Toolkit)
 [![Last Commit](https://img.shields.io/github/last-commit/Nice3point/RevitToolkit/develop?style=for-the-badge)](https://github.com/Nice3point/RevitToolkit/commits/develop)
 
-This library provides a modern interface for working with the Revit API. 
-Package contains interfaces implementation frequently encountered in revit, aiming to provide as much flexibility as possible, so developers are free to choose which components to use.
+This library provides a modern interface for working with the Revit API.
+Package contains interfaces implementation frequently encountered in revit, aiming to provide as much flexibility as possible, so developers are free to choose which components to
+use.
 
 ## Installation
 
@@ -36,7 +37,7 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
     * [IdlingEventHandler](#idlingeventhandler)
     * [AsyncEventHandler](#asynceventhandler)
     * [AsyncEventHandler\<T>](#asynceventhandlert)
-* [External Command Availability](#externalcommandavailability)
+* [External command availability](#externalcommandavailability)
     * [AvailableCommandController](#availablecommandcontroller)
 * [Context](#context)
 * [Options](#options)
@@ -57,20 +58,7 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 
 Contains an implementation for **IExternalCommand**.
 
-```c#
-[Transaction(TransactionMode.Manual)]
-public class Command : ExternalCommand
-{
-    public override void Execute()
-    {
-    }
-}
-```
-
 Override method **Execute()** to implement and external command within Revit.
-
-You can suppress the display of exceptions, dialog boxes, without subscribing to events.
-
 Data available when executing an external command is accessible by properties.
 
 ```c#
@@ -84,24 +72,11 @@ public class Command : ExternalCommand
         var username = Application.Username;
         var selection = UiDocument.Selection;
         var windowHandle = UiApplication.MainWindowHandle;
-
-        if (title.Equals("Untitled"))
-        {
-            Result = Result.Cancelled;
-            return;
-        }
-
-        SuppressDialogs();
-        SuppressDialogs(args => args.OverrideResult(2));
-        RestoreDialogs();
-
-        SuppressFailures();
-        RestoreFailures();
     }
 }
 ```
 
-**ExternalCommand** contains the logic for resolving dependencies. 
+**ExternalCommand** contains the logic for resolving dependencies.
 Now you may not encounter a `FileNotFoundException`. Dependencies are searched in the plugin folder.
 
 Starting with Revit 2025, **ExternalCommand** is executed in an isolated context, providing independent execution and preventing conflicts due to incompatible library versions.
@@ -109,19 +84,6 @@ Starting with Revit 2025, **ExternalCommand** is executed in an isolated context
 ### ExternalApplication
 
 Contains an implementation for **IExternalApplication**.
-
-```c#
-public class Application : ExternalApplication
-{
-    public override void OnStartup()
-    {
-    }
-
-    public override void OnShutdown()
-    {
-    }
-}
-```
 
 Override method **OnStartup()** to execute some tasks when Revit starts.
 
@@ -134,18 +96,14 @@ public class Application : ExternalApplication
 {
     public override void OnStartup()
     {
-        var userName = Context.Application.Username;
-        if (userName != "Nice3point")
-        {
-            //If Result is overridden, the OnShutdown() method will not be called
-            Result = Result.Failed;
-            return;
-        }
-        
-        var panel = Application.CreatePanel("Secret Panel", "RevitAddin");
-        var showButton = panel.AddPushButton<Command>("Execute");
-        showButton.SetImage("/RevitAddin;component/Resources/Icons/RibbonIcon16.png");
-        showButton.SetLargeImage("/RevitAddin;component/Resources/Icons/RibbonIcon32.png");
+        var panel = Application.CreatePanel("Commands", "RevitAddin");
+        panel.AddPushButton<Command>("Execute");
+            .SetImage("/RevitAddin;component/Resources/Icons/RibbonIcon16.png");
+            .SetLargeImage("/RevitAddin;component/Resources/Icons/RibbonIcon32.png");
+    }
+
+    public override void OnShutdown()
+    {
     }
 }
 ```
@@ -179,13 +137,14 @@ Override method **OnShutdown()** to execute some tasks when Revit shuts down. Yo
 **ExternalDBApplication** contains the logic for resolving dependencies.
 Now you may not encounter a `FileNotFoundException`. Dependencies are searched in the plugin folder.
 
-Starting with Revit 2025, **ExternalDBApplication** is executed in an isolated context, providing independent execution and preventing conflicts due to incompatible library versions.
+Starting with Revit 2025, **ExternalDBApplication** is executed in an isolated context, providing independent execution and preventing conflicts due to incompatible library
+versions.
 
 ### External events
 
 Contains an implementations for **IExternalEventHandler**.
 
-It is used to modify the document when using modeless windows. 
+It is used to modify the document when using modeless windows.
 You can create your own handlers by deriving from this class.
 
 #### ActionEventHandler
@@ -228,7 +187,7 @@ Deleted
 #### IdlingEventHandler
 
 With this handler, you can queue delegates for method calls when Revit becomes available again.
-Unsubscribing from the Idling event occurs immediately. 
+Unsubscribing from the Idling event occurs immediately.
 Suitable for cases where you need to call code when Revit receives focus.
 For example, to display a window after loading a family into a project.
 
@@ -359,20 +318,68 @@ panel.AddPushButton<StartupCommand>("Execute")
 
 ### Context
 
-Provides computed properties to retrieve Revit objects in the current session. 
-Values are provided even outside the Revit context.
+Interface to global information about an application environment.
 
-- Context.UiApplication;
+It allows access to application-specific data, as well as up-calls for application-level operations such as dialog and failure handling.
+
+List of available application properties:
+
 - Context.Application;
-- Context.UiDocument;
+- Context.UiApplication;
 - Context.Document;
+- Context.UiDocument;
 - Context.ActiveView;
 - Context.ActiveGraphicalView;
-- Context.ActiveView;
+
+Context provides resources from any Revit context:
 
 ```C#
-Context.Document.Create.NewFamilyInstance();
-Context.ActiveView = view;
+public void Execute()
+{
+    Context.Document.Delete(elementId);
+    Context.ActiveView = view;
+}
+```
+
+You can also access the application's global handlers for dialog and failure management:
+
+```C#
+try
+{
+    SuppressDialogs();
+    SuppressDialogs(resultCode: 2);
+    SuppressDialogs(args =>
+    {
+        var result = args.DialogId == "TaskDialog_ModelUpdater" ? TaskDialogResult.Ok : TaskDialogResult.Close;
+        args.OverrideResult((int)result);
+    });
+    
+    //User operations
+}
+finally
+{
+    RestoreDialogs();
+}
+```
+
+By default, Revit uses manual error resolution control with user interaction.
+Context provides automatic resolution of all failures without notifying the user or interrupting the program.
+
+By default, all errors are handled for successful completion of the transaction.
+However, if you want to cancel the transaction and undo all failed changes, pass false as the parameter:
+
+```C#
+try
+{
+    SuppressFailures();
+    SuppressFailures(resolveErrors: false);
+    
+    //User transactions
+}
+finally
+{
+    RestoreFailures();
+}
 ```
 
 ### Options
@@ -513,15 +520,18 @@ Enabled by default for `ExternalCommand`, `ExternalApplication` and `ExternalDBA
 
 Provides dependency isolation for Revit 2025 and earlier.
 
-This library enables running plugins in an isolated context using .NET [AssemblyLoadContext](https://learn.microsoft.com/en-us/dotnet/core/dependency-loading/understanding-assemblyloadcontext). 
-Each plugin executes independently, preventing conflicts from incompatible library versions. 
+This library enables running plugins in an isolated context using
+.NET [AssemblyLoadContext](https://learn.microsoft.com/en-us/dotnet/core/dependency-loading/understanding-assemblyloadcontext).
+Each plugin executes independently, preventing conflicts from incompatible library versions.
 
 How It Works:
 
 The core functionality centers on `AssemblyLoadContext`, which creates an isolated container for each plugin.
-When a plugin is loaded, it is assigned a unique `AssemblyLoadContext` instance, encapsulating the plugin and its dependencies to prevent interference with other plugins or the main application.
+When a plugin is loaded, it is assigned a unique `AssemblyLoadContext` instance, encapsulating the plugin and its dependencies to prevent interference with other plugins or the
+main application.
 
 To use this isolation feature, developers must inherit their classes from:
+
 - ExternalCommand
 - ExternalApplication
 - ExternalDbApplication
@@ -533,5 +543,128 @@ Plugins using interfaces such as `IExternalCommand` will not benefit from this i
 Limitations:
 
 - The isolated context feature is available starting with Revit 2025.
-- For older Revit versions, this library uses a `ResolveHelper` to help load dependencies from the plugin's folder, but does not protect against conflicts arising from incompatible packages.
+- For older Revit versions, this library uses a `ResolveHelper` to help load dependencies from the plugin's folder, but does not protect against conflicts arising from incompatible
+  packages.
 - Additionally, plugins that do not inherit from the specified classes will not be isolated and may experience compatibility issues if they rely on the default context.
+
+### Samples
+
+#### External command flow control
+
+Automatic transaction management without displaying additional dialogs to the user in case of an error.
+Can be used to use Modal windows when errors and dialogs change modal mode to non-modal mode:
+
+```c#
+[Transaction(TransactionMode.Manual)]
+public class Command : ExternalCommand
+{
+    public override void Execute()
+    {
+        //Suppresses all possible warnings and errors during command execution
+        Context.SuppressDialogs();
+        Context.SuppressFailures();
+        
+        try
+        {
+            //Action
+            var selectedIds = UiDocument.Selection.GetElementIds();
+            
+            using var transaction = new Transaction(Context.Document);
+            transaction.Start("Delete elements");
+            Document.Delete(selectedIds);
+            transaction.Commit();
+        }
+        finally
+        {
+            //Restore normal application error and dialogs handling when exiting an external command            
+            Context.RestoreDialogs();
+            Context.RestoreFailures();
+        }
+    }
+}
+```
+
+Redirecting errors to the revit dialog box, highlighting unsuccessfully deleted elements in the model:
+
+```c#
+[Transaction(TransactionMode.Manual)]
+public class Command : ExternalCommand
+{
+    public override void Execute()
+    {
+        var selectedIds = UiDocument.Selection.GetElementIds();
+        
+        try
+        {
+            //Action
+            using var transaction = new Transaction(Context.Document);
+            transaction.Start("Delete elements");
+            Document.Delete(selectedIds);
+            transaction.Commit();
+        }
+        catch
+        {
+            //Redirecting errors to the Revit dialog with elements highlighting
+            Result = Result.Failed;
+            ErrorMessage = "Unable to delete selected elements";
+            foreach (var selectedId in selectedIds)
+            {
+                ElementSet.Insert(selectedId.ToElement(Document));
+            }
+        }
+    }
+}
+```
+
+#### External application flow control
+
+Adding a button to the Revit ribbon based on the username. 
+IExternalApplication does not provide access to Application, but you can use the Context class to access the environment data to get the username:
+
+```c#                                                                                
+public class Application : ExternalApplication                                       
+{                                                                                    
+    public override void OnStartup()                                                 
+    {                                                                                
+        var panel = Application.CreatePanel(Commands, "RevitAddin");
+        panel.AddPushButton<Command>("Execute");
+        
+        var userName = Context.Application.Username;                                 
+        if (userName == "Administrator")                                                
+        {                                                                            
+            var panel = Application.CreatePanel("Secret Panel", "RevitAddin");
+            panel.AddPushButton<Command>("Execute");
+        }                                                                            
+    }       
+}                                                                                    
+```   
+
+Suppression of OnShutdown call in case of unsuccessful plugin startup:
+
+```c#                                                                                
+public class Application : ExternalApplication                                       
+{         
+    private ApplicationHosting _applicationHosting;
+    
+    public override void OnStartup()                                                 
+    {        
+        var isValid = LicenseManager.Validate();
+        if (!isValid)                                                
+        {     
+            //If Result is overridden as Result.Failed, the OnShutdown() method will not be called
+            Result = Result.Failed;                                                  
+            return;                                                                  
+        }
+        
+        //Running the plugin environment in case of successful license verification
+        _applicationHosting = ApplicationHosting.Run();
+    }       
+    
+    public override void OnShutdown()
+    {
+        //These methods will not be called if the license check fails on startup
+        _applicationHosting.SaveData();
+        _applicationHosting.Shutdown();
+    }
+}                                                                                    
+```                                                                                  

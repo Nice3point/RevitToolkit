@@ -29,7 +29,10 @@ public static class Context
         var apiAssembly = AppDomain.CurrentDomain.GetAssemblies().First(assembly => assembly.GetName().Name == "APIUIAPI");
         var dbAssembly = AppDomain.CurrentDomain.GetAssemblies().First(assembly => assembly.GetName().Name == "RevitDBAPI");
         
-        var getApplicationMethod = dbAssembly.ManifestModule.GetMethods(staticFlags).FirstOrDefault(info => info.Name == "RevitApplication.getApplication_");
+        var apiAssemblyMethods = apiAssembly.ManifestModule.GetMethods(staticFlags);
+        var dbAssemblyMethods = dbAssembly.ManifestModule.GetMethods(staticFlags);
+
+        var getApplicationMethod = dbAssemblyMethods.FirstOrDefault(info => info.Name == "RevitApplication.getApplication_");
         ThrowIfNotSupported(getApplicationMethod);
 
         var proxyType = dbAssembly.DefinedTypes.FirstOrDefault(info => info.FullName == "Autodesk.Revit.Proxy.ApplicationServices.ApplicationProxy");
@@ -49,12 +52,14 @@ public static class Context
         var application = (Application)applicationConstructor!.Invoke([proxy]);
         ThrowIfNotSupported(proxy);
 
-        _apiCallDepthManagerMethod = apiAssembly.ManifestModule.GetMethods(staticFlags).First(info => info.Name == "APICallDepthManager.singletonfactory");
+        var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.singletonfactory");
         ThrowIfNotSupported(_apiCallDepthManagerMethod);
         
-        _isRevitInApiModeMethod = apiAssembly.ManifestModule.GetMethods(staticFlags).First(info => info.Name == "APICallDepthManager.isRevitInAPIMode");
+        var isRevitInApiModeMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.isRevitInAPIMode");
         ThrowIfNotSupported(_isRevitInApiModeMethod);
-        
+
+        _apiCallDepthManagerMethod = apiCallDepthManagerMethod!;
+        _isRevitInApiModeMethod = isRevitInApiModeMethod!;
         UiApplication = new UIApplication(application);
     }
 

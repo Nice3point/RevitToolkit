@@ -1,3 +1,16 @@
+# Release 2025.0.2
+
+- **Context** global handlers:
+    - **SuppressFailures**: suppresses the display of the Revit error and warning messages during transaction.
+      By default, Revit uses manual error resolution control with user interaction.
+      This method provides automatic resolution of all failures without notifying the user or interrupting the program
+    - **SuppressDialogs**: suppresses the display of the Revit dialogs
+- **Context** global properties:
+    - **IsRevitInApiMode**: determines whether Revit is in API mode or not
+- Nullable types support
+- Assembly load context internal optimizations
+- Readme updates, include extra samples
+
 # Release 2025.0.1
 
 ## Add-in dependencies isolation

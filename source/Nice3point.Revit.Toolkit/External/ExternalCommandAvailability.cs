@@ -15,8 +15,8 @@ public abstract class ExternalCommandAvailability : IExternalCommandAvailability
     private object? _isolatedInstance;
 #endif
 
-    /// <summary> Implement this method to provide control over whether your external command is enabled or disabled. </summary>
-    /// <returns> Indicates whether Revit should enable or disable the corresponding external command. </returns>
+    /// <summary> Implement this method to provide control over whether your external command is enabled or disabled.</summary>
+    /// <returns> Indicates whether Revit should enable or disable the corresponding external command.</returns>
     /// <remarks>
     /// This callback will be called by Revit's user interface any time there is a contextual change. Therefore, the callback
     /// must be fast and is not permitted to modify the active document and be blocking in any way.

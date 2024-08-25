@@ -24,7 +24,7 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     public ExternalDBApplicationResult Result { get; set; } = ExternalDBApplicationResult.Succeeded;
 
     /// <summary>
-    ///     Reference to the <see cref="Autodesk.Revit.ApplicationServices.ControlledApplication" /> that is needed by an external application
+    ///     Represents the Autodesk Revit Application with no access to documents
     /// </summary>
     public ControlledApplication Application { get; private set; } = default!;
 

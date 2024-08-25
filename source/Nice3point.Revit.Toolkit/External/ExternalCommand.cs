@@ -25,28 +25,31 @@ public abstract class ExternalCommand : IExternalCommand
     public ExternalCommandData ExternalCommandData { get; private set; } = default!;
 
     /// <summary>
-    ///     Reference to the <see cref="Autodesk.Revit.UI.UIApplication" /> that is needed by an external command
+    ///     Represents an active session of the Autodesk Revit user interface, providing access to
+    ///     UI customization methods, events, the main window, and the active document.
     /// </summary>
     public UIApplication UiApplication => Context.UiApplication;
 
     /// <summary>
-    ///     Reference to the <see cref="Autodesk.Revit.ApplicationServices.Application" /> that is needed by an external command
+    ///     Represents the database level Autodesk Revit Application, providing access to documents, options and other application wide data and settings.
     /// </summary>
     public Application Application => Context.Application;
 
-    /// <summary>
-    ///     Reference to the <see cref="Autodesk.Revit.UI.UIDocument" /> that is needed by an external command
-    /// </summary>
-    public UIDocument UiDocument => Context.UiDocument;
+    /// <summary>Represents a currently active Autodesk Revit project at the UI level</summary>
+    /// <remarks>
+    ///     External API commands can access this property in read-only mode only.
+    /// </remarks>
+    /// <exception cref="T:Autodesk.Revit.Exceptions.InvalidOperationException">Thrown when attempting to modify the property.</exception>
+    public UIDocument UiDocument => Context.UiDocument!;
 
-    /// <summary>
-    ///     Reference to the <see cref="Autodesk.Revit.DB.Document" /> that is needed by an external command
-    /// </summary>
-    public Document Document => Context.Document;
+    /// <summary>Represents a currently active Autodesk Revit project at the database level</summary>
+    /// <remarks>
+    ///     Revit can have multiple projects open and multiple views to those projects.
+    ///     The active or top most view will be the active project and hence the active document which is available from the Application object.<br/><br/>
+    /// </remarks>
+    public Document Document => Context.Document!;
 
-    /// <summary>
-    ///     Reference to the <see cref="Autodesk.Revit.UI.UIDocument.ActiveView" /> that is needed by an external command
-    /// </summary>
+    /// <summary>Represents the currently active view.</summary>
     public View ActiveView => Context.ActiveView!;
 
     /// <summary>
@@ -104,11 +107,11 @@ public abstract class ExternalCommand : IExternalCommand
         finally
         {
             message = ErrorMessage;
-            Context.RestoreFailures();
-            Context.RestoreDialogs();
 #if !NETCOREAPP
             ResolveHelper.EndAssemblyResolve();
 #endif
+            Context.RestoreFailures();
+            Context.RestoreDialogs();
         }
 
         return Result;

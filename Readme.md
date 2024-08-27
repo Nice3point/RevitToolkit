@@ -38,7 +38,6 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
   * [AsyncEventHandler](#asynceventhandler)
   * [AsyncEventHandler\<T>](#asynceventhandlert)
 * [ExternalCommandAvailability](#externalcommandavailability)
-  * [AvailableCommandController](#availablecommandcontroller)
 * [Context](#context)
 * [Options](#options)
   * [FamilyLoadOptions](#familyloadoptions)
@@ -52,8 +51,8 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
   * [ResolveHelper](#resolvehelper)
   * [Add-ins Dependency Isolation](#add-ins-dependency-isolation)
 * [Samples](#samples)
-  * [External command flow control](#external-command-flow-control)
   * [External application flow control](#external-application-flow-control)
+  * [External command flow control](#external-command-flow-control)
 
 ## Features
 
@@ -147,12 +146,14 @@ versions.
 
 Contains an implementations for **IExternalEventHandler**.
 
-It is used to modify the document when using modeless windows.
+It is used to modify the document from another thread, for example, when using modeless windows.
 You can create your own handlers by deriving from this class.
 
 #### ActionEventHandler
 
-With this handler, you can queue delegates for method calls:
+A handler that provides access to modify a Revit document outside the execution context with the ability to queue Raise method calls.
+
+Calling a handler in a Revit context will call it immediately, without adding it to the queue.
 
 ```c#
 public ViewModel
@@ -180,11 +181,18 @@ private void DeteleElement()
 }
 ```
 
-Debug output:
+Debug output in a Revit context:
 
 ```text
 Command completed
 Deleted
+```
+
+Debug output outside the Revit context:
+
+```text
+Deleted
+Command completed
 ```
 
 #### IdlingEventHandler
@@ -231,6 +239,9 @@ Suitable for cases where you need to maintain the sequence of code execution.
 
 Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context.
 
+Calling the handler in a Revit context will call it immediately without adding it to the queue and awaiting with `await` keyword will not cause a context switch, 
+and you can still call API requests in the main Revit thread.
+
 ```c#
 public ViewModel
 {
@@ -267,6 +278,9 @@ The **RaiseAsync** method will return to its previous context after executing.
 Suitable for cases where you need to maintain the sequence of code execution.
 
 Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context
+
+Calling the handler in a Revit context will call it immediately without adding it to the queue and awaiting with `await` keyword will not cause a context switch,
+and you can still call API requests in the main Revit thread.
 
 ```c#
 public ViewModel
@@ -308,16 +322,7 @@ Contains an implementation for **IExternalCommandAvailability**.
 It provides the accessibility check for a Revit add-in External Command.
 
 Starting with Revit 2025, **ExternalCommandAvailability** is executed in an isolated context, providing independent execution and preventing conflicts due to incompatible library versions.
-If your implementation does not include dependencies, use the **IExternalCommandAvailability** interface to reduce memory allocation
-
-#### AvailableCommandController
-
-Controller providing permanent accessibility for External Command invocation. This means that it will always be available for execution, even when no Document is open
-
-```C#
-panel.AddPushButton<StartupCommand>("Execute")
-    .SetAvailabilityController<AvailableCommandController>()
-```
+If your implementation does not include dependencies, use the **IExternalCommandAvailability** interface to reduce memory allocation.
 
 ### Context
 
@@ -346,6 +351,7 @@ public void Execute()
 ```
 
 If your application can run in a separate thread or use API requests in an asynchronous context, perform an **IsRevitInApiMode** check.
+
 A direct API call should be used if Revit is currently within an API context, otherwise API calls should be handled by `IExternalEventHandler`:
 
 ```C#
@@ -353,16 +359,16 @@ public void Execute()
 {
     if (Context.IsRevitInApiMode)
     {
-        Execute();
+        ModifyDocument();
     }
     else
     {
-        ActionEventHandler.Raise(application => Execute());
+        externalEventHandler.Raise(application => ModifyDocument());
     }
 }
 ```
 
-You can also access the application's global handlers for dialog and failure management:
+**Context** provides access to global application handlers for dialog and failure management:
 
 ```C#
 try
@@ -376,6 +382,7 @@ try
     });
     
     //User operations
+    LoadFamilies();
 }
 finally
 {
@@ -396,6 +403,7 @@ try
     Context.SuppressFailures(resolveErrors: false);
     
     //User transactions
+    ModifyDocument();
 }
 finally
 {
@@ -570,6 +578,59 @@ Limitations:
 
 ### Samples
 
+#### External application flow control
+
+Adding a button to the Revit ribbon based on the username. 
+`IExternalApplication` does not provide access to `Application`, but you can use the **Context** class to access the environment data to get the username:
+
+```c#                                                                                
+public class Application : ExternalApplication                                       
+{                                                                                    
+    public override void OnStartup()                                                 
+    {                                                                                
+        var panel = Application.CreatePanel("Commands", "RevitAddin");
+        panel.AddPushButton<Command>("Execute");
+        
+        var userName = Context.Application.Username;                                 
+        if (userName == "Administrator")                                                
+        {                                                                            
+            var panel = Application.CreatePanel("Secret Panel", "RevitAddin");
+            panel.AddPushButton<Command>("Execute");
+        }                                                                            
+    }       
+}                                                                                    
+```   
+
+Suppression of OnShutdown call in case of unsuccessful plugin startup:
+
+```c#                                                                                
+public class Application : ExternalApplication                                       
+{         
+    private ApplicationHosting _applicationHosting;
+    
+    public override void OnStartup()                                                 
+    {        
+        var isValid = LicenseManager.Validate();
+        if (!isValid)                                                
+        {     
+            //If Result is overridden as Result.Failed, the OnShutdown() method will not be called
+            Result = Result.Failed;                                                  
+            return;                                                                  
+        }
+        
+        //Running the plugin environment in case of successful license verification
+        _applicationHosting = ApplicationHosting.Run();
+    }       
+    
+    public override void OnShutdown()
+    {
+        //These methods will not be called if the license check fails on startup
+        _applicationHosting.SaveData();
+        _applicationHosting.Shutdown();
+    }
+}                                                                                    
+```          
+
 #### External command flow control
 
 Automatic transaction management without displaying additional dialogs to the user in case of an error.
@@ -636,56 +697,3 @@ public class Command : ExternalCommand
     }
 }
 ```
-
-#### External application flow control
-
-Adding a button to the Revit ribbon based on the username. 
-`IExternalApplication` does not provide access to `Application`, but you can use the **Context** class to access the environment data to get the username:
-
-```c#                                                                                
-public class Application : ExternalApplication                                       
-{                                                                                    
-    public override void OnStartup()                                                 
-    {                                                                                
-        var panel = Application.CreatePanel("Commands", "RevitAddin");
-        panel.AddPushButton<Command>("Execute");
-        
-        var userName = Context.Application.Username;                                 
-        if (userName == "Administrator")                                                
-        {                                                                            
-            var panel = Application.CreatePanel("Secret Panel", "RevitAddin");
-            panel.AddPushButton<Command>("Execute");
-        }                                                                            
-    }       
-}                                                                                    
-```   
-
-Suppression of OnShutdown call in case of unsuccessful plugin startup:
-
-```c#                                                                                
-public class Application : ExternalApplication                                       
-{         
-    private ApplicationHosting _applicationHosting;
-    
-    public override void OnStartup()                                                 
-    {        
-        var isValid = LicenseManager.Validate();
-        if (!isValid)                                                
-        {     
-            //If Result is overridden as Result.Failed, the OnShutdown() method will not be called
-            Result = Result.Failed;                                                  
-            return;                                                                  
-        }
-        
-        //Running the plugin environment in case of successful license verification
-        _applicationHosting = ApplicationHosting.Run();
-    }       
-    
-    public override void OnShutdown()
-    {
-        //These methods will not be called if the license check fails on startup
-        _applicationHosting.SaveData();
-        _applicationHosting.Shutdown();
-    }
-}                                                                                    
-```                                                                                  

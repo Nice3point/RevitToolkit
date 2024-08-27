@@ -74,7 +74,7 @@ public static class Context
     /// </summary>
     public static Application Application => UiApplication.Application;
 
-    /// <summary>Represents a currently active Autodesk Revit project at the UI level</summary>
+    /// <summary>Represents a currently active Autodesk Revit project at the UI level.</summary>
     /// <remarks>
     ///     External API commands can access this property in read-only mode only.
     /// </remarks>
@@ -85,7 +85,7 @@ public static class Context
     /// </returns>
     public static UIDocument? UiDocument => UiApplication.ActiveUIDocument;
 
-    /// <summary>Represents a currently active Autodesk Revit project at the database level</summary>
+    /// <summary>Represents a currently active Autodesk Revit project at the database level.</summary>
     /// <remarks>
     ///     Revit can have multiple projects open and multiple views to those projects.
     ///     The active or top most view will be the active project and hence the active document which is available from the Application object.<br/><br/>
@@ -146,7 +146,7 @@ public static class Context
     public static View? ActiveGraphicalView => UiApplication.ActiveUIDocument?.ActiveGraphicalView;
     
     /// <summary>
-    ///     Determines whether Revit is in API mode or not
+    ///     Determines whether Revit is in API mode or not.
     /// </summary>
     /// <remarks>
     ///     If Revit is within an API context, direct API calls should be used.
@@ -165,14 +165,14 @@ public static class Context
     }
 
     /// <summary>
-    ///     Suppresses the display of the Revit error and warning messages during transaction
+    ///     Suppresses the display of the Revit error and warning messages during transaction.
     /// </summary>
     /// <param name="resolveErrors">
-    ///     Set <see langword="true"/> if errors should be automatically resolved, otherwise <see langword="false"/> to cancel the transaction
+    ///     Set <see langword="true"/> if errors should be automatically resolved, otherwise <see langword="false"/> to cancel the transaction.
     /// </param>
     /// <remarks>
     ///     By default, Revit uses manual error resolution control with user interaction.
-    ///     This method provides automatic resolution of all failures without notifying the user or interrupting the program
+    ///     This method provides automatic resolution of all failures without notifying the user or interrupting the program.
     /// </remarks>
     public static void SuppressFailures(bool resolveErrors = true)
     {
@@ -188,9 +188,9 @@ public static class Context
     }
 
     /// <summary>
-    ///     Suppresses the display of the Revit dialogs
+    ///     Suppresses the display of the Revit dialogs.
     /// </summary>
-    /// <param name="resultCode">The result code you wish the Revit dialog to return</param>
+    /// <param name="resultCode">The result code you wish the Revit dialog to return.</param>
     /// <remarks>
     ///     The range of valid result values depends on the type of dialog as follows:
     ///     <list type="number">
@@ -225,9 +225,29 @@ public static class Context
     }
 
     /// <summary>
-    ///     Suppresses the display of the Revit dialogs
+    ///     Suppresses the display of the Revit dialogs.
     /// </summary>
-    /// <param name="handler">Suppress handler</param>
+    /// <param name="handler">Suppress handler.</param>
+    /// <remarks>
+    ///     The range of valid result values depends on the type of dialog as follows:
+    ///     <list type="number">
+    ///         <item>
+    ///             DialogBox: Any non-zero value will cause a dialog to be dismissed.
+    ///         </item>
+    ///         <item>
+    ///             MessageBox: Standard Message Box IDs, such as IDOK and IDCANCEL, are accepted.
+    ///             For all possible IDs, refer to the Windows API documentation.
+    ///             The ID used must be relevant to the buttons in a message box.
+    ///         </item>
+    ///         <item>
+    ///             TaskDialog: Standard Message Box IDs and Revit Custom IDs are accepted,
+    ///             depending on the buttons used in a dialog. Standard buttons, such as OK
+    ///             and Cancel, have standard IDs described in Windows API documentation.
+    ///             Buttons with custom text have custom IDs with incremental values
+    ///             starting at 1001 for the left-most or top-most button in a task dialog.
+    ///         </item>
+    ///     </list>
+    /// </remarks>
     public static void SuppressDialogs(Action<DialogBoxShowingEventArgs> handler)
     {
         if (_suppressDialogs)
@@ -242,7 +262,7 @@ public static class Context
     }
 
     /// <summary>
-    ///     Restores display of the Revit dialogs
+    ///     Restores display of the Revit dialogs.
     /// </summary>
     public static void RestoreDialogs()
     {
@@ -253,7 +273,7 @@ public static class Context
     }
 
     /// <summary>
-    ///     Restores failure handling
+    ///     Restores failure handling.
     /// </summary>
     public static void RestoreFailures()
     {

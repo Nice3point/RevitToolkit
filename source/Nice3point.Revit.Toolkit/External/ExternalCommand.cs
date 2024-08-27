@@ -7,7 +7,7 @@ using Nice3point.Revit.Toolkit.Helpers;
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
-///     Implementation for a Revit add-in External Command
+///     Implementation for a Revit <see cref="Autodesk.Revit.UI.IExternalCommand"/>.
 /// </summary>
 [PublicAPI]
 public abstract class ExternalCommand : IExternalCommand

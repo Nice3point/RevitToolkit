@@ -7,7 +7,7 @@ using System.Runtime.Loader;
 namespace Nice3point.Revit.Toolkit.Helpers;
 
 /// <summary>
-///     Provides methods to resolve dependencies
+///     Provides methods to resolve dependencies.
 /// </summary>
 /// <example>
 ///     <code lang="csharp">
@@ -32,7 +32,7 @@ public static class ResolveHelper
     /// <summary>
     ///     Subscribes the current domain to resolve dependencies for the type.
     /// </summary>
-    /// <typeparam name="T">Type, to search for dependencies in the directory where this type is defined</typeparam>
+    /// <typeparam name="T">Type, to search for dependencies in the directory where this type is defined.</typeparam>
     /// <remarks>
     ///     Dependencies are searched in a directory of the specified type.
     ///     At the time of dependency resolution, all other dependency resolution methods for the domain are disabled,
@@ -46,7 +46,7 @@ public static class ResolveHelper
     /// <summary>
     ///     Subscribes the current domain to resolve dependencies for the type.
     /// </summary>
-    /// <param name="type">Type, to search for dependencies in the directory where this type is defined</param>
+    /// <param name="type">Type, to search for dependencies in the directory where this type is defined.</param>
     /// <remarks>
     ///     Dependencies are searched in a directory of the specified type.
     ///     At the time of dependency resolution, all other dependency resolution methods for the domain are disabled,

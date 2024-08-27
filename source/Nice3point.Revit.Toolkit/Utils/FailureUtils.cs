@@ -1,16 +1,16 @@
 ﻿namespace Nice3point.Revit.Toolkit.Utils;
 
 /// <summary>
-///     Provides utils for processing failures
+///     Provides utils for processing failures.
 /// </summary>
 internal static class FailureUtils
 {
     /// <summary>
-    ///     Automatically processes failure messages during transaction flow by resolving or deleting them, eliminating the need for manual intervention
+    ///     Automatically processes failure messages during transaction flow by resolving or deleting them, eliminating the need for manual intervention.
     /// </summary>
-    /// <param name="failuresAccessor">An object that provides access to the failure messages and their handling options</param>
+    /// <param name="failuresAccessor">An object that provides access to the failure messages and their handling options.</param>
     /// <returns>
-    ///     Returns <see cref="FailureProcessingResult.ProceedWithCommit"/> if all failures are resolved or deleted, otherwise returns <see cref="FailureProcessingResult.ProceedWithRollBack"/>
+    ///     Returns <see cref="FailureProcessingResult.ProceedWithCommit"/> if all failures are resolved or deleted, otherwise returns <see cref="FailureProcessingResult.ProceedWithRollBack"/>.
     /// </returns>
     /// <remarks>
     ///     Warnings are automatically deleted, and failures with available resolutions are resolved.
@@ -54,11 +54,11 @@ internal static class FailureUtils
     }
     
     /// <summary>
-    ///     Automatically processes failure messages during transaction flow by cancelling all them, eliminating the need for manual intervention
+    ///     Automatically processes failure messages during transaction flow by cancelling all them, eliminating the need for manual intervention.
     /// </summary>
-    /// <param name="failuresAccessor">An object that provides access to the failure messages and their handling options</param>
+    /// <param name="failuresAccessor">An object that provides access to the failure messages and their handling options.</param>
     /// <returns>
-    ///     Returns <see cref="FailureProcessingResult.ProceedWithRollBack"/> if the failuresAccessor has any message/>
+    ///     Returns <see cref="FailureProcessingResult.ProceedWithRollBack"/> if the failuresAccessor has any message/>.
     /// </returns>
     internal static FailureProcessingResult DismissFailures(FailuresAccessor failuresAccessor)
     {

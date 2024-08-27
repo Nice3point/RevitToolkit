@@ -14,7 +14,7 @@ public class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
     private DuplicateTypeNamesHandlerArgs _duplicateArguments = default!;
 
     /// <summary>
-    ///     Creates a new handler with <see cref="DuplicateTypeAction.UseDestinationTypes" /> by default
+    ///     Creates a new handler with <see cref="DuplicateTypeAction.UseDestinationTypes" /> by default.
     /// </summary>
     public DuplicateTypeNamesHandler()
     {
@@ -22,19 +22,19 @@ public class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
     }
 
     /// <summary>
-    ///     Creates a new handler
+    ///     Creates a new handler.
     /// </summary>
-    /// <param name="action">A structure that provides information about an attempt to copy types with names that already exist in the destination document</param>
+    /// <param name="action">A structure that provides information about an attempt to copy types with names that already exist in the destination document.</param>
     public DuplicateTypeNamesHandler(DuplicateTypeAction action)
     {
         _duplicateTypeAction = action;
     }
 
     /// <summary>
-    ///     Creates a new handler
+    ///     Creates a new handler.
     /// </summary>
     /// <param name="actionHandler">
-    ///     Encapsulates a method on a structure that provides information about an attempt to copy types with names that already exist in the destination document
+    ///     Encapsulates a method on a structure that provides information about an attempt to copy types with names that already exist in the destination document.
     /// </param>
     public DuplicateTypeNamesHandler(Func<DuplicateTypeNamesHandlerArgs, DuplicateTypeAction> actionHandler)
     {
@@ -42,11 +42,11 @@ public class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
     }
 
     /// <summary>
-    ///     Called when the destination document contains types with the same names as the types being copied
+    ///     Called when the destination document contains types with the same names as the types being copied.
     /// </summary>
-    /// <param name="args">The information about the types with duplicate names</param>
+    /// <param name="args">The information about the types with duplicate names.</param>
     /// <returns>
-    ///     The action to be taken: copy only types with unique names or cancel the operation
+    ///     The action to be taken: copy only types with unique names or cancel the operation.
     /// </returns>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public DuplicateTypeAction OnDuplicateTypeNamesFound(DuplicateTypeNamesHandlerArgs args)

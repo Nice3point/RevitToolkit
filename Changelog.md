@@ -1,4 +1,4 @@
-# Release 2025.0.2-preview.1.0
+# Release 2025.0.2-preview.2.0
 
 - **Context** global handlers:
     - **SuppressFailures**: suppresses the display of the Revit error and warning messages during transaction.
@@ -6,7 +6,12 @@
       This method provides automatic resolution of all failures without notifying the user or interrupting the program
     - **SuppressDialogs**: suppresses the display of the Revit dialogs
 - **Context** global properties:
-    - **IsRevitInApiMode**: determines whether Revit is in API mode or not
+    - **IsRevitInApiMode**: determines whether Revit is in API mode or not.
+- **ExternalCommand.SuppressFailures** is obsolete. Use Context class instead.
+- **ExternalCommand.SuppressDialogs** is obsolete. Use Context class instead.
+- **ActionEventHandler** now understands when it is in a Revit context and calls the handler immediately, without adding to the queue.
+- **AsyncEventHandler** now understands when it is in a Revit context and calls the handler immediately, without adding to the queue.
+  Awaiting with `await` keyword will not cause a context switch, and you can still call API requests in the main Revit thread.
 - Nullable types support
 - Assembly load context internal optimizations
 - Readme updates, include extra samples

@@ -15,14 +15,14 @@ public class FrameworkElementCreator<T> : IFrameworkElementCreator where T : Fra
     private readonly IServiceProvider? _serviceProvider;
 
     /// <summary>
-    ///     Factory to create an instance of a FrameworkElement based on its type
+    ///     Factory to create an instance of a FrameworkElement based on its type.
     /// </summary>
     public FrameworkElementCreator()
     {
     }
 
     /// <summary>
-    ///     Factory to create an instance of a FrameworkElement based on its type using IServiceProvider
+    ///     Factory to create an instance of a FrameworkElement based on its type using IServiceProvider.
     /// </summary>
     /// <param name="serviceProvider">Instance of the <see cref="IServiceProvider" />.</param>
     public FrameworkElementCreator(IServiceProvider serviceProvider)

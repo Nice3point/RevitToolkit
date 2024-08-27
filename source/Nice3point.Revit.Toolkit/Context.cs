@@ -29,7 +29,10 @@ public static class Context
         var apiAssembly = AppDomain.CurrentDomain.GetAssemblies().First(assembly => assembly.GetName().Name == "APIUIAPI");
         var dbAssembly = AppDomain.CurrentDomain.GetAssemblies().First(assembly => assembly.GetName().Name == "RevitDBAPI");
         
-        var getApplicationMethod = dbAssembly.ManifestModule.GetMethods(staticFlags).FirstOrDefault(info => info.Name == "RevitApplication.getApplication_");
+        var apiAssemblyMethods = apiAssembly.ManifestModule.GetMethods(staticFlags);
+        var dbAssemblyMethods = dbAssembly.ManifestModule.GetMethods(staticFlags);
+
+        var getApplicationMethod = dbAssemblyMethods.FirstOrDefault(info => info.Name == "RevitApplication.getApplication_");
         ThrowIfNotSupported(getApplicationMethod);
 
         var proxyType = dbAssembly.DefinedTypes.FirstOrDefault(info => info.FullName == "Autodesk.Revit.Proxy.ApplicationServices.ApplicationProxy");
@@ -49,12 +52,14 @@ public static class Context
         var application = (Application)applicationConstructor!.Invoke([proxy]);
         ThrowIfNotSupported(proxy);
 
-        _apiCallDepthManagerMethod = apiAssembly.ManifestModule.GetMethods(staticFlags).First(info => info.Name == "APICallDepthManager.singletonfactory");
-        ThrowIfNotSupported(_apiCallDepthManagerMethod);
+        var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.singletonfactory");
+        ThrowIfNotSupported(apiCallDepthManagerMethod);
         
-        _isRevitInApiModeMethod = apiAssembly.ManifestModule.GetMethods(staticFlags).First(info => info.Name == "APICallDepthManager.isRevitInAPIMode");
-        ThrowIfNotSupported(_isRevitInApiModeMethod);
-        
+        var isRevitInApiModeMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.isRevitInAPIMode");
+        ThrowIfNotSupported(isRevitInApiModeMethod);
+
+        _apiCallDepthManagerMethod = apiCallDepthManagerMethod!;
+        _isRevitInApiModeMethod = isRevitInApiModeMethod!;
         UiApplication = new UIApplication(application);
     }
 
@@ -65,30 +70,34 @@ public static class Context
     public static UIApplication UiApplication { get; }
 
     /// <summary>
-    ///     Returns the database level Application represented by this UI level Application
+    ///     Represents the database level Autodesk Revit Application, providing access to documents, options and other application wide data and settings.
     /// </summary>
     public static Application Application => UiApplication.Application;
 
-    /// <summary>Provides access to an object that represents the currently active project.</summary>
-    /// <remarks>External API commands can access this property in read-only mode only!
-    /// The ability to modify the property is reserved for future implementations.</remarks>
-    /// <exception cref="T:Autodesk.Revit.Exceptions.InvalidOperationException">Thrown when attempting to modify the property.</exception>
-    public static UIDocument UiDocument => UiApplication.ActiveUIDocument;
-
-    /// <summary>An object that represents an open Autodesk Revit project.</summary>
+    /// <summary>Represents a currently active Autodesk Revit project at the UI level.</summary>
     /// <remarks>
-    ///     The Document object represents an Autodesk Revit project. Revit can have multiple
-    ///     projects open and multiple views to those projects. The active or top most view will be the
-    ///     active project and hence the active document which is available from the Application object.
+    ///     External API commands can access this property in read-only mode only.
     /// </remarks>
-    public static Document Document => UiApplication.ActiveUIDocument.Document;
+    /// <exception cref="T:Autodesk.Revit.Exceptions.InvalidOperationException">Thrown when attempting to modify the property.</exception>
+    /// <returns>
+    ///     Currently active project.<br/>
+    ///     Returns <see langword="null" /> if there are no active projects.
+    /// </returns>
+    public static UIDocument? UiDocument => UiApplication.ActiveUIDocument;
 
-    /// <summary>The currently active view of the currently active document.</summary>
-    /// <since>2012</since>
+    /// <summary>Represents a currently active Autodesk Revit project at the database level.</summary>
+    /// <remarks>
+    ///     Revit can have multiple projects open and multiple views to those projects.
+    ///     The active or top most view will be the active project and hence the active document which is available from the Application object.<br/><br/>
+    ///     Returns <see langword="null" /> if there are no active projects.
+    /// </remarks>
+    public static Document? Document => UiApplication.ActiveUIDocument?.Document;
+
+    /// <summary>Represents the currently active view of the currently active document.</summary>
     /// <remarks>
     ///     <para>
-    ///         This property is applicable to the currently active document only.
-    ///         Returns <see langword="null" /> if this document doesn't represent the active document.
+    ///         This property is applicable to the currently active document only.<br/>
+    ///         Returns <see langword="null" /> if there are no active projects.
     ///     </para>
     ///     <para>
     ///         The active view can only be changed when:
@@ -115,27 +124,36 @@ public static class Context
     ///             <li>If the document is not currently active; -or-</li><li>If the document is currently modifiable (i.e. with an active transaction); -or-</li>
     ///             <li>If the document is currently in read-only state; -or-</li><li>When invoked during either ViewActivating or ViewActivated event; -or-</li>
     ///             <li>When invoked during any pre-action kind of event, such as DocumentSaving, DocumentClosing, etc.</li>
+    ///             <li>When there are no active documents in the current Autodesk Revit session</li>
     ///         </ul>
     ///     </para>
     /// </exception>
     public static View? ActiveView
     {
-        get => UiApplication.ActiveUIDocument.ActiveView;
-        set => UiApplication.ActiveUIDocument.ActiveView = value;
+        get => UiApplication.ActiveUIDocument?.ActiveView;
+        set
+        {
+            if (UiApplication.ActiveUIDocument is null) throw new InvalidOperationException("There are no active documents in the current Autodesk Revit session");
+            UiApplication.ActiveUIDocument.ActiveView = value;
+        }
     }
 
-    /// <summary>The currently active graphical view of the currently active document.</summary>
+    /// <summary>Represents the currently active graphical view of the currently active document.</summary>
     /// <remarks>
     ///     This property is applicable to the currently active document only.
-    ///     Returns <see langword="null" /> if this document doesn't represent the active document.
+    ///     Returns <see langword="null" /> if there are no active projects.
     /// </remarks>
-    public static View? ActiveGraphicalView => UiApplication.ActiveUIDocument.ActiveGraphicalView;
+    public static View? ActiveGraphicalView => UiApplication.ActiveUIDocument?.ActiveGraphicalView;
     
     /// <summary>
-    ///     Determines whether Revit is in API mode or not
+    ///     Determines whether Revit is in API mode or not.
     /// </summary>
     /// <remarks>
-    ///     A direct API call should be used if Revit is currently within an API context, otherwise API calls should be handled by <see cref="Autodesk.Revit.UI.IExternalEventHandler"/>
+    ///     If Revit is within an API context, direct API calls should be used.
+    ///     Otherwise, when Revit is outside the API context, API calls should be handled 
+    ///     through the <see cref="Autodesk.Revit.UI.IExternalEventHandler"/> interface.
+    ///     IExternalEventHandler enables safely executing commands and operations from external threads 
+    ///     or the user interface, ensuring they are synchronized with Revit's main thread.
     /// </remarks>
     public static bool IsRevitInApiMode
     {
@@ -147,12 +165,14 @@ public static class Context
     }
 
     /// <summary>
-    ///     Suppresses the display of the Revit error and warning messages during transaction
+    ///     Suppresses the display of the Revit error and warning messages during transaction.
     /// </summary>
-    /// <param name="resolveErrors">Set <see langword="true"/> if errors should be resolved, otherwise <see langword="false"/> to cancel the transaction</param>
+    /// <param name="resolveErrors">
+    ///     Set <see langword="true"/> if errors should be automatically resolved, otherwise <see langword="false"/> to cancel the transaction.
+    /// </param>
     /// <remarks>
     ///     By default, Revit uses manual error resolution control with user interaction.
-    ///     This method provides automatic resolution of all failures without notifying the user or interrupting the program
+    ///     This method provides automatic resolution of all failures without notifying the user or interrupting the program.
     /// </remarks>
     public static void SuppressFailures(bool resolveErrors = true)
     {
@@ -168,9 +188,9 @@ public static class Context
     }
 
     /// <summary>
-    ///     Suppresses the display of the Revit dialogs
+    ///     Suppresses the display of the Revit dialogs.
     /// </summary>
-    /// <param name="resultCode">The result code you wish the Revit dialog to return</param>
+    /// <param name="resultCode">The result code you wish the Revit dialog to return.</param>
     /// <remarks>
     ///     The range of valid result values depends on the type of dialog as follows:
     ///     <list type="number">
@@ -205,9 +225,29 @@ public static class Context
     }
 
     /// <summary>
-    ///     Suppresses the display of the Revit dialogs
+    ///     Suppresses the display of the Revit dialogs.
     /// </summary>
-    /// <param name="handler">Suppress handler</param>
+    /// <param name="handler">Suppress handler.</param>
+    /// <remarks>
+    ///     The range of valid result values depends on the type of dialog as follows:
+    ///     <list type="number">
+    ///         <item>
+    ///             DialogBox: Any non-zero value will cause a dialog to be dismissed.
+    ///         </item>
+    ///         <item>
+    ///             MessageBox: Standard Message Box IDs, such as IDOK and IDCANCEL, are accepted.
+    ///             For all possible IDs, refer to the Windows API documentation.
+    ///             The ID used must be relevant to the buttons in a message box.
+    ///         </item>
+    ///         <item>
+    ///             TaskDialog: Standard Message Box IDs and Revit Custom IDs are accepted,
+    ///             depending on the buttons used in a dialog. Standard buttons, such as OK
+    ///             and Cancel, have standard IDs described in Windows API documentation.
+    ///             Buttons with custom text have custom IDs with incremental values
+    ///             starting at 1001 for the left-most or top-most button in a task dialog.
+    ///         </item>
+    ///     </list>
+    /// </remarks>
     public static void SuppressDialogs(Action<DialogBoxShowingEventArgs> handler)
     {
         if (_suppressDialogs)
@@ -222,7 +262,7 @@ public static class Context
     }
 
     /// <summary>
-    ///     Restores display of the Revit dialogs
+    ///     Restores display of the Revit dialogs.
     /// </summary>
     public static void RestoreDialogs()
     {
@@ -233,7 +273,7 @@ public static class Context
     }
 
     /// <summary>
-    ///     Restores failure handling
+    ///     Restores failure handling.
     /// </summary>
     public static void RestoreFailures()
     {

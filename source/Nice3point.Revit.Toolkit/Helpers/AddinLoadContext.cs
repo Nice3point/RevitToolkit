@@ -8,12 +8,12 @@ using Autodesk.Revit.UI;
 namespace Nice3point.Revit.Toolkit.Helpers;
 
 /// <summary>
-///     Isolated addin dependency container
+///     Isolated addin dependency container.
 /// </summary>
 internal sealed class AddinLoadContext : AssemblyLoadContext
 {
     /// <summary>
-    ///     Add-ins contexts storage
+    ///     Add-ins contexts storage.
     /// </summary>
     private static readonly Dictionary<string, AddinLoadContext> DependenciesProviders = new(1);
 
@@ -33,7 +33,7 @@ internal sealed class AddinLoadContext : AssemblyLoadContext
     }
 
     /// <summary>
-    ///     Get or create a new isolated context for the type
+    ///     Get or create a new isolated context for the type.
     /// </summary>
     public static AddinLoadContext GetDependenciesProvider(Type type)
     {
@@ -49,7 +49,7 @@ internal sealed class AddinLoadContext : AssemblyLoadContext
     }
 
     /// <summary>
-    ///     Determines whether the type is the type not associated with the default context
+    ///     Determines whether the type is the type not associated with the default context.
     /// </summary>
     public static bool CheckAccess(Type type)
     {
@@ -58,7 +58,7 @@ internal sealed class AddinLoadContext : AssemblyLoadContext
     }
 
     /// <summary>
-    ///     Create new instance in the separated context
+    ///     Create new instance in the separated context.
     /// </summary>
     public object CreateInstance(Type type)
     {
@@ -68,7 +68,7 @@ internal sealed class AddinLoadContext : AssemblyLoadContext
     }
 
     /// <summary>
-    ///     Execute ExternalApplication in the separated context
+    ///     Execute ExternalApplication in the separated context.
     /// </summary>
     public static Result Invoke(object instance, string methodName, UIControlledApplication application)
     {
@@ -78,7 +78,7 @@ internal sealed class AddinLoadContext : AssemblyLoadContext
     }
 
     /// <summary>
-    ///     Execute ExternalDbApplication in the separated context
+    ///     Execute ExternalDbApplication in the separated context.
     /// </summary>
     public static ExternalDBApplicationResult Invoke(object instance, string methodName, ControlledApplication application)
     {
@@ -88,7 +88,7 @@ internal sealed class AddinLoadContext : AssemblyLoadContext
     }
 
     /// <summary>
-    ///     Execute ExternalCommandAvailability in the separated context
+    ///     Execute ExternalCommandAvailability in the separated context.
     /// </summary>
     public static bool Invoke(object instance, string methodName, UIApplication applicationData, CategorySet selectedCategories)
     {
@@ -111,7 +111,7 @@ internal sealed class AddinLoadContext : AssemblyLoadContext
     }
 
     /// <summary>
-    ///     Execute IExternalCommand in the separated context
+    ///     Execute IExternalCommand in the separated context.
     /// </summary>
     public static Result Invoke(object command, ExternalCommandData commandData, ref string message, ElementSet elements)
     {

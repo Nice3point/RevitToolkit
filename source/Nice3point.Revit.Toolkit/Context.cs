@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
@@ -13,6 +14,7 @@ namespace Nice3point.Revit.Toolkit;
 [PublicAPI]
 public static class Context
 {
+    //Global state
     private static bool _suppressDialogs;
     private static bool _suppressFailures;
 
@@ -39,17 +41,17 @@ public static class Context
         ThrowIfNotSupported(proxyType);
 
         const BindingFlags internalFlags = BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance;
-        var proxyConstructor = proxyType!.GetConstructor(internalFlags, null, [getApplicationMethod!.ReturnType], null);
+        var proxyConstructor = proxyType.GetConstructor(internalFlags, null, [getApplicationMethod.ReturnType], null);
         ThrowIfNotSupported(proxyConstructor);
 
-        var proxy = proxyConstructor!.Invoke([getApplicationMethod.Invoke(null, null)]);
+        var proxy = proxyConstructor.Invoke([getApplicationMethod.Invoke(null, null)]);
         ThrowIfNotSupported(proxy);
 
         var applicationType = typeof(Application);
         var applicationConstructor = applicationType.GetConstructor(internalFlags, null, [proxyType], null);
         ThrowIfNotSupported(applicationConstructor);
 
-        var application = (Application)applicationConstructor!.Invoke([proxy]);
+        var application = (Application)applicationConstructor.Invoke([proxy]);
         ThrowIfNotSupported(proxy);
 
         var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.singletonfactory");
@@ -58,8 +60,8 @@ public static class Context
         var isRevitInApiModeMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.isRevitInAPIMode");
         ThrowIfNotSupported(isRevitInApiModeMethod);
 
-        _apiCallDepthManagerMethod = apiCallDepthManagerMethod!;
-        _isRevitInApiModeMethod = isRevitInApiModeMethod!;
+        _apiCallDepthManagerMethod = apiCallDepthManagerMethod;
+        _isRevitInApiModeMethod = isRevitInApiModeMethod;
         UiApplication = new UIApplication(application);
     }
 
@@ -300,6 +302,9 @@ public static class Context
         args.SetProcessingResult(result);
     }
 
+#if NETCOREAPP
+    [DoesNotReturn]
+#endif
     [ContractAnnotation("null => halt")]
     private static void ThrowIfNotSupported(object? argument)
     {

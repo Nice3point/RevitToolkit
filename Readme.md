@@ -334,8 +334,8 @@ List of available environment properties:
 
 - Context.Application;
 - Context.UiApplication;
-- Context.Document;
-- Context.UiDocument;
+- Context.ActiveDocument;
+- Context.ActiveUiDocument;
 - Context.ActiveView;
 - Context.ActiveGraphicalView;
 - Context.IsRevitInApiMode;
@@ -345,7 +345,7 @@ List of available environment properties:
 ```C#
 public void Execute()
 {
-    Context.Document.Delete(elementId);
+    Context.ActiveDocument.Delete(elementId);
     Context.ActiveView = view;
 }
 ```
@@ -445,7 +445,7 @@ Contains an implementation for **ISaveSharedCoordinatesCallback**.
 Provides a handler for control Revit when trying to unload or reload a Revit link with changes in shared coordinates.
 
 ```c#
-var linkType = elementId.ToElement<RevitLinkType>(Context.Document);
+var linkType = elementId.ToElement<RevitLinkType>(Context.ActiveDocument);
 linkType.Unload(new SaveSharedCoordinatesCallback());
 linkType.Unload(new SaveSharedCoordinatesCallback(SaveModifiedLinksOptions.DoNotSaveLinks));
 linkType.Unload(new SaveSharedCoordinatesCallback(type =>
@@ -651,7 +651,7 @@ public class Command : ExternalCommand
             //Action
             var selectedIds = UiDocument.Selection.GetElementIds();
             
-            using var transaction = new Transaction(Context.Document);
+            using var transaction = new Transaction(Context.ActiveDocument);
             transaction.Start("Delete elements");
             Document.Delete(selectedIds);
             transaction.Commit();
@@ -679,7 +679,7 @@ public class Command : ExternalCommand
         try
         {
             //Action
-            using var transaction = new Transaction(Context.Document);
+            using var transaction = new Transaction(Context.ActiveDocument);
             transaction.Start("Delete elements");
             Document.Delete(selectedIds);
             transaction.Commit();

@@ -1,4 +1,4 @@
-# Release 2025.0.2-preview.2.0
+# Release 2025.0.2
 
 - **Context** global handlers:
     - **SuppressFailures**: suppresses the display of the Revit error and warning messages during transaction.
@@ -7,6 +7,8 @@
     - **SuppressDialogs**: suppresses the display of the Revit dialogs
 - **Context** global properties:
     - **IsRevitInApiMode**: determines whether Revit is in API mode or not.
+    - **Document** is obsolete. Use _ActiveDocument_ instead.
+    - **UiDocument** is obsolete. Use _ActiveUiDocument_ instead.
 - **ExternalCommand.SuppressFailures** is obsolete. Use Context class instead.
 - **ExternalCommand.SuppressDialogs** is obsolete. Use Context class instead.
 - **ActionEventHandler** now understands when it is in a Revit context and calls the handler immediately, without adding to the queue.

@@ -32,35 +32,35 @@ public static class Context
         const BindingFlags staticFlags = BindingFlags.NonPublic | BindingFlags.Static;
         var apiAssembly = AppDomain.CurrentDomain.GetAssemblies().First(assembly => assembly.GetName().Name == "APIUIAPI");
         var dbAssembly = AppDomain.CurrentDomain.GetAssemblies().First(assembly => assembly.GetName().Name == "RevitDBAPI");
-        
+
         var apiAssemblyMethods = apiAssembly.ManifestModule.GetMethods(staticFlags);
         var dbAssemblyMethods = dbAssembly.ManifestModule.GetMethods(staticFlags);
 
         var getApplicationMethod = dbAssemblyMethods.FirstOrDefault(info => info.Name == "RevitApplication.getApplication_");
-        ThrowIfNotSupported(getApplicationMethod);
+        ThrowIfApiModified(getApplicationMethod is null);
 
         var proxyType = dbAssembly.DefinedTypes.FirstOrDefault(info => info.FullName == "Autodesk.Revit.Proxy.ApplicationServices.ApplicationProxy");
-        ThrowIfNotSupported(proxyType);
+        ThrowIfApiModified(proxyType is null);
 
         const BindingFlags internalFlags = BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance;
         var proxyConstructor = proxyType.GetConstructor(internalFlags, null, [getApplicationMethod.ReturnType], null);
-        ThrowIfNotSupported(proxyConstructor);
+        ThrowIfApiModified(proxyConstructor is null);
 
         var proxy = proxyConstructor.Invoke([getApplicationMethod.Invoke(null, null)]);
-        ThrowIfNotSupported(proxy);
+        ThrowIfApiModified(proxy is null);
 
         var applicationType = typeof(Application);
         var applicationConstructor = applicationType.GetConstructor(internalFlags, null, [proxyType], null);
-        ThrowIfNotSupported(applicationConstructor);
+        ThrowIfApiModified(applicationConstructor is null);
 
         var application = (Application)applicationConstructor.Invoke([proxy]);
-        ThrowIfNotSupported(proxy);
+        ThrowIfApiModified(proxy is null);
 
         var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.singletonfactory");
-        ThrowIfNotSupported(apiCallDepthManagerMethod);
-        
+        ThrowIfApiModified(apiCallDepthManagerMethod is null);
+
         var isRevitInApiModeMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.isRevitInAPIMode");
-        ThrowIfNotSupported(isRevitInApiModeMethod);
+        ThrowIfApiModified(isRevitInApiModeMethod is null);
 
         _apiCallDepthManagerMethod = apiCallDepthManagerMethod;
         _isRevitInApiModeMethod = isRevitInApiModeMethod;
@@ -88,7 +88,7 @@ public static class Context
     ///     Returns <see langword="null" /> if there are no active projects.
     /// </returns>
     public static UIDocument? ActiveUiDocument => UiApplication.ActiveUIDocument;
-    
+
     /// <summary>Represents a currently active Autodesk Revit project at the UI level.</summary>
     [Obsolete("Document property will be removed in the next Major version, use Context.ActiveUiDocument() instead")]
     public static UIDocument? UiDocument => ActiveUiDocument;
@@ -100,7 +100,7 @@ public static class Context
     ///     Returns <see langword="null" /> if there are no active projects.
     /// </remarks>
     public static Document? ActiveDocument => UiApplication.ActiveUIDocument?.Document;
-    
+
     /// <summary>Represents a currently active Autodesk Revit project at the database level.</summary>
     [Obsolete("Document property will be removed in the next Major version, use Context.ActiveDocument() instead")]
     public static Document? Document => ActiveDocument;
@@ -156,7 +156,7 @@ public static class Context
     ///     Returns <see langword="null" /> if there are no active projects.
     /// </remarks>
     public static View? ActiveGraphicalView => UiApplication.ActiveUIDocument?.ActiveGraphicalView;
-    
+
     /// <summary>
     ///     Determines whether Revit is in API mode or not.
     /// </summary>
@@ -172,7 +172,7 @@ public static class Context
         get
         {
             var apiCallDepthManager = _apiCallDepthManagerMethod.Invoke(null, null);
-            return (bool) _isRevitInApiModeMethod.Invoke(null, [apiCallDepthManager])!;
+            return (bool)_isRevitInApiModeMethod.Invoke(null, [apiCallDepthManager])!;
         }
     }
 
@@ -292,7 +292,7 @@ public static class Context
         _suppressFailures = false;
         Application.FailuresProcessing -= ResolveFailures;
     }
-    
+
     private static void ResolveDialogBox(object? sender, DialogBoxShowingEventArgs args)
     {
         if (_suppressDialogCode.HasValue)
@@ -313,12 +313,13 @@ public static class Context
     }
 
 #if NETCOREAPP
-    [DoesNotReturn]
+    private static void ThrowIfApiModified([DoesNotReturnIf(true)] bool condition)
+#else
+    [ContractAnnotation("condition:true => halt")]
+    private static void ThrowIfApiModified(bool condition)
 #endif
-    [ContractAnnotation("null => halt")]
-    private static void ThrowIfNotSupported(object? argument)
     {
-        if (argument is null)
+        if (condition)
         {
             throw new NotSupportedException("The operation is not supported by current Revit API version. Failed to retrieve the application context.");
         }

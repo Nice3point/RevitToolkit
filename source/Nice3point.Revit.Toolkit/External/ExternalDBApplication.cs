@@ -35,7 +35,7 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     public ExternalDBApplicationResult OnStartup(ControlledApplication application)
     {
         var currentType = GetType();
-
+        
 #if NETCOREAPP
         if (!AddinLoadContext.CheckAccess(currentType))
         {
@@ -45,6 +45,8 @@ public abstract class ExternalDBApplication : IExternalDBApplication
         }
 #endif
 
+        Application = application;
+        
 #if NETCOREAPP
         OnStartup();
 #else

@@ -85,7 +85,11 @@ public static class Context
     ///     Currently active project.<br/>
     ///     Returns <see langword="null" /> if there are no active projects.
     /// </returns>
-    public static UIDocument? UiDocument => UiApplication.ActiveUIDocument;
+    public static UIDocument? ActiveUiDocument => UiApplication.ActiveUIDocument;
+    
+    /// <summary>Represents a currently active Autodesk Revit project at the UI level.</summary>
+    [Obsolete("Document property will be removed in the next Major version, use Context.ActiveUiDocument() instead")]
+    public static UIDocument? UiDocument => ActiveUiDocument;
 
     /// <summary>Represents a currently active Autodesk Revit project at the database level.</summary>
     /// <remarks>
@@ -93,7 +97,11 @@ public static class Context
     ///     The active or top most view will be the active project and hence the active document which is available from the Application object.<br/><br/>
     ///     Returns <see langword="null" /> if there are no active projects.
     /// </remarks>
-    public static Document? Document => UiApplication.ActiveUIDocument?.Document;
+    public static Document? ActiveDocument => UiApplication.ActiveUIDocument?.Document;
+    
+    /// <summary>Represents a currently active Autodesk Revit project at the database level.</summary>
+    [Obsolete("Document property will be removed in the next Major version, use Context.ActiveDocument() instead")]
+    public static Document? Document => ActiveDocument;
 
     /// <summary>Represents the currently active view of the currently active document.</summary>
     /// <remarks>

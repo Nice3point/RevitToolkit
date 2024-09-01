@@ -40,14 +40,14 @@ public abstract class ExternalCommand : IExternalCommand
     ///     External API commands can access this property in read-only mode only.
     /// </remarks>
     /// <exception cref="T:Autodesk.Revit.Exceptions.InvalidOperationException">Thrown when attempting to modify the property.</exception>
-    public UIDocument UiDocument => Context.UiDocument!;
+    public UIDocument UiDocument => Context.ActiveUiDocument!;
 
     /// <summary>Represents a currently active Autodesk Revit project at the database level</summary>
     /// <remarks>
     ///     Revit can have multiple projects open and multiple views to those projects.
     ///     The active or top most view will be the active project and hence the active document which is available from the Application object.<br/><br/>
     /// </remarks>
-    public Document Document => Context.Document!;
+    public Document Document => Context.ActiveDocument!;
 
     /// <summary>Represents the currently active view.</summary>
     public View ActiveView => Context.ActiveView!;

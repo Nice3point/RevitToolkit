@@ -1,3 +1,8 @@
+# Release 2025.0.3
+
+- Removed JetBrains.Annotations dependency
+- Fixed typo in summary
+
 # Release 2025.0.2
 
 - **Context** global handlers:

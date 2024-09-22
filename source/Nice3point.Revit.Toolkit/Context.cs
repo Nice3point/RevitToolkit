@@ -13,7 +13,6 @@ namespace Nice3point.Revit.Toolkit;
 /// <summary>
 ///     Provides members for setting and retrieving data about Revit application context.
 /// </summary>
-[PublicAPI]
 public static class Context
 {
     //Global state
@@ -24,8 +23,8 @@ public static class Context
     private static int? _suppressDialogCode;
     private static Action<DialogBoxShowingEventArgs>? _suppressDialogHandler;
 
-    private static MethodInfo _apiCallDepthManagerMethod;
-    private static MethodInfo _isRevitInApiModeMethod;
+    private static readonly MethodInfo ApiCallDepthManagerMethod;
+    private static readonly MethodInfo IsRevitInApiModeMethod;
 
     static Context()
     {
@@ -43,17 +42,17 @@ public static class Context
         ThrowIfApiModified(proxyType is null);
 
         const BindingFlags internalFlags = BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance;
-        var proxyConstructor = proxyType.GetConstructor(internalFlags, null, [getApplicationMethod.ReturnType], null);
+        var proxyConstructor = proxyType!.GetConstructor(internalFlags, null, [getApplicationMethod!.ReturnType], null);
         ThrowIfApiModified(proxyConstructor is null);
 
-        var proxy = proxyConstructor.Invoke([getApplicationMethod.Invoke(null, null)]);
+        var proxy = proxyConstructor!.Invoke([getApplicationMethod.Invoke(null, null)]);
         ThrowIfApiModified(proxy is null);
 
         var applicationType = typeof(Application);
         var applicationConstructor = applicationType.GetConstructor(internalFlags, null, [proxyType], null);
         ThrowIfApiModified(applicationConstructor is null);
 
-        var application = (Application)applicationConstructor.Invoke([proxy]);
+        var application = (Application)applicationConstructor!.Invoke([proxy]);
         ThrowIfApiModified(proxy is null);
 
         var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.singletonfactory");
@@ -62,8 +61,8 @@ public static class Context
         var isRevitInApiModeMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.isRevitInAPIMode");
         ThrowIfApiModified(isRevitInApiModeMethod is null);
 
-        _apiCallDepthManagerMethod = apiCallDepthManagerMethod;
-        _isRevitInApiModeMethod = isRevitInApiModeMethod;
+        ApiCallDepthManagerMethod = apiCallDepthManagerMethod!;
+        IsRevitInApiModeMethod = isRevitInApiModeMethod!;
         UiApplication = new UIApplication(application);
     }
 
@@ -90,7 +89,7 @@ public static class Context
     public static UIDocument? ActiveUiDocument => UiApplication.ActiveUIDocument;
 
     /// <summary>Represents a currently active Autodesk Revit project at the UI level.</summary>
-    [Obsolete("Document property will be removed in the next Major version, use Context.ActiveUiDocument() instead")]
+    [Obsolete("Document property renamed and will be removed in the next Major version, use Context.ActiveUiDocument instead")]
     public static UIDocument? UiDocument => ActiveUiDocument;
 
     /// <summary>Represents a currently active Autodesk Revit project at the database level.</summary>
@@ -102,7 +101,7 @@ public static class Context
     public static Document? ActiveDocument => UiApplication.ActiveUIDocument?.Document;
 
     /// <summary>Represents a currently active Autodesk Revit project at the database level.</summary>
-    [Obsolete("Document property will be removed in the next Major version, use Context.ActiveDocument() instead")]
+    [Obsolete("Document property renamed and will be removed in the next Major version, use Context.ActiveDocument instead")]
     public static Document? Document => ActiveDocument;
 
     /// <summary>Represents the currently active view of the currently active document.</summary>
@@ -171,8 +170,8 @@ public static class Context
     {
         get
         {
-            var apiCallDepthManager = _apiCallDepthManagerMethod.Invoke(null, null);
-            return (bool)_isRevitInApiModeMethod.Invoke(null, [apiCallDepthManager])!;
+            var apiCallDepthManager = ApiCallDepthManagerMethod.Invoke(null, null);
+            return (bool)IsRevitInApiModeMethod.Invoke(null, [apiCallDepthManager])!;
         }
     }
 
@@ -315,7 +314,7 @@ public static class Context
 #if NETCOREAPP
     private static void ThrowIfApiModified([DoesNotReturnIf(true)] bool condition)
 #else
-    [ContractAnnotation("condition:true => halt")]
+    [ContractAnnotation("true => halt")]
     private static void ThrowIfApiModified(bool condition)
 #endif
     {

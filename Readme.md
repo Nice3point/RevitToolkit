@@ -37,7 +37,6 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
   * [IdlingEventHandler](#idlingeventhandler)
   * [AsyncEventHandler](#asynceventhandler)
   * [AsyncEventHandler\<T>](#asynceventhandlert)
-* [ExternalCommandAvailability](#externalcommandavailability)
 * [Context](#context)
 * [Options](#options)
   * [FamilyLoadOptions](#familyloadoptions)
@@ -306,15 +305,6 @@ Windows selected
 Windows count 17
 Command completed
 ```
-
-### ExternalCommandAvailability
-
-Contains an implementation for **IExternalCommandAvailability**.
-
-It provides the accessibility check for a Revit add-in External Command.
-
-Starting with Revit 2025, **ExternalCommandAvailability** is executed in an isolated context, providing independent execution and preventing conflicts due to incompatible library versions.
-If your implementation does not include dependencies, use the **IExternalCommandAvailability** interface to reduce memory allocation.
 
 ### Context
 

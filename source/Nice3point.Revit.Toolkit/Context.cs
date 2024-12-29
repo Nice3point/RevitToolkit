@@ -73,6 +73,11 @@ public static class Context
     public static UIApplication UiApplication { get; }
 
     /// <summary>
+    ///     Represents the Autodesk Revit user interface, providing access to UI customization methods and events.
+    /// </summary>
+    public static UIControlledApplication UiControlledApplication => CreateUiControlledApplication();
+
+    /// <summary>
     ///     Represents the database level Autodesk Revit Application, providing access to documents, options and other application wide data and settings.
     /// </summary>
     public static Application Application => UiApplication.Application;
@@ -309,6 +314,16 @@ public static class Context
         var result = _suppressFailureErrors ? FailureUtils.ResolveFailures(failuresAccessor) : FailureUtils.DismissFailures(failuresAccessor);
 
         args.SetProcessingResult(result);
+    }
+
+    private static UIControlledApplication CreateUiControlledApplication()
+    {
+        return (UIControlledApplication)Activator.CreateInstance(
+            typeof(UIControlledApplication),
+            BindingFlags.Instance | BindingFlags.NonPublic,
+            null,
+            [UiApplication],
+            null)!;
     }
 
 #if NETCOREAPP

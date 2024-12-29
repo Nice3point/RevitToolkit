@@ -24,7 +24,7 @@ public abstract class ExternalApplication : IExternalApplication
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIControlledApplication" /> that is needed by an external application.
     /// </summary>
-    public UIControlledApplication Application { get; private set; } = default!;
+    public UIControlledApplication Application { get; private set; } = null!;
 
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIApplication" /> that is needed by an external application.

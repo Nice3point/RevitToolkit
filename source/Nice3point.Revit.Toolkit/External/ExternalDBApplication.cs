@@ -14,9 +14,6 @@ namespace Nice3point.Revit.Toolkit.External;
 // ReSharper disable once InconsistentNaming
 public abstract class ExternalDBApplication : IExternalDBApplication
 {
-#if NETCOREAPP
-    private object? _isolatedInstance;
-#endif
     /// <summary>
     ///     Indicates if the external application completes its work successfully.
     /// </summary>
@@ -28,7 +25,7 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     /// <summary>
     ///     Represents the Autodesk Revit Application with no access to documents.
     /// </summary>
-    public ControlledApplication Application { get; private set; } = default!;
+    public ControlledApplication Application { get; private set; } = null!;
 
     /// <summary>Callback invoked by Revit. Not used to be called in user code.</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]

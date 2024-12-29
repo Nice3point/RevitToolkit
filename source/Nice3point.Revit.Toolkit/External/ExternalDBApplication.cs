@@ -36,20 +36,8 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     {
         var currentType = GetType();
         
-#if NETCOREAPP
-        if (!AddinLoadContext.CheckAccess(currentType))
-        {
-            var dependenciesProvider = AddinLoadContext.GetDependenciesProvider(currentType);
-            _isolatedInstance = dependenciesProvider.CreateInstance(currentType);
-            return AddinLoadContext.Invoke(_isolatedInstance, nameof(OnStartup), application);
-        }
-#endif
-
         Application = application;
         
-#if NETCOREAPP
-        OnStartup();
-#else
         try
         {
             ResolveHelper.BeginAssemblyResolve(currentType);
@@ -59,7 +47,6 @@ public abstract class ExternalDBApplication : IExternalDBApplication
         {
             ResolveHelper.EndAssemblyResolve();
         }
-#endif
 
         return Result;
     }
@@ -70,14 +57,6 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     {
         var currentType = GetType();
 
-#if NETCOREAPP
-        if (!AddinLoadContext.CheckAccess(currentType))
-        {
-            return AddinLoadContext.Invoke(_isolatedInstance!, nameof(OnShutdown), application);
-        }
-
-        OnShutdown();
-#else
         try
         {
             ResolveHelper.BeginAssemblyResolve(currentType);
@@ -87,7 +66,6 @@ public abstract class ExternalDBApplication : IExternalDBApplication
         {
             ResolveHelper.EndAssemblyResolve();
         }
-#endif
 
         return ExternalDBApplicationResult.Succeeded;
     }

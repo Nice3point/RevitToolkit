@@ -1,3 +1,7 @@
+# Release 2025.0.4-preview.1.0
+
+- New `Context.UiControlledApplication` property. Helps to manipulate with the Revit ribbon, context menus outside ExternalApplication. 
+
 # Release 2025.0.3
 
 - Removed JetBrains.Annotations dependency

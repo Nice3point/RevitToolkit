@@ -13,10 +13,6 @@ namespace Nice3point.Revit.Toolkit.External;
 [PublicAPI]
 public abstract class ExternalApplication : IExternalApplication
 {
-#if NETCOREAPP
-    private object? _isolatedInstance;
-#endif
-
     /// <summary>
     ///     Indicates if the external application completes its work successfully.
     /// </summary>
@@ -40,21 +36,9 @@ public abstract class ExternalApplication : IExternalApplication
     public Result OnStartup(UIControlledApplication application)
     {
         var currentType = GetType();
-
-#if NETCOREAPP
-        if (!AddinLoadContext.CheckAccess(currentType))
-        {
-            var dependenciesProvider = AddinLoadContext.GetDependenciesProvider(currentType);
-            _isolatedInstance = dependenciesProvider.CreateInstance(currentType);
-            return AddinLoadContext.Invoke(_isolatedInstance, nameof(OnStartup), application);
-        }
-#endif
-
+        
         Application = application;
 
-#if NETCOREAPP
-        OnStartup();
-#else
         try
         {
             ResolveHelper.BeginAssemblyResolve(currentType);
@@ -64,7 +48,6 @@ public abstract class ExternalApplication : IExternalApplication
         {
             ResolveHelper.EndAssemblyResolve();
         }
-#endif
 
         return Result;
     }
@@ -75,14 +58,6 @@ public abstract class ExternalApplication : IExternalApplication
     {
         var currentType = GetType();
 
-#if NETCOREAPP
-        if (!AddinLoadContext.CheckAccess(currentType))
-        {
-            return AddinLoadContext.Invoke(_isolatedInstance!, nameof(OnShutdown), application);
-        }
-
-        OnShutdown();
-#else
         try
         {
             ResolveHelper.BeginAssemblyResolve(currentType);
@@ -92,7 +67,6 @@ public abstract class ExternalApplication : IExternalApplication
         {
             ResolveHelper.EndAssemblyResolve();
         }
-#endif
 
         return Result.Succeeded;
     }

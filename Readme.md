@@ -49,7 +49,6 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
   * [DockablePaneProvider](#dockablepaneprovider)
 * [Helpers](#helpers)
   * [ResolveHelper](#resolvehelper)
-  * [Add-ins Dependency Isolation](#add-ins-dependency-isolation)
 * [Samples](#samples)
   * [External application flow control](#external-application-flow-control)
   * [External command flow control](#external-command-flow-control)
@@ -81,8 +80,6 @@ public class Command : ExternalCommand
 **ExternalCommand** contains the logic for resolving dependencies.
 Now you may not encounter a `FileNotFoundException`. Dependencies are searched in the plugin folder.
 
-Starting with Revit 2025, **ExternalCommand** is executed in an isolated context, providing independent execution and preventing conflicts due to incompatible library versions.
-
 ### ExternalApplication
 
 Contains an implementation for **IExternalApplication**.
@@ -113,8 +110,6 @@ public class Application : ExternalApplication
 **ExternalApplication** contains the logic for resolving dependencies.
 Now you may not encounter a `FileNotFoundException`. Dependencies are searched in the plugin folder.
 
-Starting with Revit 2025, **ExternalApplication** is executed in an isolated context, providing independent execution and preventing conflicts due to incompatible library versions.
-
 ### ExternalDBApplication
 
 Contains an implementation for **IExternalDBApplication**.
@@ -138,9 +133,6 @@ Override method **OnShutdown()** to execute some tasks when Revit shuts down. Yo
 
 **ExternalDBApplication** contains the logic for resolving dependencies.
 Now you may not encounter a `FileNotFoundException`. Dependencies are searched in the plugin folder.
-
-Starting with Revit 2025, **ExternalDBApplication** is executed in an isolated context, providing independent execution and preventing conflicts due to incompatible library
-versions.
 
 ### External events
 
@@ -529,7 +521,7 @@ Provides auxiliary components
 
 #### ResolveHelper
 
-Provides handlers to resolve dependencies for Revit 2024 and older.
+Provides handlers to resolve dependencies for Revit 2025 and older.
 
 ```c#
 try
@@ -544,37 +536,6 @@ finally
 ```
 
 Enabled by default for `ExternalCommand`, `ExternalApplication` and `ExternalDBApplication`.
-
-#### Add-ins Dependency Isolation
-
-Provides dependency isolation for Revit 2025 and earlier.
-
-This library enables running plugins in an isolated context using
-.NET [AssemblyLoadContext](https://learn.microsoft.com/en-us/dotnet/core/dependency-loading/understanding-assemblyloadcontext).
-Each plugin executes independently, preventing conflicts from incompatible library versions.
-
-How It Works:
-
-The core functionality centers on `AssemblyLoadContext`, which creates an isolated container for each plugin.
-When a plugin is loaded, it is assigned a unique `AssemblyLoadContext` instance, encapsulating the plugin and its dependencies to prevent interference with other plugins or the
-main application.
-
-To use this isolation feature, developers must inherit their classes from:
-
-- ExternalCommand
-- ExternalApplication
-- ExternalDbApplication
-- ExternalCommandAvailability
-
-These classes contain the built-in isolation mechanism under the hood.
-Plugins using interfaces such as `IExternalCommand` will not benefit from this isolation and will run in the default context.
-
-Limitations:
-
-- The isolated context feature is available starting with Revit 2025.
-- For older Revit versions, this library uses a `ResolveHelper` to help load dependencies from the plugin's folder, but does not protect against conflicts arising from incompatible
-  packages.
-- Additionally, plugins that do not inherit from the specified classes will not be isolated and may experience compatibility issues if they rely on the default context.
 
 ### Samples
 

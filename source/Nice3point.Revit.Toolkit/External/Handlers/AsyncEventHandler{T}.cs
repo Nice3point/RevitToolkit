@@ -25,12 +25,12 @@ public sealed class AsyncEventHandler<T> : ExternalEventHandler
             _result = _func!(uiApplication);
             if (_resultTask is null) return; //Revit In Api mode
             
-            _resultTask!.SetResult(_result);
+            _resultTask.SetResult(_result);
         }
         catch (Exception exception)
         {
             if (_resultTask is null) throw; //Revit In Api mode
-            _resultTask!.SetException(exception);
+            _resultTask.SetException(exception);
         }
         finally
         {

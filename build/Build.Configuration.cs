@@ -1,6 +1,9 @@
-﻿sealed partial class Build
+﻿using Nuke.Common.CI.GitHubActions;
+
+sealed partial class Build
 {
-    string PublishVersion => Version ??= VersionMap.Values.Last();
+    [Parameter] string ReleaseVersion = GitHubActions.Instance?.RefName;
+
     readonly AbsolutePath ArtifactsDirectory = RootDirectory / "output";
     readonly AbsolutePath ChangeLogPath = RootDirectory / "Changelog.md";
 
@@ -11,7 +14,7 @@
             "Release*"
         ];
 
-        VersionMap = new()
+        AssemblyVersionMap = new()
         {
             { "Release R20", "2020.2.4-preview.1.0" },
             { "Release R21", "2021.2.4-preview.1.0" },

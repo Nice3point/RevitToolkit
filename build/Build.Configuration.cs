@@ -14,7 +14,7 @@ sealed partial class Build
             "Release*"
         ];
 
-        AssemblyVersionMap = new()
+        PackageVersionsMap = new()
         {
             { "Release R20", "2020.2.4-preview.1.0" },
             { "Release R21", "2021.2.4-preview.1.0" },

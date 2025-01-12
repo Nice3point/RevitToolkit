@@ -26,7 +26,7 @@ partial class Build
         .OnlyWhenStatic(() => IsLocalBuild)
         .Executes(() =>
         {
-            foreach (var versionPair in AssemblyVersionMap)
+            foreach (var versionPair in PackageVersionsMap)
             {
                 ProcessTasks.StartProcess("dotnet", $"nuget delete Nice3point.Revit.Toolkit {versionPair.Value} -s {NugetSource} -k {NugetApiKey} --non-interactive")
                     .AssertZeroExitCode();

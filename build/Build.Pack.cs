@@ -39,8 +39,9 @@ partial class Build
         var readmePath = Solution.Directory / "Readme.md";
         var readme = File.ReadAllText(readmePath);
 
-        var startSymbol = "<p";
-        var endSymbol = "</p>\r\n\r\n";
+        const string startSymbol = "<p";
+        const string endSymbol = "</p>\r\n\r\n";
+        
         var logoStartIndex = readme.IndexOf(startSymbol, StringComparison.Ordinal);
         var logoEndIndex = readme.IndexOf(endSymbol, StringComparison.Ordinal);
 

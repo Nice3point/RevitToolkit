@@ -1,5 +1,4 @@
-﻿using Nuke.Common.Tooling;
-using Nuke.Common.Tools.DotNet;
+﻿using Nuke.Common.Tools.DotNet;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 partial class Build
@@ -28,8 +27,12 @@ partial class Build
         {
             foreach (var versionPair in PackageVersionsMap)
             {
-                ProcessTasks.StartProcess("dotnet", $"nuget delete Nice3point.Revit.Toolkit {versionPair.Value} -s {NugetSource} -k {NugetApiKey} --non-interactive")
-                    .AssertZeroExitCode();
+                DotNetNuGetDelete(settings => settings
+                    .SetPackageId("Nice3point.Revit.Toolkit")
+                    .SetPackageVersion(versionPair.Value)
+                    .SetSource(NugetSource)
+                    .SetApiKey(NugetApiKey)
+                    .EnableNonInteractive());
             }
         });
 }

@@ -7,6 +7,7 @@ sealed partial class Build
         .Unlisted()
         .AssuredAfterFailure()
         .TriggeredBy(PublishGitHub)
+        .OnlyWhenStatic(() => IsServerBuild)
         .OnlyWhenDynamic(() => !FailedTargets.IsEmpty())
         .Executes(() =>
         {

@@ -1,6 +1,7 @@
 using System.Text;
 using Nuke.Common.Tools.Git;
 using Nuke.Common.Tools.GitHub;
+using Nuke.Common.Utilities;
 
 sealed partial class Build
 {
@@ -19,12 +20,21 @@ sealed partial class Build
         var builder = CreateChangelogBuilder();
 
         return builder.ToString()
-            .Replace(";", "%3B")
-            .Replace("- ", "• ")
-            .Replace("* ", "• ")
-            .Replace("+ ", "• ")
-            .Replace("`", string.Empty)
-            .Replace(",", "%2C");
+            .Split(Environment.NewLine)
+            .Where(line => !line.Contains("```"))
+            .Where(line => !line.Contains("!["))
+            .Select(line => line.Replace(";", "%3B")
+                .Replace("- ", "• ")
+                .Replace("**", string.Empty)
+                .Replace("#### ", string.Empty)
+                .Replace("### ", string.Empty)
+                .Replace("## ", string.Empty)
+                .Replace("# ", string.Empty)
+                .Replace("* ", "• ")
+                .Replace("+ ", "• ")
+                .Replace("`", string.Empty)
+                .Replace(",", "%2C"))
+            .JoinNewLine();
     }
 
     string CreateGithubChangelog()

@@ -40,14 +40,14 @@ public class ActionEventHandler : ExternalEventHandler
     /// </remarks>
     public void Raise(Action<UIApplication> action)
     {
-        if (_action is null) _action = action;
-        else _action += action;
-
         if (Context.IsRevitInApiMode)
         {
-            Execute(Context.UiApplication);
+            action(Context.UiApplication);
             return;
         }
+        
+        if (_action is null) _action = action;
+        else _action += action;
 
         Raise();
     }

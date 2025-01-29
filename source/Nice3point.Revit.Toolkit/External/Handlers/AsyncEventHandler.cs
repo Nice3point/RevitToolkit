@@ -10,8 +10,8 @@ namespace Nice3point.Revit.Toolkit.External.Handlers;
 [PublicAPI]
 public sealed class AsyncEventHandler : ExternalEventHandler
 {
-    private Action<UIApplication>? _action;
-    
+    private Action<UIApplication>? _handler;
+
 #if NETCOREAPP
     private TaskCompletionSource? _resultTask;
 #else
@@ -22,11 +22,12 @@ public sealed class AsyncEventHandler : ExternalEventHandler
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override void Execute(UIApplication uiApplication)
     {
+        if (_handler is null) return;
+        if (_resultTask is null) return;
+        
         try
         {
-            _action!.Invoke(uiApplication);
-            if (_resultTask is null) return; //Revit In Api mode
-            
+            _handler.Invoke(uiApplication);
 #if NETCOREAPP
             _resultTask.SetResult();
 #else
@@ -35,12 +36,11 @@ public sealed class AsyncEventHandler : ExternalEventHandler
         }
         catch (Exception exception)
         {
-            if (_resultTask is null) throw; //Revit In Api mode
             _resultTask.SetException(exception);
         }
         finally
         {
-            _action = null;
+            _handler = null;
             _resultTask = null;
         }
     }
@@ -55,23 +55,23 @@ public sealed class AsyncEventHandler : ExternalEventHandler
     ///     <see cref="System.Threading.Tasks.Task.Wait()" /> will cause a deadlock.<br/><br/>
     ///     Executes the handler out of queue if Revit is in API mode.
     /// </remarks>
-    public async Task RaiseAsync(Action<UIApplication> action)
+    public async Task RaiseAsync(Action<UIApplication> handler)
     {
-        if (_action is null) _action = action;
-        else _action += action;
-
         if (Context.IsRevitInApiMode)
         {
-            Execute(Context.UiApplication);
+            handler.Invoke(Context.UiApplication);
             return;
         }
-        
+
+        if (_handler is null) _handler = handler;
+        else _handler += handler;
+
 #if NETCOREAPP
         _resultTask ??= new TaskCompletionSource();
 #else
         _resultTask ??= new TaskCompletionSource<bool>();
 #endif
-        
+
         Raise();
         await _resultTask.Task;
     }

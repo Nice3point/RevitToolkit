@@ -15,14 +15,12 @@ namespace Nice3point.Revit.Toolkit.External.Handlers;
 [PublicAPI]
 public class IdlingEventHandler : ExternalEventHandler
 {
-    private Action<UIApplication>? _action;
+    private Action<UIApplication>? _handler;
 
     /// <summary>Callback invoked by Revit. Not used to be called in user code.</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override void Execute(UIApplication uiApplication)
     {
-        if (_action is null) return;
-
         uiApplication.Idling += HandleIdling;
     }
 
@@ -31,13 +29,15 @@ public class IdlingEventHandler : ExternalEventHandler
         var uiApplication = (UIApplication)sender!;
         uiApplication.Idling -= HandleIdling;
 
+        if (_handler is null) return;
+        
         try
         {
-            _action!(uiApplication);
+            _handler(uiApplication);
         }
         finally
         {
-            _action = null;
+            _handler = null;
         }
     }
 
@@ -53,8 +53,8 @@ public class IdlingEventHandler : ExternalEventHandler
     /// </remarks>
     public void Raise(Action<UIApplication> action)
     {
-        if (_action is null) _action = action;
-        else _action += action;
+        if (_handler is null) _handler = action;
+        else _handler += action;
 
         Raise();
     }
@@ -65,6 +65,6 @@ public class IdlingEventHandler : ExternalEventHandler
     /// <remarks>The queue can be cleaned up before the first delegate is invoked.</remarks>
     public void Cancel()
     {
-        _action = null;
+        _handler = null;
     }
 }

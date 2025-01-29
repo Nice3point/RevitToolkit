@@ -10,31 +10,31 @@ namespace Nice3point.Revit.Toolkit.External.Handlers;
 [PublicAPI]
 public sealed class AsyncEventHandler<T> : ExternalEventHandler
 {
-    private Func<UIApplication, T>? _func;
+    private Func<UIApplication, T>? _handler;
     private TaskCompletionSource<T>? _resultTask;
-    private T? _result;
-
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
+    
     /// <summary>
     ///     This method is called to handle the external event.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override void Execute(UIApplication uiApplication)
     {
+        if (_handler is null) return;
+        if (_resultTask is null) return;
+        
         try
         {
-            _result = _func!(uiApplication);
-            if (_resultTask is null) return; //Revit In Api mode
-            
-            _resultTask.SetResult(_result);
+            var result = _handler(uiApplication);
+            _resultTask.SetResult(result);
         }
         catch (Exception exception)
         {
-            if (_resultTask is null) throw; //Revit In Api mode
             _resultTask.SetException(exception);
         }
         finally
         {
-            _func = null;
+            _handler = null;
             _resultTask = null;
         }
     }
@@ -52,20 +52,26 @@ public sealed class AsyncEventHandler<T> : ExternalEventHandler
     ///     <see cref="System.Threading.Tasks.Task.Wait()" /> will cause a deadlock.<br/><br/>
     ///     Executes the handler out of queue if Revit is in API mode.
     /// </remarks>
-    public async Task<T> RaiseAsync(Func<UIApplication, T> func)
+    public async Task<T> RaiseAsync(Func<UIApplication, T> handler)
     {
-        if (_func is null) _func = func;
-        else _func += func;
-        
         if (Context.IsRevitInApiMode)
         {
-            Execute(Context.UiApplication);
-            return _result!;
+            return handler(Context.UiApplication)!;
         }
         
-        _resultTask ??= new TaskCompletionSource<T>();
+        await _semaphore.WaitAsync();
+
+        try
+        {
+            _handler = handler;
+            _resultTask = new TaskCompletionSource<T>();
         
-        Raise();
-        return await _resultTask.Task;
+            Raise();
+            return await _resultTask.Task;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 }

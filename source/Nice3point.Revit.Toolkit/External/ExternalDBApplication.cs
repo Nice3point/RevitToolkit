@@ -1,6 +1,9 @@
 ﻿using System.ComponentModel;
 using Autodesk.Revit.ApplicationServices;
 using Nice3point.Revit.Toolkit.Helpers;
+#if NETCOREAPP
+using System.Runtime.Loader;
+#endif
 
 namespace Nice3point.Revit.Toolkit.External;
 
@@ -31,13 +34,20 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     [EditorBrowsable(EditorBrowsableState.Never)]
     public ExternalDBApplicationResult OnStartup(ControlledApplication application)
     {
-        var currentType = GetType();
-        
         Application = application;
         
         try
         {
+            var currentType = GetType();
+#if NETCOREAPP
+            if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+            {
+                ResolveHelper.BeginAssemblyResolve(currentType);
+            }
+#else
             ResolveHelper.BeginAssemblyResolve(currentType);
+
+#endif
             OnStartup();
         }
         finally
@@ -52,11 +62,18 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     [EditorBrowsable(EditorBrowsableState.Never)]
     public ExternalDBApplicationResult OnShutdown(ControlledApplication application)
     {
-        var currentType = GetType();
-
         try
         {
+            var currentType = GetType();
+#if NETCOREAPP
+            if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+            {
+                ResolveHelper.BeginAssemblyResolve(currentType);
+            }
+#else
             ResolveHelper.BeginAssemblyResolve(currentType);
+
+#endif
             OnShutdown();
         }
         finally

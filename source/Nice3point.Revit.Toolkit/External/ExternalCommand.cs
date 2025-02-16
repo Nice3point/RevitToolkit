@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Events;
 using Nice3point.Revit.Toolkit.Helpers;
+#if NETCOREAPP
+using System.Runtime.Loader;
+#endif
 
 namespace Nice3point.Revit.Toolkit.External;
 
@@ -69,15 +71,22 @@ public abstract class ExternalCommand : IExternalCommand
     [EditorBrowsable(EditorBrowsableState.Never)]
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
-        var currentType = GetType();
-
         ElementSet = elements;
         ErrorMessage = message;
         ExternalCommandData = commandData;
 
         try
         {
+            var currentType = GetType();
+#if NETCOREAPP
+            if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+            {
+                ResolveHelper.BeginAssemblyResolve(currentType);
+            }
+#else
             ResolveHelper.BeginAssemblyResolve(currentType);
+
+#endif
             Execute();
         }
         finally

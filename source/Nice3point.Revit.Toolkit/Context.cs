@@ -13,6 +13,7 @@ namespace Nice3point.Revit.Toolkit;
 /// <summary>
 ///     Provides members for setting and retrieving data about Revit application context.
 /// </summary>
+[PublicAPI]
 public static class Context
 {
     //Global state
@@ -25,6 +26,12 @@ public static class Context
 
     private static readonly MethodInfo ApiCallDepthManagerMethod;
     private static readonly MethodInfo IsRevitInApiModeMethod;
+
+#if NETFRAMEWORK
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+#pragma warning disable CS8601 // Possible null reference assignment.
+#pragma warning disable CS8618, CS9264
+#endif
 
     static Context()
     {
@@ -42,17 +49,17 @@ public static class Context
         ThrowIfApiModified(proxyType is null);
 
         const BindingFlags internalFlags = BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance;
-        var proxyConstructor = proxyType!.GetConstructor(internalFlags, null, [getApplicationMethod!.ReturnType], null);
+        var proxyConstructor = proxyType.GetConstructor(internalFlags, null, [getApplicationMethod.ReturnType], null);
         ThrowIfApiModified(proxyConstructor is null);
 
-        var proxy = proxyConstructor!.Invoke([getApplicationMethod.Invoke(null, null)]);
+        var proxy = proxyConstructor.Invoke([getApplicationMethod.Invoke(null, null)]);
         ThrowIfApiModified(proxy is null);
 
         var applicationType = typeof(Application);
         var applicationConstructor = applicationType.GetConstructor(internalFlags, null, [proxyType], null);
         ThrowIfApiModified(applicationConstructor is null);
 
-        var application = (Application)applicationConstructor!.Invoke([proxy]);
+        var application = (Application)applicationConstructor.Invoke([proxy]);
         ThrowIfApiModified(proxy is null);
 
         var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.singletonfactory");
@@ -61,10 +68,15 @@ public static class Context
         var isRevitInApiModeMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.isRevitInAPIMode");
         ThrowIfApiModified(isRevitInApiModeMethod is null);
 
-        ApiCallDepthManagerMethod = apiCallDepthManagerMethod!;
-        IsRevitInApiModeMethod = isRevitInApiModeMethod!;
+        ApiCallDepthManagerMethod = apiCallDepthManagerMethod;
+        IsRevitInApiModeMethod = isRevitInApiModeMethod;
         UiApplication = new UIApplication(application);
     }
+#if NETFRAMEWORK
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+#pragma warning restore CS8601 // Possible null reference assignment.
+#pragma warning restore CS8618, CS9264
+#endif
 
     /// <summary>
     ///     Represents an active session of the Autodesk Revit user interface, providing access to

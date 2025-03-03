@@ -147,22 +147,17 @@ A handler that provides access to modify a Revit document outside the execution 
 Calling a handler in a Revit context will call it immediately, without adding it to the queue.
 
 ```c#
-public ViewModel
-{
-    ActionEventHandler = new ActionEventHandler();
-}
-
-public ActionEventHandler ActionEventHandler { get; }
-public ElementId ElementId { get; set; }
+private readonly ElementId _elementId = new(12869);
+private readonly ActionEventHandler _actionEventHandler = new();
 
 private void DeteleElement()
 {
-    ActionEventHandler.Raise(application =>
+    _actionEventHandler.Raise(application =>
     {
         var document = application.ActiveUIDocument.Document;
         using var transaction = new Transaction(document, $"Delete element");
         transaction.Start();
-        document.Delete(ElementId)
+        document.Delete(_elementId)
         transaction.Commit();
         
         Debug.WriteLine("Deleted");
@@ -194,16 +189,11 @@ Suitable for cases where you need to call code when Revit receives focus.
 For example, to display a window after loading a family into a project.
 
 ```c#
-public ViewModel
-{
-    IdlingEventHandler = new IdlingEventHandler();
-}
-
-public IdlingEventHandler IdlingEventHandler { get; }
+private readonly IdlingEventHandler _idlingEventHandler = new();
 
 private void NotifyOnIdling()
 {
-    IdlingEventHandler.Raise(application =>
+    _idlingEventHandler.Raise(application =>
     {
         var view = new FamilyBrowser();
         view.Show();
@@ -234,16 +224,11 @@ Calling the handler in a Revit context will call it immediately without adding i
 and you can still call API requests in the main Revit thread.
 
 ```c#
-public ViewModel
-{
-    AsyncEventHandler = new AsyncEventHandler();
-}
-
-public AsyncEventHandler AsyncEventHandler { get; }
+private readonly AsyncEventHandler _asyncEventHandler = new();
 
 private async Task DeleteDoorsAsync()
 {
-    await AsyncEventHandler.RaiseAsync(application =>
+    await _asyncEventHandler.RaiseAsync(application =>
     {
         var doorIds = document.GetInstanceIds(BuiltInCategory.OST_Doors);
         document.Delete(doorIds);
@@ -274,16 +259,11 @@ Calling the handler in a Revit context will call it immediately without adding i
 and you can still call API requests in the main Revit thread.
 
 ```c#
-public ViewModel
-{
-    AsyncEventHandler = new AsyncEventHandler<int>();
-}
-
-public AsyncEventHandler<int> AsyncEventHandler { get; }
+private readonly AsyncEventHandler<int> _asyncEventHandler = new();
 
 private async Task GetWindowsCountAsync()
 {
-    var windowsCount = await AsyncEventHandler.RaiseAsync(application =>
+    var windowsCount = await _asyncEventHandler.RaiseAsync(application =>
     {
         var uiDocument = application.ActiveUIDocument;
         var elementIds = uiDocument.Document.GetInstanceIds(BuiltInCategory.OST_Windows);

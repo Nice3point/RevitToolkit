@@ -44,13 +44,13 @@ public static class ResolveHelper
     }
 
     /// <summary>
-    ///     Subscribes the current domain to resolve dependencies for the type.
+    ///     Subscribes the current domain to resolve dependencies for the type module.
     /// </summary>
     /// <param name="type">Type, to search for dependencies in the directory where this type is defined.</param>
     /// <remarks>
     ///     Dependencies are searched in a directory of the specified type.
-    ///     At the time of dependency resolution, all other dependency resolution methods for the domain are disabled,
-    ///     this requires calling <see cref="EndAssemblyResolve" /> immediately after executing user code where dependency failures occur.
+    ///     At the time of dependency resolution, all other dependency resolution methods for the domain are set to low priority,
+    ///     this requires calling <see cref="EndAssemblyResolve" /> immediately after executing user code to avoid conflict with Revit runtime.
     /// </remarks>
     public static void BeginAssemblyResolve(Type type)
     {
@@ -60,23 +60,25 @@ public static class ResolveHelper
 #if NETCOREAPP
         var loadContextType = typeof(AssemblyLoadContext);
         var resolversField = loadContextType.GetField("AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;
-        var resolvers = resolversField.GetValue(null);
+        var resolvers = (ResolveEventHandler?)resolversField.GetValue(null);
         resolversField.SetValue(null, null);
 #else
         var domainType = AppDomain.CurrentDomain.GetType();
         var resolversField = domainType.GetField("_AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
-        var resolvers = resolversField.GetValue(AppDomain.CurrentDomain);
+        var resolvers = (ResolveEventHandler)resolversField.GetValue(AppDomain.CurrentDomain);
         resolversField.SetValue(AppDomain.CurrentDomain, null);
 #endif
 
         _domainResolvers = resolvers;
         _moduleDirectory = Path.GetDirectoryName(type.Module.FullyQualifiedName);
 
+        // Set priority on the add-in's resolver
         AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
+        AppDomain.CurrentDomain.AssemblyResolve += resolvers;
     }
 
     /// <summary>
-    ///     Unsubscribes the current domain to resolve dependencies for the type.
+    ///     Unsubscribes the current domain to resolve dependencies for the type module.
     /// </summary>
     public static void EndAssemblyResolve()
     {

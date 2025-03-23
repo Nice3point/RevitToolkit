@@ -17,11 +17,11 @@ use.
 
 ## Installation
 
-You can install Toolkit as a [nuget package](https://www.nuget.org/packages/Nice3point.Revit.Toolkit).
+You can install the Toolkit as a [NuGet package](https://www.nuget.org/packages/Nice3point.Revit.Toolkit).
 
-Packages are compiled for a specific version of Revit, to support different versions of libraries in one project, use RevitVersion property.
+The packages are compiled for specific versions of Revit. To support different versions of libraries in one project, use the `RevitVersion` property:
 
-```text
+```xml
 <PackageReference Include="Nice3point.Revit.Toolkit" Version="$(RevitVersion).*"/>
 ```
 
@@ -59,7 +59,8 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 Contains an implementation for **IExternalCommand**.
 
 Override method **Execute()** to implement and external command within Revit.
-Data available when executing an external command is accessible by properties:
+
+The following properties provide access to the external command execution context:
 
 ```c#
 [Transaction(TransactionMode.Manual)]
@@ -76,8 +77,8 @@ public class Command : ExternalCommand
 }
 ```
 
-**ExternalCommand** contains the logic for resolving dependencies.
-Now you may not encounter a `FileNotFoundException`. Dependencies are searched in the plugin folder.
+**ExternalCommand** includes dependency resolution for external dependencies, to avoid `FileNotFoundException` exceptions. 
+Dependencies are searched for in the plugin folder.
 
 ### ExternalApplication
 
@@ -85,9 +86,9 @@ Contains an implementation for **IExternalApplication**.
 
 Override method **OnStartup()** to execute some tasks when Revit starts.
 
-Override method **OnShutdown()** to execute some tasks when Revit shuts down. You don't have to override this method if you don't plan to use it.
+Override method **OnShutdown()** to execute some tasks when Revit shuts down.
 
-Data available when executing an external application is accessible by properties:
+The following properties provide access to the external application execution context:
 
 ```c#
 public class Application : ExternalApplication
@@ -106,8 +107,8 @@ public class Application : ExternalApplication
 }
 ```
 
-**ExternalApplication** contains the logic for resolving dependencies.
-Now you may not encounter a `FileNotFoundException`. Dependencies are searched in the plugin folder.
+**ExternalApplication** includes dependency resolution for external dependencies, to avoid `FileNotFoundException` exceptions.
+Dependencies are searched for in the plugin folder.
 
 ### ExternalDBApplication
 
@@ -130,19 +131,16 @@ Override method **OnStartup()** to execute some tasks when Revit starts.
 
 Override method **OnShutdown()** to execute some tasks when Revit shuts down. You don't have to override this method if you don't plan to use it.
 
-**ExternalDBApplication** contains the logic for resolving dependencies.
-Now you may not encounter a `FileNotFoundException`. Dependencies are searched in the plugin folder.
+**ExternalDBApplication** includes dependency resolution for external dependencies, to avoid `FileNotFoundException` exceptions.
+Dependencies are searched for in the plugin folder.
 
 ### External events
 
-Contains an implementations for **IExternalEventHandler**.
-
-It is used to modify the document from another thread, for example, when using modeless windows.
-You can create your own handlers by deriving from this class.
+The Toolkit provides implementations of **IExternalEventHandler** for various scenarios. These handlers are used to modify the Revit document from another thread, which is particularly useful when working with modeless windows.
 
 #### ActionEventHandler
 
-A handler that provides access to modify a Revit document outside the execution context with the ability to queue Raise method calls.
+A handler that provides access to modify a Revit document outside the execution context with queue support for Raise method calls.
 
 Calling a handler in a Revit context will call it immediately, without adding it to the queue.
 
@@ -155,9 +153,9 @@ private void DeteleElement()
     _actionEventHandler.Raise(application =>
     {
         var document = application.ActiveUIDocument.Document;
-        using var transaction = new Transaction(document, $"Delete element");
+        using var transaction = new Transaction(document, "Delete element");
         transaction.Start();
-        document.Delete(_elementId)
+        document.Delete(_elementId);
         transaction.Commit();
         
         Debug.WriteLine("Deleted");
@@ -496,7 +494,7 @@ Provides handlers to resolve dependencies for Revit 2025 and older.
 ```c#
 try
 {
-    ResolveHelper.BeginAssemblyResolve<DockView>();
+    ResolveHelper.BeginAssemblyResolve<Application>();
     window.Show();
 }
 finally
@@ -582,7 +580,7 @@ public class Command : ExternalCommand
             //Action
             var selectedIds = UiDocument.Selection.GetElementIds();
             
-            using var transaction = new Transaction(Context.ActiveDocument);
+            using var transaction = new Transaction(Document);
             transaction.Start("Delete elements");
             Document.Delete(selectedIds);
             transaction.Commit();
@@ -610,7 +608,7 @@ public class Command : ExternalCommand
         try
         {
             //Action
-            using var transaction = new Transaction(Context.ActiveDocument);
+            using var transaction = new Transaction(Document);
             transaction.Start("Delete elements");
             Document.Delete(selectedIds);
             transaction.Commit();

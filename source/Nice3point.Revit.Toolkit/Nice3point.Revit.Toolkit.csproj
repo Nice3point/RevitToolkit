@@ -63,16 +63,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Nice3point.Revit.Build.Tasks" Version="3.0.0-preview.1.5" PrivateAssets="all"/>
-        <PackageReference Include="JetBrains.Annotations" Version="2024.*" PrivateAssets="all"/>
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*-*" PrivateAssets="all"/>
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-*" PrivateAssets="all"/>
+        <PackageReference Include="Nice3point.Revit.Build.Tasks" Version="3.0.1" PrivateAssets="all" />
+        <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" PrivateAssets="all"/>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" PrivateAssets="all"/>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" PrivateAssets="all"/>
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\..\.nuget\PackageIcon.png" Link="NuGet\PackageIcon.png" PackagePath="images\" Pack="true"/>
-        <None Include="..\..\License.md" Link="NuGet\License.md" PackagePath="" Pack="true"/>
-        <None Include="..\..\Readme.md" Link="NuGet\Readme.md" PackagePath="" Pack="true"/>
+        <None Include="..\..\.nuget\PackageIcon.png" PackagePath="images\" Pack="true" Visible="false"/>
+        <None Include="..\..\License.md" PackagePath="" Pack="true" Visible="false"/>
+        <None Include="..\..\Readme.md" PackagePath="" Pack="true" Visible="false"/>
     </ItemGroup>
 
 </Project>

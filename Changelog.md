@@ -1,10 +1,10 @@
-# Release 2026.0.0-preview.4.250314
+# Release 2026.0.0
 
 - New `Context.UiControlledApplication` property. Helps to manipulate with the Revit ribbon, context menus outside ExternalApplication. 
 - Now `AsyncEventHandler{T}` works in a multithreaded application and returns the result to each recipient.
-- Removed AssemblyLoadContext for addins isolation. It will be moved to Revit itself. [More info.](https://feedback.autodesk.com/project/forum/thread.html?cap=cb0fd5af18bb49b791dfa3f5efc47a72&forid=%7B057e532f-e478-43d9-affc-01b3deb82a76%7D&topid=%7B8C202188-9EA5-49BE-B95F-7F5115507C88%7D)
+- Removed `AssemblyLoadContext` for addins isolation. It will be moved to Revit itself. [More info.](https://feedback.autodesk.com/project/forum/thread.html?cap=cb0fd5af18bb49b791dfa3f5efc47a72&forid=%7B057e532f-e478-43d9-affc-01b3deb82a76%7D&topid=%7B8C202188-9EA5-49BE-B95F-7F5115507C88%7D)
 - Removed deprecated features.
-- Fixed dependency resolution, to avoid conflict with the Revit runtime
+- Fixed dependency resolver to avoid conflict with the Revit runtime.
 
 # Release 2025.0.3
 

@@ -292,13 +292,14 @@ It allows access to application-specific data, as well as up-calls for applicati
 
 List of available environment properties:
 
-- Context.Application;
-- Context.UiApplication;
-- Context.ActiveDocument;
-- Context.ActiveUiDocument;
-- Context.ActiveView;
-- Context.ActiveGraphicalView;
-- Context.IsRevitInApiMode;
+- Context.Application
+- Context.UiApplication
+- Context.UiControlledApplication
+- Context.ActiveDocument
+- Context.ActiveUiDocument
+- Context.ActiveView
+- Context.ActiveGraphicalView
+- Context.IsRevitInApiMode
 
 **Context** data can be accessed from any application execution location:
 

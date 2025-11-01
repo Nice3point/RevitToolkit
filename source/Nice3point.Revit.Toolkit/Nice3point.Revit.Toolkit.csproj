@@ -16,7 +16,7 @@
         <PackageId>Nice3point.Revit.Toolkit</PackageId>
         <Authors>Nice3point</Authors>
         <Description>Toolkit for Revit plugin development</Description>
-        <PackageTags>revit;toolkit</PackageTags>
+        <PackageTags>autodesk;revit;toolkit</PackageTags>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/Nice3point/RevitToolkit</RepositoryUrl>
         <PackageProjectUrl>https://github.com/Nice3point/RevitToolkit</PackageProjectUrl>

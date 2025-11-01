@@ -1,4 +1,4 @@
-name: Compile
+name: Compile solution
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', 'Directory.Build.props', 'Directory.Packages.props') }}
           restore-keys: ${{ runner.os }}-nuget-
           
-      - name: Publish packages
+      - name: Compile solution
         run: dotnet run -c Release
         working-directory: "build"
         env:

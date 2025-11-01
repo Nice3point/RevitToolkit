@@ -10,19 +10,22 @@ jobs:
     name: windows-2022
     runs-on: windows-2022
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Cache packages
+
+      - name: Cache NuGet
         uses: actions/cache@v4
         with:
-          path: |
-            .nuke/temp
-            ~/.nuget/packages
-          key: ${{ runner.os }}-${{ hashFiles('**/global.json', '**/*.csproj') }}
-      - name: Run Nuke Build
-        run: ./.nuke/build.cmd PublishGitHub PublishNuget
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', 'Directory.Build.props', 'Directory.Packages.props') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Publish packages
+        run: dotnet run -c Release -- pack publish
+        working-directory: "build"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          DOTNET_ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Development' }}
+          Build__Version: ${{ github.ref_name }}
+          NuGet__ApiKey: ${{ secrets.NUGET_API_KEY }}

@@ -4,11 +4,13 @@ using Microsoft.Extensions.Options;
 using ModularPipelines.Attributes;
 using ModularPipelines.Context;
 using ModularPipelines.Git.Extensions;
+using ModularPipelines.Git.Options;
 using ModularPipelines.GitHub.Attributes;
 using ModularPipelines.GitHub.Extensions;
 using ModularPipelines.Modules;
 using Octokit;
 using Shouldly;
+using Status = ModularPipelines.Enums.Status;
 
 namespace Build.Modules;
 
@@ -45,5 +47,17 @@ public sealed class PublishGithubModule(IOptions<BuildOptions> buildOptions, IOp
                 return await context.GitHub().Client.Repository.Release.UploadAsset(release, asset, cancellationToken);
             }, cancellationToken)
             .ProcessInParallel();
+    }
+
+    protected override async Task OnAfterExecute(IPipelineContext context)
+    {
+        if (Status == Status.Failed)
+        {
+            await context.Git().Commands.Push(new GitPushOptions
+            {
+                Delete = true,
+                Arguments = ["origin", buildOptions.Value.Version]
+            });
+        }
     }
 }

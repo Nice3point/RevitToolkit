@@ -16,7 +16,8 @@ public sealed class DeleteNugetModule(IOptions<BuildOptions> buildOptions, IOpti
         return await buildOptions.Value.Versions.Values
             .SelectAsync(async version => await context.DotNet().Nuget.Delete(new DotNetNugetDeleteOptions
                 {
-                    PackageNamePackageVersion = $"Nice3point.Revit.Toolkit {version}",
+                    PackageName = "Nice3point.Revit.Toolkit",
+                    PackageVersion = version.ToString(),
                     ApiKey = nuGetOptions.Value.ApiKey,
                     Source = nuGetOptions.Value.Source,
                     NonInteractive = true

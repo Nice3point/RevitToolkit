@@ -2,7 +2,8 @@
 
 namespace Build.Options;
 
-public sealed class PackOptions
+[Serializable]
+public sealed record PackOptions
 {
     [Required] public string OutputDirectory { get; init; } = null!;
 }

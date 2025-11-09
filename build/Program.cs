@@ -43,8 +43,13 @@ await PipelineHostBuilder.Create()
             collection.AddModule<RestoreReadmeModule>();
         }
 
-        if (args.Contains("publish") && context.HostingEnvironment.IsProduction())
+        if (args.Contains("publish"))
         {
+            if (!context.HostingEnvironment.IsProduction())
+            {
+                throw new InvalidOperationException("Publish can only be run in production");
+            }
+
             collection.AddOptions<NuGetOptions>().Bind(context.Configuration.GetSection("NuGet")).ValidateDataAnnotations();
 
             collection.AddModule<CreateGitHubChangelogModule>();

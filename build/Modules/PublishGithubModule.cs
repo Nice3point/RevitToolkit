@@ -24,7 +24,7 @@ public sealed class PublishGithubModule(IOptions<BuildOptions> buildOptions, IOp
         var changelog = await GetModule<CreateGitHubChangelogModule>();
         var outputFolder = context.Git().RootDirectory.GetFolder(packOptions.Value.OutputDirectory);
         var targetFiles = outputFolder.ListFiles().ToArray();
-        targetFiles.Length.ShouldBePositive("No artifacts were found to create the Release");
+        targetFiles.ShouldNotBeEmpty("No artifacts were found to create the Release");
 
         var repositoryInfo = context.GitHub().RepositoryInfo;
         var newRelease = new NewRelease(buildOptions.Value.Version)
@@ -32,8 +32,9 @@ public sealed class PublishGithubModule(IOptions<BuildOptions> buildOptions, IOp
             Name = buildOptions.Value.Version,
             Body = changelog.Value,
             TargetCommitish = context.Git().Information.LastCommitSha,
-            Prerelease = buildOptions.Value.Version.Contains("preview")
+            Prerelease = buildOptions.Value.Version.Contains('-')
         };
+
         var release = await context.GitHub().Client.Repository.Release.Create(repositoryInfo.Owner, repositoryInfo.RepositoryName, newRelease);
         return await targetFiles
             .SelectAsync(async file =>

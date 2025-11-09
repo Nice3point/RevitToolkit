@@ -19,7 +19,7 @@ public sealed class PublishNugetModule(IOptions<PackOptions> packOptions, IOptio
     {
         var outputFolder = context.Git().RootDirectory.GetFolder(packOptions.Value.OutputDirectory);
         var targetPackages = outputFolder.GetFiles(file => file.Extension == ".nupkg").ToArray();
-        targetPackages.Length.ShouldBePositive("No NuGet packages were found to publish");
+        targetPackages.ShouldNotBeEmpty("No NuGet packages were found to publish");
 
         return await targetPackages
             .SelectAsync(async file => await context.DotNet().Nuget.Push(new DotNetNugetPushOptions

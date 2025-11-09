@@ -20,7 +20,7 @@ public sealed class ParseSolutionConfigurationsModule(IOptions<BuildOptions> bui
             .Where(configuration => FileSystemName.MatchesSimpleExpression(buildOptions.Value.ConfigurationFilter, configuration))
             .ToArray();
 
-        configurations.Length.ShouldBePositive("No solution configurations have been found");
+        configurations.ShouldNotBeEmpty("No solution configurations have been found");
 
         return configurations;
     }
@@ -33,7 +33,7 @@ public sealed class ParseSolutionConfigurationsModule(IOptions<BuildOptions> bui
             return await SolutionSerializers.SlnXml.OpenAsync(solution.GetStream(), cancellationToken);
         }
 
-        context.Logger.LogInformation("Solution file not found. Trying to find fallback .sln");
+        context.Logger.LogInformation("Solution .slnx file not found. Trying to find fallback .sln");
 
         solution = context.Git().RootDirectory.FindFile(file => file.Extension == ".sln");
         solution.ShouldNotBeNull("Solution file not found.");

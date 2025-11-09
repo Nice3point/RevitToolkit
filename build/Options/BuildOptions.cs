@@ -2,7 +2,8 @@
 
 namespace Build.Options;
 
-public sealed class BuildOptions
+[Serializable]
+public sealed record BuildOptions
 {
     [Required] public string ConfigurationFilter { get; init; } = null!;
     [Required] public string Version { get; init; } = null!;

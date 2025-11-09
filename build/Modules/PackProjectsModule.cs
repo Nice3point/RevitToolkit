@@ -26,7 +26,7 @@ public sealed class PackProjectsModule(IOptions<BuildOptions> buildOptions,IOpti
 
         foreach (var configuration in configurations.Value!)
         {
-            await SubModule(configuration, async () => await PackAsync(context, configuration, outputFolder, changelog.Value!, cancellationToken));
+            await SubModule(configuration, async () => await PackAsync(context, configuration, outputFolder.Path, changelog.Value!, cancellationToken));
         }
 
         return await NothingAsync();

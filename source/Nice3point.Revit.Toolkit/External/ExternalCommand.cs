@@ -85,7 +85,6 @@ public abstract class ExternalCommand : IExternalCommand
             }
 #else
             ResolveHelper.BeginAssemblyResolve(currentType);
-
 #endif
             Execute();
         }

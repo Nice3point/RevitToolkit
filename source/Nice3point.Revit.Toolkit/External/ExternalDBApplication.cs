@@ -46,7 +46,6 @@ public abstract class ExternalDBApplication : IExternalDBApplication
             }
 #else
             ResolveHelper.BeginAssemblyResolve(currentType);
-
 #endif
             OnStartup();
         }

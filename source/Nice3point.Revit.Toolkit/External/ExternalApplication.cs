@@ -50,7 +50,6 @@ public abstract class ExternalApplication : IExternalApplication
             }
 #else
             ResolveHelper.BeginAssemblyResolve(currentType);
-
 #endif
             OnStartup();
         }

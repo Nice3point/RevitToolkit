@@ -1,78 +1,69 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Concurrent;
+using System.ComponentModel;
 using Autodesk.Revit.UI;
 
 namespace Nice3point.Revit.Toolkit.External.Handlers;
 
 /// <summary>
-///     Handler, to provide access to modify the Revit document.
+///     Handler to provide access to modify the Revit document asynchronously.
 /// </summary>
-/// <remarks>Suitable for cases where it is needed to await the completion of an external event.</remarks>
 [PublicAPI]
 public sealed class AsyncEventHandler : ExternalEventHandler
 {
-    private Action<UIApplication>? _handler;
-
-#if NETCOREAPP
-    private TaskCompletionSource? _resultTask;
+#if NET
+    private readonly ConcurrentQueue<(Action<UIApplication> Action, TaskCompletionSource Tcs)> _queue = new();
 #else
-    private TaskCompletionSource<bool>? _resultTask;
+    private readonly ConcurrentQueue<(Action<UIApplication> Action, TaskCompletionSource<object?> Tcs)> _queue = new();
 #endif
 
     /// <summary>Callback invoked by Revit. Not used to be called in user code.</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override void Execute(UIApplication uiApplication)
     {
-        if (_handler is null) return;
-        if (_resultTask is null) return;
-        
-        try
+        while (_queue.TryDequeue(out var item))
         {
-            _handler.Invoke(uiApplication);
-#if NETCOREAPP
-            _resultTask.SetResult();
+            try
+            {
+                item.Action(uiApplication);
+#if NET
+                item.Tcs.SetResult();
 #else
-            _resultTask.SetResult(false);
+                item.Tcs.SetResult(null);
 #endif
-        }
-        catch (Exception exception)
-        {
-            _resultTask.SetException(exception);
-        }
-        finally
-        {
-            _handler = null;
-            _resultTask = null;
+            }
+            catch (Exception exception)
+            {
+                item.Tcs.SetException(exception);
+            }
         }
     }
 
     /// <summary>
-    ///     Instructing Revit to queue a handler, raise (signal) the external event and async awaiting for its completion.
+    ///     Instructing Revit to queue a handler, raise the external event and await completion.
     /// </summary>
-    /// <remarks>
-    ///     This method async awaiting completion of the <see cref="Nice3point.Revit.Toolkit.External.Handlers.AsyncEventHandler.Execute" /> method. <br />
-    ///     Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context.<br />
-    ///     <see cref="System.Threading.Tasks.Task.WaitAll(System.Threading.Tasks.Task[])" />,
-    ///     <see cref="System.Threading.Tasks.Task.Wait()" /> will cause a deadlock.<br/><br/>
-    ///     Executes the handler out of queue if Revit is in API mode.
-    /// </remarks>
-    public async Task RaiseAsync(Action<UIApplication> handler)
+    public Task RaiseAsync(Action<UIApplication> handler)
     {
         if (Context.IsRevitInApiMode)
         {
-            handler.Invoke(Context.UiApplication);
-            return;
+            try
+            {
+                handler(Context.UiApplication);
+                return Task.CompletedTask;
+            }
+            catch (Exception exception)
+            {
+                return Task.FromException(exception);
+            }
         }
 
-        if (_handler is null) _handler = handler;
-        else _handler += handler;
-
-#if NETCOREAPP
-        _resultTask ??= new TaskCompletionSource();
+#if NET
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 #else
-        _resultTask ??= new TaskCompletionSource<bool>();
+        var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
 #endif
-
+        _queue.Enqueue((handler, tcs));
         Raise();
-        await _resultTask.Task;
+
+        return tcs.Task;
     }
 }

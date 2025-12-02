@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using System.Reflection;
-#if NETCOREAPP
+#if NET
 using System.Runtime.Loader;
 #endif
 
@@ -57,7 +57,7 @@ public static class ResolveHelper
         if (_domainResolvers is not null) return;
         if (type.Module.FullyQualifiedName == "<Unknown>") return;
 
-#if NETCOREAPP
+#if NET
         var loadContextType = typeof(AssemblyLoadContext);
         var resolversField = loadContextType.GetField("AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;
         var resolvers = (ResolveEventHandler?)resolversField.GetValue(null);
@@ -84,7 +84,7 @@ public static class ResolveHelper
     {
         if (_domainResolvers is null) return;
 
-#if NETCOREAPP
+#if NET
         var loadContextType = typeof(AssemblyLoadContext);
         var resolversField = loadContextType.GetField("AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;
         resolversField.SetValue(null, _domainResolvers);

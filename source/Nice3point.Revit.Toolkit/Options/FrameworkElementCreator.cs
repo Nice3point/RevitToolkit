@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 using Autodesk.Revit.UI;
-#if (!NETCOREAPP)
+#if (!NET)
 using Nice3point.Revit.Toolkit.Helpers;
 #endif
 
@@ -38,7 +38,7 @@ public class FrameworkElementCreator<T> : IFrameworkElementCreator where T : Fra
     {
         var elementType = typeof(T);
 
-#if NETCOREAPP
+#if NET
         if (_serviceProvider is not null)
         {
             return (FrameworkElement?)_serviceProvider.GetService(elementType);

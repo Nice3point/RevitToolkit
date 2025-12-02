@@ -2,7 +2,7 @@
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.UI;
 using Nice3point.Revit.Toolkit.Helpers;
-#if NETCOREAPP
+#if NET
 using System.Runtime.Loader;
 #endif
 
@@ -78,7 +78,7 @@ public abstract class ExternalCommand : IExternalCommand
         try
         {
             var currentType = GetType();
-#if NETCOREAPP
+#if NET
             if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
             {
                 ResolveHelper.BeginAssemblyResolve(currentType);

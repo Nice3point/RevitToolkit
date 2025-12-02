@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using Autodesk.Revit.UI;
 using Nice3point.Revit.Toolkit.Helpers;
-#if NETCOREAPP
+#if NET
 using System.Runtime.Loader;
 #endif
 
@@ -43,7 +43,7 @@ public abstract class ExternalApplication : IExternalApplication
         try
         {
             var currentType = GetType();
-#if NETCOREAPP
+#if NET
             if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
             {
                 ResolveHelper.BeginAssemblyResolve(currentType);
@@ -69,7 +69,7 @@ public abstract class ExternalApplication : IExternalApplication
         try
         {
             var currentType = GetType();
-#if NETCOREAPP
+#if NET
             if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
             {
                 ResolveHelper.BeginAssemblyResolve(currentType);

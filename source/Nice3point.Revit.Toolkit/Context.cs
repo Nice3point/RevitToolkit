@@ -1,4 +1,4 @@
-﻿#if NETCOREAPP
+﻿#if NET
 using System.Diagnostics.CodeAnalysis;
 #endif
 using System.Reflection;
@@ -338,7 +338,7 @@ public static class Context
             null)!;
     }
 
-#if NETCOREAPP
+#if NET
     private static void ThrowIfApiModified([DoesNotReturnIf(true)] bool condition)
 #else
     [ContractAnnotation("true => halt")]

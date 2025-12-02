@@ -28,7 +28,7 @@ public abstract class ExternalEventHandler : IExternalEventHandler
     ///     String identification of the event handler.
     /// </summary>
     /// <returns>Event name</returns>
-    public string GetName()
+    public virtual string GetName()
     {
         return _identifier ??= GetType().Name;
     }

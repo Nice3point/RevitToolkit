@@ -11,7 +11,6 @@ namespace Nice3point.Revit.Toolkit.Options;
 public class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
 {
     private readonly DuplicateTypeAction _duplicateTypeAction;
-    private DuplicateTypeNamesHandlerArgs _duplicateArguments = null!;
     private readonly Func<DuplicateTypeNamesHandlerArgs, DuplicateTypeAction>? _actionHandler;
 
     /// <summary>
@@ -52,7 +51,6 @@ public class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
     [EditorBrowsable(EditorBrowsableState.Never)]
     public DuplicateTypeAction OnDuplicateTypeNamesFound(DuplicateTypeNamesHandlerArgs args)
     {
-        _duplicateArguments = args;
         return _actionHandler?.Invoke(args) ?? _duplicateTypeAction;
     }
 }

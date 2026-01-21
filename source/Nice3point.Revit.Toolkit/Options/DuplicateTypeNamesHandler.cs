@@ -12,6 +12,7 @@ public class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
 {
     private readonly DuplicateTypeAction _duplicateTypeAction;
     private DuplicateTypeNamesHandlerArgs _duplicateArguments = null!;
+    private readonly Func<DuplicateTypeNamesHandlerArgs, DuplicateTypeAction>? _actionHandler;
 
     /// <summary>
     ///     Creates a new handler with <see cref="DuplicateTypeAction.UseDestinationTypes" /> by default.
@@ -38,7 +39,7 @@ public class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
     /// </param>
     public DuplicateTypeNamesHandler(Func<DuplicateTypeNamesHandlerArgs, DuplicateTypeAction> actionHandler)
     {
-        _duplicateTypeAction = actionHandler(_duplicateArguments);
+        _actionHandler = actionHandler;
     }
 
     /// <summary>
@@ -52,6 +53,6 @@ public class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
     public DuplicateTypeAction OnDuplicateTypeNamesFound(DuplicateTypeNamesHandlerArgs args)
     {
         _duplicateArguments = args;
-        return _duplicateTypeAction;
+        return _actionHandler?.Invoke(args) ?? _duplicateTypeAction;
     }
 }

@@ -1,8 +1,9 @@
-﻿using System.Windows;
-using Autodesk.Revit.UI;
-#if (!NET)
-using Nice3point.Revit.Toolkit.Helpers;
+﻿#if NET
+using System.Runtime.Loader;
 #endif
+using System.Windows;
+using Autodesk.Revit.UI;
+using Nice3point.Revit.Toolkit.Helpers;
 
 namespace Nice3point.Revit.Toolkit.Options;
 
@@ -38,29 +39,32 @@ public class FrameworkElementCreator<T> : IFrameworkElementCreator where T : Fra
     {
         var elementType = typeof(T);
 
+        try
+        {
+            var currentType = GetType();
 #if NET
+            if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+            {
+                ResolveHelper.BeginAssemblyResolve(currentType);
+            }
+#else
+            ResolveHelper.BeginAssemblyResolve(currentType);
+#endif
+            return CreateInstance(elementType);
+        }
+        finally
+        {
+            ResolveHelper.EndAssemblyResolve();
+        }
+    }
+
+    private FrameworkElement? CreateInstance(Type elementType)
+    {
         if (_serviceProvider is not null)
         {
             return (FrameworkElement?)_serviceProvider.GetService(elementType);
         }
 
         return (FrameworkElement?)Activator.CreateInstance(elementType);
-#else
-        try
-        {
-            ResolveHelper.BeginAssemblyResolve(elementType);
-
-            if (_serviceProvider is not null)
-            {
-                return (FrameworkElement)_serviceProvider.GetService(elementType);
-            }
-
-            return (FrameworkElement)Activator.CreateInstance(elementType);
-        }
-        finally
-        {
-            ResolveHelper.EndAssemblyResolve();
-        }
-#endif
     }
 }

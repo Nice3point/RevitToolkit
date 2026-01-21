@@ -1,33 +1,34 @@
 using ModularPipelines.Attributes;
+using ModularPipelines.Configuration;
 using ModularPipelines.Context;
 using ModularPipelines.Git.Extensions;
-using ModularPipelines.Models;
 using ModularPipelines.Modules;
 
 namespace Build.Modules;
 
-[DependsOn<PackProjectsModule>]
-[DependsOn<CreatePackageReadmeModule>]
+[DependsOn<UpdateReadmeModule>]
+[DependsOn<PackProjectsModule>(Optional = true)]
 public sealed class RestoreReadmeModule : Module
 {
-    public override ModuleRunType ModuleRunType => ModuleRunType.AlwaysRun;
-
-    protected override async Task<bool> ShouldIgnoreFailures(IPipelineContext context, Exception exception)
-    {
-        var nugetReadmeModule = await GetModule<CreatePackageReadmeModule>();
-        return nugetReadmeModule.HasValue;
-    }
-
-    protected override async Task<IDictionary<string, object>?> ExecuteAsync(IPipelineContext context, CancellationToken cancellationToken)
-    {
-        var nugetReadmeModule = await GetModule<CreatePackageReadmeModule>();
-        if (!nugetReadmeModule.HasValue)
+    protected override ModuleConfiguration Configure() => ModuleConfiguration.Create()
+        .WithAlwaysRun()
+        .WithSkipWhen(async context =>
         {
-            return await NothingAsync();
+            var nugetReadmeModule = await context.GetModule<UpdateReadmeModule>();
+            return !nugetReadmeModule.IsSuccess;
+        })
+        .Build();
+
+    protected override async Task ExecuteModuleAsync(IModuleContext context, CancellationToken cancellationToken)
+    {
+        var nugetReadmeResult = await context.GetModule<UpdateReadmeModule>();
+        if (!nugetReadmeResult.IsSuccess)
+        {
+            return;
         }
-        
+
+        var nugetReadme = nugetReadmeResult.ValueOrDefault!;
         var readmePath = context.Git().RootDirectory.GetFile("Readme.md");
-        await readmePath.WriteAsync(nugetReadmeModule.Value!, cancellationToken);
-        return await NothingAsync();
+        await readmePath.WriteAsync(nugetReadme, cancellationToken);
     }
 }

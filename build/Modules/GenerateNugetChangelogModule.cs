@@ -1,17 +1,18 @@
-﻿using ModularPipelines.Context;
+﻿using ModularPipelines.Attributes;
+using ModularPipelines.Context;
 using ModularPipelines.Modules;
-using ModularPipelines.Attributes;
 
 namespace Build.Modules;
 
-[DependsOn<CreateChangelogModule>]
-public sealed class CreatePackageChangelogModule : Module<string>
+[DependsOn<GenerateChangelogModule>]
+public sealed class GenerateNugetChangelogModule : Module<string>
 {
-    protected override async Task<string?> ExecuteAsync(IPipelineContext context, CancellationToken cancellationToken)
+    protected override async Task<string?> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
     {
-        var changelogModule = await GetModule<CreateChangelogModule>();
+        var changelogResult = await context.GetModule<GenerateChangelogModule>();
+        var changelog = changelogResult.ValueOrDefault!;
 
-        var formattedChangelog = changelogModule.Value!.ToString()
+        var formattedChangelog = changelog
             .Split(Environment.NewLine)
             .Where(line => !line.Contains("```"))
             .Where(line => !line.Contains("!["))

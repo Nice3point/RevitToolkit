@@ -4,9 +4,9 @@ using ModularPipelines.Modules;
 
 namespace Build.Modules;
 
-public sealed class CreatePackageReadmeModule : Module<string>
+public sealed class UpdateReadmeModule : Module<string>
 {
-    protected override async Task<string?> ExecuteAsync(IPipelineContext context, CancellationToken cancellationToken)
+    protected override async Task<string?> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
     {
         var readmePath = context.Git().RootDirectory.GetFile("Readme.md");
         var readme = await readmePath.ReadAsync(cancellationToken);

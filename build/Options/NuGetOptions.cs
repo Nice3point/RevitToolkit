@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using ModularPipelines.Attributes;
 
 namespace Build.Options;
@@ -6,6 +5,6 @@ namespace Build.Options;
 [Serializable]
 public sealed record NuGetOptions
 {
-    [Required] [SecretValue] public string? ApiKey { get; init; }
-    [Required] public string? Source { get; init; }
+    [SecretValue] public string? ApiKey { get; init; }
+    public string Source { get; init; } = "https://api.nuget.org/v3/index.json";
 }

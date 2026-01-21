@@ -11,17 +11,17 @@ namespace Build.Modules;
 
 public sealed class DeleteNugetModule(IOptions<BuildOptions> buildOptions, IOptions<NuGetOptions> nuGetOptions) : Module<CommandResult[]?>
 {
-    protected override async Task<CommandResult[]?> ExecuteAsync(IPipelineContext context, CancellationToken cancellationToken)
+    protected override async Task<CommandResult[]?> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
     {
         return await buildOptions.Value.Versions.Values
             .SelectAsync(async version => await context.DotNet().Nuget.Delete(new DotNetNugetDeleteOptions
                 {
                     PackageName = "Nice3point.Revit.Toolkit",
-                    PackageVersion = version.ToString(),
+                    Version = version.ToString(),
                     ApiKey = nuGetOptions.Value.ApiKey,
                     Source = nuGetOptions.Value.Source,
                     NonInteractive = true
-                }, cancellationToken),
+                }, cancellationToken: cancellationToken),
                 cancellationToken)
             .ProcessInParallel();
     }

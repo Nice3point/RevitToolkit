@@ -1,0 +1,41 @@
+﻿<Project>
+
+    <!-- Global NuGet configuration -->
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
+        <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Revit Platform -->
+        <PackageVersion Include="Nice3point.Revit.Api.AdWindows" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
+        <PackageVersion Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
+        <PackageVersion Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
+        <PackageVersion Include="Nice3point.Revit.Api.UIFramework" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
+        <PackageVersion Include="Nice3point.Revit.Api.UIFrameworkServices" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
+        <PackageVersion Include="Nice3point.TUnit.Revit" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
+
+        <!-- Build Automation -->
+        <PackageVersion Include="Sourcy.DotNet" Version="1.1.1"/>
+        <PackageVersion Include="ModularPipelines" Version="3.1.6"/>
+        <PackageVersion Include="ModularPipelines.Git" Version="3.1.6"/>
+        <PackageVersion Include="ModularPipelines.GitHub" Version="3.1.6"/>
+        <PackageVersion Include="ModularPipelines.DotNet" Version="3.1.6"/>
+        <PackageVersion Include="Microsoft.VisualStudio.SolutionPersistence" Version="1.0.52"/>
+
+        <!-- Testing -->
+        <PackageVersion Include="BenchmarkDotNet" Version="0.15.8"/>
+        <PackageVersion Include="TUnit" Version="1.12.3"/>
+        <PackageVersion Include="Shouldly" Version="4.3.0"/>
+
+        <!-- Development Tools -->
+        <PackageVersion Include="JetBrains.Annotations" Version="2025.2.4"/>
+    </ItemGroup>
+
+    <!-- Development References -->
+    <ItemGroup>
+        <GlobalPackageReference Include="Polyfill" Version="9.7.3"/>
+    </ItemGroup>
+
+</Project>

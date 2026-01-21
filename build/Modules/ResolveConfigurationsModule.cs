@@ -1,8 +1,4 @@
-﻿using System.IO.Enumeration;
-using Build.Options;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.VisualStudio.SolutionPersistence.Model;
+﻿using Microsoft.VisualStudio.SolutionPersistence.Model;
 using Microsoft.VisualStudio.SolutionPersistence.Serializer;
 using ModularPipelines.Context;
 using ModularPipelines.Git.Extensions;
@@ -11,13 +7,16 @@ using Shouldly;
 
 namespace Build.Modules;
 
-public sealed class ParseSolutionConfigurationsModule(IOptions<BuildOptions> buildOptions) : Module<string[]>
+/// <summary>
+///     Resolve solution configurations required to compile the add-in for all supported Revit versions.
+/// </summary>
+public sealed class ResolveConfigurationsModule : Module<string[]>
 {
-    protected override async Task<string[]?> ExecuteAsync(IPipelineContext context, CancellationToken cancellationToken)
+    protected override async Task<string[]?> ExecuteAsync(IModuleContext context, CancellationToken cancellationToken)
     {
         var solutionModel = await LoadSolutionModelAsync(context, cancellationToken);
         var configurations = solutionModel.BuildTypes
-            .Where(configuration => FileSystemName.MatchesSimpleExpression(buildOptions.Value.ConfigurationFilter, configuration))
+            .Where(configuration => configuration.Contains("Release.R", StringComparison.OrdinalIgnoreCase))
             .ToArray();
 
         configurations.ShouldNotBeEmpty("No solution configurations have been found");
@@ -32,8 +31,6 @@ public sealed class ParseSolutionConfigurationsModule(IOptions<BuildOptions> bui
         {
             return await SolutionSerializers.SlnXml.OpenAsync(solution.GetStream(), cancellationToken);
         }
-
-        context.Logger.LogInformation("Solution .slnx file not found. Trying to find fallback .sln");
 
         solution = context.Git().RootDirectory.FindFile(file => file.Extension == ".sln");
         solution.ShouldNotBeNull("Solution file not found.");

@@ -1,4 +1,5 @@
 ﻿using ModularPipelines.Attributes;
+using ModularPipelines.Conditions;
 using ModularPipelines.Context;
 using ModularPipelines.DotNet.Extensions;
 using ModularPipelines.DotNet.Options;
@@ -8,8 +9,13 @@ using Sourcy.DotNet;
 
 namespace Build.Modules;
 
+/// <summary>
+///     Test the add-in for each supported Revit configuration.
+/// </summary>
+[SkipIf<IsCI>]
 [DependsOn<ResolveConfigurationsModule>]
-public sealed class CompileProjectsModule : Module
+[DependsOn<CompileProjectsModule>(Optional = true)]
+public sealed class TestProjectsModule : Module
 {
     protected override async Task ExecuteModuleAsync(IModuleContext context, CancellationToken cancellationToken)
     {
@@ -22,12 +28,15 @@ public sealed class CompileProjectsModule : Module
         }
     }
 
+    /// <summary>
+    ///     Test the add-in project for the specified configuration.
+    /// </summary>
     private static async Task<CommandResult> CompileAsync(IPipelineContext context, string configuration, CancellationToken cancellationToken)
     {
-        return await context.DotNet().Build(new DotNetBuildOptions
+        return await context.DotNet().Test(new DotNetTestOptions
         {
-            ProjectSolution = Projects.Nice3point_Revit_Toolkit.FullName,
-            Configuration = configuration,
+            Solution = Solutions.Nice3point_Revit_Toolkit.FullName,
+            Configuration = configuration
         }, cancellationToken: cancellationToken);
     }
 }

@@ -35,11 +35,11 @@ public sealed class AsyncEventHandler<T> : ExternalEventHandler
     /// </summary>
     public Task<T> RaiseAsync(Func<UIApplication, T> handler)
     {
-        if (Context.IsRevitInApiMode)
+        if (RevitContext.IsRevitInApiMode)
         {
             try
             {
-                return Task.FromResult(handler(Context.UiApplication));
+                return Task.FromResult(handler(RevitContext.UiApplication));
             }
             catch (Exception exception)
             {

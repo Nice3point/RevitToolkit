@@ -42,9 +42,9 @@ public class ActionEventHandler : ExternalEventHandler
     /// </remarks>
     public void Raise(Action<UIApplication> action)
     {
-        if (Context.IsRevitInApiMode)
+        if (RevitContext.IsRevitInApiMode)
         {
-            action(Context.UiApplication);
+            action(RevitContext.UiApplication);
             return;
         }
 

@@ -10,7 +10,7 @@ namespace Nice3point.Revit.Toolkit.External.Handlers;
 [PublicAPI]
 public sealed class AsyncEventHandler<T> : ExternalEventHandler
 {
-    private readonly ConcurrentQueue<(Func<UIApplication, T> Handler, TaskCompletionSource<T> Tcs)> _queue = new();
+    private readonly ConcurrentQueue<(Func<UIApplication, T> Handler, TaskCompletionSource<T> Tcs, CancellationToken CancellationToken)> _queue = new();
 
     /// <summary>Callback invoked by Revit. Not used to be called in user code.</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -18,6 +18,12 @@ public sealed class AsyncEventHandler<T> : ExternalEventHandler
     {
         while (_queue.TryDequeue(out var item))
         {
+            if (item.CancellationToken.IsCancellationRequested)
+            {
+                item.Tcs.SetCanceled(item.CancellationToken);
+                continue;
+            }
+
             try
             {
                 var result = item.Handler(uiApplication);
@@ -33,8 +39,18 @@ public sealed class AsyncEventHandler<T> : ExternalEventHandler
     /// <summary>
     ///     Instructing Revit to queue a handler, raise the external event and await completion with a result.
     /// </summary>
-    public Task<T> RaiseAsync(Func<UIApplication, T> handler)
+    /// <param name="handler">The function to execute in Revit context that returns a value.</param>
+    /// <param name="cancellationToken">
+    ///     Cancellation token to cancel the operation before it executes.
+    ///     It cannot interrupt a handler that is already executing.
+    /// </param>
+    public Task<T> RaiseAsync(Func<UIApplication, T> handler, CancellationToken cancellationToken = default)
     {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return Task.FromCanceled<T>(cancellationToken);
+        }
+
         if (RevitContext.IsRevitInApiMode)
         {
             try
@@ -48,7 +64,7 @@ public sealed class AsyncEventHandler<T> : ExternalEventHandler
         }
 
         var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
-        _queue.Enqueue((handler, tcs));
+        _queue.Enqueue((handler, tcs, cancellationToken));
         Raise();
 
         return tcs.Task;

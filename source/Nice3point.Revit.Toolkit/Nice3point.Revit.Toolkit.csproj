@@ -1,8 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Nice3point.Revit.Sdk/6.0.2">
 
     <PropertyGroup>
         <UseWpf>true</UseWpf>
-        <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
         <Configurations>Debug.R20;Debug.R21;Debug.R22;Debug.R23;Debug.R24;Debug.R25;Debug.R26</Configurations>
         <Configurations>$(Configurations);Release.R20;Release.R21;Release.R22;Release.R23;Release.R24;Release.R25;Release.R26</Configurations>
     </PropertyGroup>
@@ -12,7 +11,7 @@
         <PackageId>Nice3point.Revit.Toolkit</PackageId>
         <Authors>Nice3point</Authors>
         <Description>Toolkit for Revit plugin development</Description>
-        <PackageTags>autodesk;revit;toolkit</PackageTags>
+        <PackageTags>autodesk;revit;api;toolkit</PackageTags>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/Nice3point/RevitToolkit</RepositoryUrl>
         <PackageProjectUrl>https://github.com/Nice3point/RevitToolkit</PackageProjectUrl>
@@ -33,17 +32,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="..\..\.nuget\PackageIcon.png" PackagePath="images\" Pack="true" Visible="false"/>
-        <None Include="..\..\License.md" PackagePath="" Pack="true" Visible="false"/>
-        <None Include="..\..\Readme.md" PackagePath="" Pack="true" Visible="false"/>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" PrivateAssets="all"/>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" PrivateAssets="all"/>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All"/>
+        <PackageReference Include="JetBrains.Annotations" PrivateAssets="all"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Nice3point.Revit.Build.Tasks" Version="3.0.1" PrivateAssets="all"/>
-        <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" PrivateAssets="all"/>
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" PrivateAssets="all"/>
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" PrivateAssets="all"/>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+        <None Include="..\..\.nuget\PackageIcon.png" PackagePath="images\" Pack="true" Visible="false"/>
+        <None Include="..\..\License.md" PackagePath="" Pack="true" Visible="false"/>
+        <None Include="..\..\Readme.md" PackagePath="" Pack="true" Visible="false"/>
     </ItemGroup>
 
 </Project>

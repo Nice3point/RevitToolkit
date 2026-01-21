@@ -74,7 +74,7 @@ public static class Context
 
         Application = application;
 #endif
-        UiApplication = new UIApplication(application);
+        UiApplication = new UIApplication(Application);
     }
 
     /// <summary>

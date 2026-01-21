@@ -1,6 +1,8 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
+﻿#if NET8_0_OR_GREATER
 using System.Runtime.CompilerServices;
+#endif
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
@@ -46,13 +48,6 @@ public static class Context
         ThrowWhen(proxyConstructor is null);
 
         var proxy = proxyConstructor.Invoke([getApplicationMethod.Invoke(null, null)]);
-        ThrowWhen(proxy is null);
-
-        var applicationType = typeof(Application);
-        var applicationConstructor = applicationType.GetConstructor(internalFlags, null, [proxyType], null);
-        ThrowWhen(applicationConstructor is null);
-
-        var application = (Application)applicationConstructor.Invoke([proxy]);
         ThrowWhen(proxy is null);
 
         var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.singletonfactory");

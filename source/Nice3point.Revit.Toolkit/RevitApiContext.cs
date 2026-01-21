@@ -22,10 +22,9 @@ public class RevitApiContext
 
     static RevitApiContext()
     {
-        var dbAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.GetName().Name == "RevitDBAPI");
-        ThrowWhen(dbAssembly is null);
-        
+        var dbAssembly = AppDomain.CurrentDomain.GetAssemblies().First(assembly => assembly.GetName().Name == "RevitDBAPI");
         var dbAssemblyMethods = dbAssembly.ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
+
         var getApplicationMethod = dbAssemblyMethods.FirstOrDefault(info => info.Name == "RevitApplication.getApplication_");
         ThrowWhen(getApplicationMethod is null);
 
@@ -59,45 +58,46 @@ public class RevitApiContext
     public static Application Application { get; }
 
     /// <summary>
-    ///     Suppresses the display of the Revit error and warning messages during transaction.
+    ///     Begins a scope that suppresses the display of Revit error and warning messages during transaction.
+    ///     Failure handling is automatically restored when the returned scope is disposed.
     /// </summary>
     /// <param name="resolveErrors">
     ///     Set <see langword="true"/> if errors should be automatically resolved, otherwise <see langword="false"/> to cancel the transaction.
     /// </param>
+    /// <returns>A disposable scope. Call Dispose or use 'using' statement to restore failure handling.</returns>
     /// <remarks>
     ///     By default, Revit uses manual error resolution control with user interaction.
     ///     This method provides automatic resolution of all failures without notifying the user or interrupting the program.
     ///     This method is thread-safe.
     /// </remarks>
-    public static void SuppressFailures(bool resolveErrors = true)
+    /// <example>
+    ///     <code>
+    ///         using (RevitApiContext.BeginFailureSuppressionScope())
+    ///         {
+    ///             using var transaction = new Transaction(document, "Operation");
+    ///             transaction.Start();
+    ///             // Operations that may cause failures
+    ///             transaction.Commit();
+    ///         }
+    ///         // Failure handling is restored automatically
+    ///     </code>
+    /// </example>
+    public static IDisposable BeginFailureSuppressionScope(bool resolveErrors = true)
     {
         lock (FailureLock)
         {
             if (_suppressFailures)
             {
                 _suppressFailureErrors = resolveErrors;
-                return;
+                return new FailureSuppressionScope();
             }
 
             _suppressFailures = true;
             _suppressFailureErrors = resolveErrors;
             Application.FailuresProcessing += ResolveFailures;
         }
-    }
 
-    /// <summary>
-    ///     Restores failure handling.
-    /// </summary>
-    /// <remarks>
-    ///     This method is thread-safe.
-    /// </remarks>
-    public static void RestoreFailures()
-    {
-        lock (FailureLock)
-        {
-            _suppressFailures = false;
-            Application.FailuresProcessing -= ResolveFailures;
-        }
+        return new FailureSuppressionScope();
     }
 
     private static void ResolveFailures(object? sender, FailuresProcessingEventArgs args)
@@ -107,11 +107,6 @@ public class RevitApiContext
 
         args.SetProcessingResult(result);
     }
-
-#if NET8_0_OR_GREATER
-    [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
-    private static extern Application CreateApplication(object proxy);
-#endif
 
     /// <summary>
     ///     Dynamically throw when the <paramref name="condition"/> is <c>true</c>.
@@ -123,4 +118,26 @@ public class RevitApiContext
             throw new NotSupportedException("The operation is not supported by current Revit API version. Failed to retrieve the application context.");
         }
     }
+
+    private sealed class FailureSuppressionScope : IDisposable
+    {
+        private bool _disposed;
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+
+            lock (FailureLock)
+            {
+                _suppressFailures = false;
+                Application.FailuresProcessing -= ResolveFailures;
+            }
+        }
+    }
+
+#if NET8_0_OR_GREATER
+    [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
+    private static extern Application CreateApplication(object proxy);
+#endif
 }

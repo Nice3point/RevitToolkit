@@ -240,16 +240,12 @@ public static class Context
     /// <param name="resolveErrors">
     ///     Set <see langword="true"/> if errors should be automatically resolved, otherwise <see langword="false"/> to cancel the transaction.
     /// </param>
-    /// <remarks>
-    ///     By default, Revit uses manual error resolution control with user interaction.
-    ///     This method provides automatic resolution of all failures without notifying the user or interrupting the program.
-    /// </remarks>
-    [Obsolete("Use RevitApiContext.SuppressFailures instead")]
+    [Obsolete("Use RevitApiContext.BeginFailureSuppressionScope instead")]
     [CodeTemplate(
         searchTemplate: "Context.SuppressFailures($args$)",
-        Message = "Context.SuppressFailures is obsolete, use RevitApiContext.SuppressFailures instead",
-        ReplaceTemplate = "RevitApiContext.SuppressFailures($args$)",
-        ReplaceMessage = "Replace with RevitApiContext.SuppressFailures")]
+        Message = "Context.SuppressFailures is obsolete, use RevitApiContext.BeginFailureSuppressionScope with 'using' statement instead",
+        ReplaceTemplate = "RevitApiContext.BeginFailureSuppressionScope($args$)",
+        ReplaceMessage = "Replace with RevitApiContext.BeginFailureSuppressionScope")]
     public static void SuppressFailures(bool resolveErrors = true)
     {
         if (_suppressFailures)
@@ -267,32 +263,12 @@ public static class Context
     ///     Suppresses the display of the Revit dialogs.
     /// </summary>
     /// <param name="resultCode">The result code you wish the Revit dialog to return.</param>
-    /// <remarks>
-    ///     The range of valid result values depends on the type of dialog as follows:
-    ///     <list type="number">
-    ///         <item>
-    ///             DialogBox: Any non-zero value will cause a dialog to be dismissed.
-    ///         </item>
-    ///         <item>
-    ///             MessageBox: Standard Message Box IDs, such as IDOK and IDCANCEL, are accepted.
-    ///             For all possible IDs, refer to the Windows API documentation.
-    ///             The ID used must be relevant to the buttons in a message box.
-    ///         </item>
-    ///         <item>
-    ///             TaskDialog: Standard Message Box IDs and Revit Custom IDs are accepted,
-    ///             depending on the buttons used in a dialog. Standard buttons, such as OK
-    ///             and Cancel, have standard IDs described in Windows API documentation.
-    ///             Buttons with custom text have custom IDs with incremental values
-    ///             starting at 1001 for the left-most or top-most button in a task dialog.
-    ///         </item>
-    ///     </list>
-    /// </remarks>
-    [Obsolete("Use RevitContext.SuppressDialogs instead")]
+    [Obsolete("Use RevitContext.BeginDialogSuppressionScope instead")]
     [CodeTemplate(
         searchTemplate: "Context.SuppressDialogs($args$)",
-        Message = "Context.SuppressDialogs is obsolete, use RevitContext.SuppressDialogs instead",
-        ReplaceTemplate = "RevitContext.SuppressDialogs($args$)",
-        ReplaceMessage = "Replace with RevitContext.SuppressDialogs")]
+        Message = "Context.SuppressDialogs is obsolete, use RevitContext.BeginDialogSuppressionScope with 'using' statement instead",
+        ReplaceTemplate = "RevitContext.BeginDialogSuppressionScope($args$)",
+        ReplaceMessage = "Replace with RevitContext.BeginDialogSuppressionScope")]
     public static void SuppressDialogs(int resultCode = 1)
     {
         if (_suppressDialogs)
@@ -310,32 +286,12 @@ public static class Context
     ///     Suppresses the display of the Revit dialogs.
     /// </summary>
     /// <param name="handler">Suppress handler.</param>
-    /// <remarks>
-    ///     The range of valid result values depends on the type of dialog as follows:
-    ///     <list type="number">
-    ///         <item>
-    ///             DialogBox: Any non-zero value will cause a dialog to be dismissed.
-    ///         </item>
-    ///         <item>
-    ///             MessageBox: Standard Message Box IDs, such as IDOK and IDCANCEL, are accepted.
-    ///             For all possible IDs, refer to the Windows API documentation.
-    ///             The ID used must be relevant to the buttons in a message box.
-    ///         </item>
-    ///         <item>
-    ///             TaskDialog: Standard Message Box IDs and Revit Custom IDs are accepted,
-    ///             depending on the buttons used in a dialog. Standard buttons, such as OK
-    ///             and Cancel, have standard IDs described in Windows API documentation.
-    ///             Buttons with custom text have custom IDs with incremental values
-    ///             starting at 1001 for the left-most or top-most button in a task dialog.
-    ///         </item>
-    ///     </list>
-    /// </remarks>
-    [Obsolete("Use RevitContext.SuppressDialogs instead")]
+    [Obsolete("Use RevitContext.BeginDialogSuppressionScope instead")]
     [CodeTemplate(
         searchTemplate: "Context.SuppressDialogs($args$)",
-        Message = "Context.SuppressDialogs is obsolete, use RevitContext.SuppressDialogs instead",
-        ReplaceTemplate = "RevitContext.SuppressDialogs($args$)",
-        ReplaceMessage = "Replace with RevitContext.SuppressDialogs")]
+        Message = "Context.SuppressDialogs is obsolete, use RevitContext.BeginDialogSuppressionScope with 'using' statement instead",
+        ReplaceTemplate = "RevitContext.BeginDialogSuppressionScope($args$)",
+        ReplaceMessage = "Replace with RevitContext.BeginDialogSuppressionScope")]
     public static void SuppressDialogs(Action<DialogBoxShowingEventArgs> handler)
     {
         if (_suppressDialogs)
@@ -352,12 +308,7 @@ public static class Context
     /// <summary>
     ///     Restores display of the Revit dialogs.
     /// </summary>
-    [Obsolete("Use RevitContext.RestoreDialogs instead")]
-    [CodeTemplate(
-        searchTemplate: "Context.RestoreDialogs()",
-        Message = "Context.RestoreDialogs is obsolete, use RevitContext.RestoreDialogs instead",
-        ReplaceTemplate = "RevitContext.RestoreDialogs()",
-        ReplaceMessage = "Replace with RevitContext.RestoreDialogs")]
+    [Obsolete("Use RevitContext.BeginDialogSuppressionScope instead for automatic resource management")]
     public static void RestoreDialogs()
     {
         _suppressDialogs = false;
@@ -369,12 +320,7 @@ public static class Context
     /// <summary>
     ///     Restores failure handling.
     /// </summary>
-    [Obsolete("Use RevitApiContext.RestoreFailures instead")]
-    [CodeTemplate(
-        searchTemplate: "Context.RestoreFailures()",
-        Message = "Context.RestoreFailures is obsolete, use RevitApiContext.RestoreFailures instead",
-        ReplaceTemplate = "RevitApiContext.RestoreFailures()",
-        ReplaceMessage = "Replace with RevitApiContext.RestoreFailures")]
+    [Obsolete("Use RevitApiContext.BeginFailureSuppressionScope instead for automatic resource management")]
     public static void RestoreFailures()
     {
         _suppressFailures = false;

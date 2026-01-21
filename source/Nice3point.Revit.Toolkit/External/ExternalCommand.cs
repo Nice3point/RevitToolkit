@@ -40,6 +40,15 @@ public abstract class ExternalCommand : IExternalCommand
     ///     External API commands can access this property in read-only mode only.
     /// </remarks>
     /// <exception cref="T:Autodesk.Revit.Exceptions.InvalidOperationException">Thrown when attempting to modify the property.</exception>
+    public UIDocument ActiveUiDocument => RevitContext.ActiveUiDocument!;
+    
+    /// <summary></summary>
+    [Obsolete("Use ActiveUiDocument instead")]
+    [CodeTemplate(
+        searchTemplate: "UIDocument",
+        Message = "UIDocument is obsolete, use ActiveUiDocument instead",
+        ReplaceTemplate = "ActiveUiDocument",
+        ReplaceMessage = "Replace with ActiveUiDocument")]
     public UIDocument UiDocument => RevitContext.ActiveUiDocument!;
 
     /// <summary>Represents a currently active Autodesk Revit project at the database level</summary>
@@ -84,25 +93,27 @@ public abstract class ExternalCommand : IExternalCommand
         ErrorMessage = message;
         ExternalCommandData = commandData;
 
-        try
-        {
-            var currentType = GetType();
+        var currentType = GetType();
 #if NET
-            if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+        if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+        {
+            using (ResolveHelper.BeginAssemblyResolveScope(currentType))
             {
-                ResolveHelper.BeginAssemblyResolve(currentType);
+                Execute();
             }
-#else
-            ResolveHelper.BeginAssemblyResolve(currentType);
-#endif
+        }
+        else
+        {
             Execute();
         }
-        finally
+#else
+        using (ResolveHelper.BeginAssemblyResolveScope(currentType))
         {
-            message = ErrorMessage;
-            ResolveHelper.EndAssemblyResolve();
+            Execute();
         }
+#endif
 
+        message = ErrorMessage;
         return Result;
     }
 

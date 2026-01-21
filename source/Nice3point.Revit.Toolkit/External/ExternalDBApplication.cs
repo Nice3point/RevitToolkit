@@ -35,24 +35,26 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     public ExternalDBApplicationResult OnStartup(ControlledApplication application)
     {
         Application = application;
-        
-        try
-        {
-            var currentType = GetType();
+
+        var currentType = GetType();
 #if NET
-            if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+        if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+        {
+            using (ResolveHelper.BeginAssemblyResolveScope(currentType))
             {
-                ResolveHelper.BeginAssemblyResolve(currentType);
+                OnStartup();
             }
-#else
-            ResolveHelper.BeginAssemblyResolve(currentType);
-#endif
+        }
+        else
+        {
             OnStartup();
         }
-        finally
+#else
+        using (ResolveHelper.BeginAssemblyResolveScope(currentType))
         {
-            ResolveHelper.EndAssemblyResolve();
+            OnStartup();
         }
+#endif
 
         return Result;
     }
@@ -61,24 +63,25 @@ public abstract class ExternalDBApplication : IExternalDBApplication
     [EditorBrowsable(EditorBrowsableState.Never)]
     public ExternalDBApplicationResult OnShutdown(ControlledApplication application)
     {
-        try
-        {
-            var currentType = GetType();
+        var currentType = GetType();
 #if NET
-            if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+        if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+        {
+            using (ResolveHelper.BeginAssemblyResolveScope(currentType))
             {
-                ResolveHelper.BeginAssemblyResolve(currentType);
+                OnShutdown();
             }
-#else
-            ResolveHelper.BeginAssemblyResolve(currentType);
-
-#endif
+        }
+        else
+        {
             OnShutdown();
         }
-        finally
+#else
+        using (ResolveHelper.BeginAssemblyResolveScope(currentType))
         {
-            ResolveHelper.EndAssemblyResolve();
+            OnShutdown();
         }
+#endif
 
         return ExternalDBApplicationResult.Succeeded;
     }

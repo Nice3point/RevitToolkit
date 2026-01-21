@@ -38,24 +38,24 @@ public class FrameworkElementCreator<T> : IFrameworkElementCreator where T : Fra
     public FrameworkElement? CreateFrameworkElement()
     {
         var elementType = typeof(T);
+        var currentType = GetType();
 
-        try
-        {
-            var currentType = GetType();
 #if NET
-            if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+        if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+        {
+            using (ResolveHelper.BeginAssemblyResolveScope(currentType))
             {
-                ResolveHelper.BeginAssemblyResolve(currentType);
+                return CreateInstance(elementType);
             }
+        }
+
+        return CreateInstance(elementType);
 #else
-            ResolveHelper.BeginAssemblyResolve(currentType);
-#endif
+        using (ResolveHelper.BeginAssemblyResolveScope(currentType))
+        {
             return CreateInstance(elementType);
         }
-        finally
-        {
-            ResolveHelper.EndAssemblyResolve();
-        }
+#endif
     }
 
     private FrameworkElement? CreateInstance(Type elementType)

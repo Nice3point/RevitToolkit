@@ -40,23 +40,25 @@ public abstract class ExternalApplication : IExternalApplication
     {
         Application = application;
 
-        try
-        {
-            var currentType = GetType();
+        var currentType = GetType();
 #if NET
-            if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+        if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+        {
+            using (ResolveHelper.BeginAssemblyResolveScope(currentType))
             {
-                ResolveHelper.BeginAssemblyResolve(currentType);
+                OnStartup();
             }
-#else
-            ResolveHelper.BeginAssemblyResolve(currentType);
-#endif
+        }
+        else
+        {
             OnStartup();
         }
-        finally
+#else
+        using (ResolveHelper.BeginAssemblyResolveScope(currentType))
         {
-            ResolveHelper.EndAssemblyResolve();
+            OnStartup();
         }
+#endif
 
         return Result;
     }
@@ -65,24 +67,25 @@ public abstract class ExternalApplication : IExternalApplication
     [EditorBrowsable(EditorBrowsableState.Never)]
     public Result OnShutdown(UIControlledApplication application)
     {
-        try
-        {
-            var currentType = GetType();
+        var currentType = GetType();
 #if NET
-            if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+        if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
+        {
+            using (ResolveHelper.BeginAssemblyResolveScope(currentType))
             {
-                ResolveHelper.BeginAssemblyResolve(currentType);
-            }
-#else
-            ResolveHelper.BeginAssemblyResolve(currentType);
-
-#endif
+                OnShutdown();
+            }   
+        }
+        else
+        {
             OnShutdown();
         }
-        finally
+#else
+        using (ResolveHelper.BeginAssemblyResolveScope(currentType))
         {
-            ResolveHelper.EndAssemblyResolve();
+            OnShutdown();
         }
+#endif
 
         return Result.Succeeded;
     }

@@ -22,9 +22,10 @@ public class RevitContext : RevitApiContext
 
     static RevitContext()
     {
-        var apiUiAssembly = AppDomain.CurrentDomain.GetAssemblies().First(assembly => assembly.GetName().Name == "APIUIAPI");
-        var apiAssemblyMethods = apiUiAssembly.ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
+        var apiUiAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.GetName().Name == "APIUIAPI");
+        ThrowWhen(apiUiAssembly is null);
 
+        var apiAssemblyMethods = apiUiAssembly.ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
         var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.singletonfactory");
         ThrowWhen(apiCallDepthManagerMethod is null);
 

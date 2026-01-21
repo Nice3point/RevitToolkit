@@ -28,29 +28,38 @@ public abstract class ExternalCommand : IExternalCommand
     ///     Represents an active session of the Autodesk Revit user interface, providing access to
     ///     UI customization methods, events, the main window, and the active document.
     /// </summary>
-    public UIApplication UiApplication => Context.UiApplication;
+    public UIApplication UiApplication => RevitContext.UiApplication;
 
     /// <summary>
     ///     Represents the database level Autodesk Revit Application, providing access to documents, options and other application wide data and settings.
     /// </summary>
-    public Application Application => Context.Application;
+    public Application Application => RevitApiContext.Application;
 
     /// <summary>Represents a currently active Autodesk Revit project at the UI level</summary>
     /// <remarks>
     ///     External API commands can access this property in read-only mode only.
     /// </remarks>
     /// <exception cref="T:Autodesk.Revit.Exceptions.InvalidOperationException">Thrown when attempting to modify the property.</exception>
-    public UIDocument UiDocument => Context.ActiveUiDocument!;
+    public UIDocument UiDocument => RevitContext.ActiveUiDocument!;
 
     /// <summary>Represents a currently active Autodesk Revit project at the database level</summary>
     /// <remarks>
     ///     Revit can have multiple projects open and multiple views to those projects.
     ///     The active or top most view will be the active project and hence the active document which is available from the Application object.<br/><br/>
     /// </remarks>
-    public Document Document => Context.ActiveDocument!;
+    public Document ActiveDocument => RevitContext.ActiveDocument!;
+
+    /// <summary></summary>
+    [Obsolete("Use ActiveDocument instead")]
+    [CodeTemplate(
+        searchTemplate: "Document",
+        Message = "Document is obsolete, use ActiveDocument instead",
+        ReplaceTemplate = "ActiveDocument",
+        ReplaceMessage = "Replace with ActiveDocument")]
+    public Document Document => RevitContext.ActiveDocument!;
 
     /// <summary>Represents the currently active view.</summary>
-    public View ActiveView => Context.ActiveView!;
+    public View ActiveView => RevitContext.ActiveView!;
 
     /// <summary>
     ///     Informs Autodesk Revit of the status of your application after execution.

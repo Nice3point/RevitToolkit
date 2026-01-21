@@ -32,7 +32,7 @@ public abstract class ExternalApplication : IExternalApplication
     /// <summary>
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIApplication" /> that is needed by an external application.
     /// </summary>
-    public UIApplication UiApplication => Context.UiApplication;
+    public UIApplication UiApplication => RevitContext.UiApplication;
 
     /// <summary>Callback invoked by Revit. Not used to be called in user code.</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]

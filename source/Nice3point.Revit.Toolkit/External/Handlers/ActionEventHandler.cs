@@ -11,6 +11,7 @@ namespace Nice3point.Revit.Toolkit.External.Handlers;
 public class ActionEventHandler : ExternalEventHandler
 {
     private readonly ConcurrentQueue<Action<UIApplication>> _queue = new();
+    private Action<Exception>? _exceptionHandler;
 
     /// <summary>Callback invoked by Revit. Not used to be called in user code.</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -22,9 +23,9 @@ public class ActionEventHandler : ExternalEventHandler
             {
                 action(uiApplication);
             }
-            catch
+            catch (Exception exception)
             {
-                // Ignore exceptions to ensure subsequent actions are executed
+                _exceptionHandler?.Invoke(exception);
             }
         }
     }
@@ -50,5 +51,18 @@ public class ActionEventHandler : ExternalEventHandler
 
         _queue.Enqueue(action);
         Raise();
+    }
+    
+    /// <summary>
+    ///     Sets an optional exception handler to be called when an action throws an exception.
+    /// </summary>
+    /// <param name="handler">The exception handler callback.</param>
+    /// <remarks>
+    ///     Exceptions are caught and passed to this handler to ensure subsequent actions continue executing.
+    ///     If no handler is set, exceptions are silently ignored.
+    /// </remarks>
+    public void SetExceptionHandler(Action<Exception> handler)
+    {
+        _exceptionHandler = handler;
     }
 }

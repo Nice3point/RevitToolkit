@@ -1,0 +1,25 @@
+name: 📃 Documentation Issue
+description: Report issues in our documentation
+title: "[Documentation]: "
+labels:
+  - documentation 📃
+body:
+  - type: textarea
+    attributes:
+      label: Provide a description of requested docs changes
+      description: Briefly describe which document needs to be corrected and why
+      placeholder: |
+        Document: [e.g., Installation Guide, API Reference]
+        Issue: [What's wrong or missing?]
+        Suggested fix: [How should it be corrected?]
+  - type: dropdown
+    attributes:
+      label: Type of documentation issue
+      options:
+        - Incorrect information
+        - Missing information
+        - Typo or formatting
+        - Outdated content
+        - New documentation needed
+    validations:
+      required: true

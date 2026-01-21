@@ -1,0 +1,34 @@
+name: 🐛 Bug report
+description: Report errors or unexpected behavior
+labels:
+  - bug 🐛
+  - needs triage 🔍
+body:
+  - type: markdown
+    attributes:
+      value: Please make sure to [search for existing issues](https://github.com/Nice3point/RevitToolkit/issues?q=) before filing a new one!
+
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: We highly suggest including screenshots
+      placeholder: |
+        1. Create a new ExternalCommand
+        2. Launch Revit application
+        3. Check the returned result
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: ✔️ Expected Behavior
+      placeholder: What were you expecting?
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: ❌ Actual Behavior
+      placeholder: What happened instead?
+    validations:
+      required: false

@@ -1,5 +1,7 @@
-﻿using System.Reflection;
+﻿#if NET8_0_OR_GREATER
 using System.Runtime.CompilerServices;
+#endif
+using System.Reflection;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 
@@ -12,6 +14,7 @@ namespace Nice3point.Revit.Toolkit;
 public class RevitContext : RevitApiContext
 {
     //Global state
+    private static readonly Lock DialogLock = new();
     private static bool _suppressDialogs;
     private static int? _suppressDialogCode;
     private static Action<DialogBoxShowingEventArgs>? _suppressDialogHandler;
@@ -164,18 +167,22 @@ public class RevitContext : RevitApiContext
     ///             starting at 1001 for the left-most or top-most button in a task dialog.
     ///         </item>
     ///     </list>
+    ///     This method is thread-safe.
     /// </remarks>
     public static void SuppressDialogs(int resultCode = 1)
     {
-        if (_suppressDialogs)
+        lock (DialogLock)
         {
-            _suppressDialogCode = resultCode;
-            return;
-        }
+            if (_suppressDialogs)
+            {
+                _suppressDialogCode = resultCode;
+                return;
+            }
 
-        _suppressDialogs = true;
-        _suppressDialogCode = resultCode;
-        UiApplication.DialogBoxShowing += ResolveDialogBox;
+            _suppressDialogs = true;
+            _suppressDialogCode = resultCode;
+            UiApplication.DialogBoxShowing += ResolveDialogBox;
+        }
     }
 
     /// <summary>
@@ -201,29 +208,39 @@ public class RevitContext : RevitApiContext
     ///             starting at 1001 for the left-most or top-most button in a task dialog.
     ///         </item>
     ///     </list>
+    ///     This method is thread-safe.
     /// </remarks>
     public static void SuppressDialogs(Action<DialogBoxShowingEventArgs> handler)
     {
-        if (_suppressDialogs)
+        lock (DialogLock)
         {
-            _suppressDialogHandler = handler;
-            return;
-        }
+            if (_suppressDialogs)
+            {
+                _suppressDialogHandler = handler;
+                return;
+            }
 
-        _suppressDialogs = true;
-        _suppressDialogHandler = handler;
-        UiApplication.DialogBoxShowing += ResolveDialogBox;
+            _suppressDialogs = true;
+            _suppressDialogHandler = handler;
+            UiApplication.DialogBoxShowing += ResolveDialogBox;
+        }
     }
 
     /// <summary>
     ///     Restores display of the Revit dialogs.
     /// </summary>
+    /// <remarks>
+    ///     This method is thread-safe.
+    /// </remarks>
     public static void RestoreDialogs()
     {
-        _suppressDialogs = false;
-        _suppressDialogCode = null;
-        _suppressDialogHandler = null;
-        UiApplication.DialogBoxShowing -= ResolveDialogBox;
+        lock (DialogLock)
+        {
+            _suppressDialogs = false;
+            _suppressDialogCode = null;
+            _suppressDialogHandler = null;
+            UiApplication.DialogBoxShowing -= ResolveDialogBox;
+        }
     }
 
     private static void ResolveDialogBox(object? sender, DialogBoxShowingEventArgs args)

@@ -1,6 +1,8 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
+﻿#if NET8_0_OR_GREATER
 using System.Runtime.CompilerServices;
+#endif
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB.Events;
 using Nice3point.Revit.Toolkit.Utils;
@@ -14,6 +16,7 @@ namespace Nice3point.Revit.Toolkit;
 public class RevitApiContext
 {
     //Global state
+    private static readonly Lock FailureLock = new();
     private static bool _suppressFailures;
     private static bool _suppressFailureErrors;
 
@@ -63,27 +66,37 @@ public class RevitApiContext
     /// <remarks>
     ///     By default, Revit uses manual error resolution control with user interaction.
     ///     This method provides automatic resolution of all failures without notifying the user or interrupting the program.
+    ///     This method is thread-safe.
     /// </remarks>
     public static void SuppressFailures(bool resolveErrors = true)
     {
-        if (_suppressFailures)
+        lock (FailureLock)
         {
-            _suppressFailureErrors = resolveErrors;
-            return;
-        }
+            if (_suppressFailures)
+            {
+                _suppressFailureErrors = resolveErrors;
+                return;
+            }
 
-        _suppressFailures = true;
-        _suppressFailureErrors = resolveErrors;
-        Application.FailuresProcessing += ResolveFailures;
+            _suppressFailures = true;
+            _suppressFailureErrors = resolveErrors;
+            Application.FailuresProcessing += ResolveFailures;
+        }
     }
 
     /// <summary>
     ///     Restores failure handling.
     /// </summary>
+    /// <remarks>
+    ///     This method is thread-safe.
+    /// </remarks>
     public static void RestoreFailures()
     {
-        _suppressFailures = false;
-        Application.FailuresProcessing -= ResolveFailures;
+        lock (FailureLock)
+        {
+            _suppressFailures = false;
+            Application.FailuresProcessing -= ResolveFailures;
+        }
     }
 
     private static void ResolveFailures(object? sender, FailuresProcessingEventArgs args)

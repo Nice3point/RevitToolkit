@@ -58,7 +58,7 @@ internal static class FailureUtils
     /// </summary>
     /// <param name="failuresAccessor">An object that provides access to the failure messages and their handling options.</param>
     /// <returns>
-    ///     Returns <see cref="FailureProcessingResult.ProceedWithRollBack"/> if the failuresAccessor has any message/>.
+    ///     Returns <see cref="FailureProcessingResult.ProceedWithRollBack"/> if the failuresAccessor has any message.
     /// </returns>
     internal static FailureProcessingResult DismissFailures(FailuresAccessor failuresAccessor)
     {

@@ -12,7 +12,7 @@ namespace Nice3point.Revit.Toolkit.Options;
 ///     Class that the Revit UI will call, if present, to construct the FrameworkElement for the pane.
 /// </summary>
 [PublicAPI]
-public class FrameworkElementCreator<T> : IFrameworkElementCreator where T : FrameworkElement
+public sealed class FrameworkElementCreator<T> : IFrameworkElementCreator where T : FrameworkElement
 {
     private readonly IServiceProvider? _serviceProvider;
 

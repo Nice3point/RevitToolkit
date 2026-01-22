@@ -9,7 +9,7 @@ namespace Nice3point.Revit.Toolkit.Options;
 ///     cancel the operation or continue, but only copy types with unique names.
 /// </summary>
 [PublicAPI]
-public class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
+public sealed class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
 {
     private readonly DuplicateTypeAction _duplicateTypeAction;
     private readonly Func<DuplicateTypeNamesHandlerArgs, DuplicateTypeAction>? _actionHandler;

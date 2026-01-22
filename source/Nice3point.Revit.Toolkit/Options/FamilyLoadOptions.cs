@@ -13,7 +13,7 @@ namespace Nice3point.Revit.Toolkit.Options;
 ///     </code>
 /// </example>
 [PublicAPI]
-public class FamilyLoadOptions : IFamilyLoadOptions
+public sealed class FamilyLoadOptions : IFamilyLoadOptions
 {
     private readonly FamilySource _familySource;
     private readonly bool _overwrite;

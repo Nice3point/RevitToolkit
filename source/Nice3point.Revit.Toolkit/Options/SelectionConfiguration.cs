@@ -16,7 +16,7 @@ namespace Nice3point.Revit.Toolkit.Options;
 ///     </code>
 /// </example>
 [PublicAPI]
-public class SelectionConfiguration
+public sealed class SelectionConfiguration
 {
     private readonly SelectionFilterInternal _filter;
 

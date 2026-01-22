@@ -60,8 +60,8 @@ public sealed class RevitApiContextTests : RevitApiTest
                 using var transaction = new Transaction(document, "Create Reference Planes");
                 transaction.Start();
 
-                document.FamilyCreate.NewReferencePlane(new XYZ(-10, 0, 0), new XYZ(10, 0, 0), XYZ.BasisZ, document.ActiveView);
-                document.FamilyCreate.NewReferencePlane(new XYZ(-10, 0, 0), new XYZ(10, 0, 0), XYZ.BasisZ, document.ActiveView);
+                CreateModelLine(document, 10);
+                CreateModelLine(document, 10);
 
                 var status = transaction.Commit();
 
@@ -93,7 +93,7 @@ public sealed class RevitApiContextTests : RevitApiTest
                     using var transaction = new Transaction(document, "Nested Scope Test");
                     transaction.Start();
 
-                    document.FamilyCreate.NewReferencePlane(new XYZ(-5, 0, 0), new XYZ(5, 0, 0), XYZ.BasisZ, document.ActiveView);
+                    CreateModelLine(document, 10);
 
                     var status = transaction.Commit();
 
@@ -139,7 +139,7 @@ public sealed class RevitApiContextTests : RevitApiTest
                 using var transaction = new Transaction(document, "Test with dismiss");
                 transaction.Start();
 
-                document.FamilyCreate.NewReferencePlane(new XYZ(-5, 0, 0), new XYZ(5, 0, 0), XYZ.BasisZ, document.ActiveView);
+                CreateModelLine(document, 10);
 
                 var status = transaction.Commit();
 
@@ -189,5 +189,17 @@ public sealed class RevitApiContextTests : RevitApiTest
         {
             document.Close(false);
         }
+    }
+
+    [PublicAPI]
+    private static ModelCurve CreateModelLine(Document document, double length)
+    {
+        var start = new XYZ(-length / 2, 0, 0);
+        var end = new XYZ(length / 2, 0, 0);
+        var line = Line.CreateBound(start, end);
+
+        var sketchPlane = SketchPlane.Create(document, Plane.CreateByNormalAndOrigin(XYZ.BasisZ, XYZ.Zero));
+
+        return document.FamilyCreate.NewModelCurve(line, sketchPlane);
     }
 }

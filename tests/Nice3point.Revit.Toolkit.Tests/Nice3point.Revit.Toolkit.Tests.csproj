@@ -10,6 +10,7 @@
     <ItemGroup>
         <PackageReference Include="Nice3point.Revit.Api.RevitAPI"/>
         <PackageReference Include="Nice3point.TUnit.Revit"/>
+        <PackageReference Include="JetBrains.Annotations"/>
         <PackageReference Include="TUnit"/>
     </ItemGroup>
 

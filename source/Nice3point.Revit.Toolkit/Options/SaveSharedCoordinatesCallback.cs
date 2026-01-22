@@ -1,4 +1,6 @@
-﻿namespace Nice3point.Revit.Toolkit.Options;
+﻿using JetBrains.Annotations;
+
+namespace Nice3point.Revit.Toolkit.Options;
 
 /// <summary>
 ///     Callback that may be used to control Revit when trying to unload or reload a Revit link with changes in shared coordinates.

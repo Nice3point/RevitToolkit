@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <UseWpf>true</UseWpf>
+        <DefineConstants>$(DefineConstants);JETBRAINS_ANNOTATIONS</DefineConstants>
         <Configurations>Debug.R20;Debug.R21;Debug.R22;Debug.R23;Debug.R24;Debug.R25;Debug.R26</Configurations>
         <Configurations>$(Configurations);Release.R20;Release.R21;Release.R22;Release.R23;Release.R24;Release.R25;Release.R26</Configurations>
     </PropertyGroup>
@@ -35,7 +36,7 @@
         <PackageReference Include="Nice3point.Revit.Api.RevitAPI" PrivateAssets="all"/>
         <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" PrivateAssets="all"/>
         <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All"/>
-        <PackageReference Include="JetBrains.Annotations" PrivateAssets="all"/>
+        <PackageReference Include="JetBrains.Annotations.Sources" PrivateAssets="All"/>
     </ItemGroup>
 
     <ItemGroup>

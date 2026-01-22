@@ -8,6 +8,7 @@
 - New **BeginDialogSuppressionScope()** method with disposable pattern for dialog suppression
 - New **BeginFailureSuppressionScope()** method with disposable pattern for failure handling
 - New **BeginAssemblyResolveScope()** method with disposable pattern for dependency resolution
+- New **BeginAssemblyResolveScope(string directory)** overload for explicit path specification
 - New **SetExceptionHandler()** method for `ActionEventHandler` and `IdlingEventHandler`
 - New **CancellationToken** support for `AsyncEventHandler` and `AsyncEventHandler<T>`
 - New overloads for `BeginDialogSuppressionScope()`: `MessageBoxResult`, `TaskDialogResult`, custom handler
@@ -19,6 +20,7 @@
 - Thread safety improvements with `Lock` class and `Interlocked` operations
 - `UnsafeAccessor` usage for .NET 8+ to improve performance
 - Removed `SemaphoreSlim` from `AsyncEventHandler<T>` for better performance
+- `BeginAssemblyResolveScope` now uses Stack to support nested scopes with different directories
 
 ## Breaking Changes
 
@@ -87,6 +89,24 @@ finally
 // After (auto-fix available)
 using (ResolveHelper.BeginAssemblyResolveScope<MyType>())
 {
+    window.Show();
+}
+```
+
+New: Specify directory path directly for assembly resolution:
+```csharp
+// Path-based (new)
+using (ResolveHelper.BeginAssemblyResolveScope(@"C:\Libraries"))
+{
+    window.Show();
+}
+
+// Nested scopes (new) - searches innermost first
+using (ResolveHelper.BeginAssemblyResolveScope(@"C:\Shared\Common"))
+using (ResolveHelper.BeginAssemblyResolveScope(@"C:\Plugin"))
+using (ResolveHelper.BeginAssemblyResolveScope<MyType>())
+{
+    // Searches: MyType directory -> Plugin -> Common
     window.Show();
 }
 ```

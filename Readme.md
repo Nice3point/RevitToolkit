@@ -616,6 +616,26 @@ using (ResolveHelper.BeginAssemblyResolveScope(typeof(ViewModel)))
 }
 ```
 
+Or specify a directory path directly:
+
+```c#
+using (ResolveHelper.BeginAssemblyResolveScope(@"C:\Libraries"))
+{
+    return LoadExternalLibrary();
+}
+```
+
+Scopes can be nested. Dependencies are searched from innermost to outermost scope:
+
+```c#
+using (ResolveHelper.BeginAssemblyResolveScope(@"C:\Shared\Common"))
+using (ResolveHelper.BeginAssemblyResolveScope(@"C:\Plugin"))
+{
+    // First searches in Plugin, then in Common
+    return new Window();
+}
+```
+
 Enabled by default for `ExternalCommand`, `AsyncExternalCommand`, `ExternalApplication` and `ExternalDBApplication`.
 
 ### Samples

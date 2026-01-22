@@ -10,15 +10,6 @@ namespace Nice3point.Revit.Toolkit.Helpers;
 /// <summary>
 ///     Provides methods to resolve dependencies.
 /// </summary>
-/// <example>
-///     <code lang="csharp">
-/// // Recommended: Use scope-based pattern
-/// using (ResolveHelper.BeginAssemblyResolveScope&lt;MyType&gt;())
-/// {
-///     return (T)Activator.CreateInstance(typeof(T));
-/// }
-/// </code>
-/// </example>
 [PublicAPI]
 public static class ResolveHelper
 {
@@ -82,10 +73,38 @@ public static class ResolveHelper
             return DisposedAssemblyResolveScope.Instance;
         }
 
+        return BeginAssemblyResolveScope(moduleDirectory);
+    }
+
+    /// <summary>
+    ///     Begins a scope that resolves dependencies from the specified directory.
+    ///     Assembly resolution is automatically ended when the returned scope is disposed.
+    /// </summary>
+    /// <param name="directory">The directory path to search for dependencies.</param>
+    /// <returns>A disposable scope. Call Dispose or use 'using' statement to end assembly resolution.</returns>
+    /// <remarks>
+    ///     At the time of dependency resolution, all other dependency resolution methods for the domain are set to low priority,
+    ///     this requires calling Dispose immediately after executing user code to avoid conflict with Revit runtime.
+    /// </remarks>
+    /// <example>
+    ///     <code>
+    ///         using (ResolveHelper.BeginAssemblyResolveScope(@"C:\Libraries"))
+    ///         {
+    ///             return new MyWindow();
+    ///         }
+    ///     </code>
+    /// </example>
+    public static IDisposable BeginAssemblyResolveScope(string directory)
+    {
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            return DisposedAssemblyResolveScope.Instance;
+        }
+
         lock (ResolveLock)
         {
             var isFirstScope = ModuleDirectories.Count == 0;
-            ModuleDirectories.Push(moduleDirectory);
+            ModuleDirectories.Push(directory);
 
             if (isFirstScope)
             {

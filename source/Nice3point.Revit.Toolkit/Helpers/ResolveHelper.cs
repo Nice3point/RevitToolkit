@@ -23,9 +23,7 @@ namespace Nice3point.Revit.Toolkit.Helpers;
 public static class ResolveHelper
 {
     private static readonly Lock ResolveLock = new();
-    private static int _scopeCount;
-
-    private static string? _moduleDirectory;
+    private static readonly Stack<string> ModuleDirectories = new();
     private static object? _domainResolvers;
 
     /// <summary>
@@ -73,41 +71,49 @@ public static class ResolveHelper
     /// </example>
     public static IDisposable BeginAssemblyResolveScope(Type type)
     {
+        if (type.Module.FullyQualifiedName == "<Unknown>")
+        {
+            return DisposedAssemblyResolveScope.Instance;
+        }
+
+        var moduleDirectory = Path.GetDirectoryName(type.Module.FullyQualifiedName);
+        if (moduleDirectory is null)
+        {
+            return DisposedAssemblyResolveScope.Instance;
+        }
+
         lock (ResolveLock)
         {
-            if (_scopeCount > 0)
+            var isFirstScope = ModuleDirectories.Count == 0;
+            ModuleDirectories.Push(moduleDirectory);
+
+            if (isFirstScope)
             {
-                _scopeCount++;
-                return new AssemblyResolveScope();
+                OverrideDomainResolvers();
             }
-
-            if (type.Module.FullyQualifiedName == "<Unknown>")
-            {
-                return DisposedAssemblyResolveScope.Instance;
-            }
-
-            _moduleDirectory = Path.GetDirectoryName(type.Module.FullyQualifiedName);
-
-#if NET
-            var loadContextType = typeof(AssemblyLoadContext);
-            var resolversField = loadContextType.GetField("AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;
-            var resolvers = (ResolveEventHandler?)resolversField.GetValue(null);
-            resolversField.SetValue(null, null);
-#else
-            var domainType = AppDomain.CurrentDomain.GetType();
-            var resolversField = domainType.GetField("_AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
-            var resolvers = (ResolveEventHandler)resolversField.GetValue(AppDomain.CurrentDomain);
-            resolversField.SetValue(AppDomain.CurrentDomain, null);
-#endif
-
-            _domainResolvers = resolvers;
-            _scopeCount++;
-
-            AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
-            AppDomain.CurrentDomain.AssemblyResolve += resolvers;
         }
 
         return new AssemblyResolveScope();
+    }
+
+    private static void OverrideDomainResolvers()
+    {
+#if NET
+        var loadContextType = typeof(AssemblyLoadContext);
+        var resolversField = loadContextType.GetField("AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;
+        var resolvers = (ResolveEventHandler?)resolversField.GetValue(null);
+        resolversField.SetValue(null, null);
+#else
+        var domainType = AppDomain.CurrentDomain.GetType();
+        var resolversField = domainType.GetField("_AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
+        var resolvers = (ResolveEventHandler)resolversField.GetValue(AppDomain.CurrentDomain);
+        resolversField.SetValue(AppDomain.CurrentDomain, null);
+#endif
+
+        _domainResolvers = resolvers;
+
+        AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
+        AppDomain.CurrentDomain.AssemblyResolve += resolvers;
     }
 
     /// <summary>
@@ -158,29 +164,38 @@ public static class ResolveHelper
     {
         lock (ResolveLock)
         {
-            if (_scopeCount == 0) return;
-            if (--_scopeCount > 0) return;
+            if (ModuleDirectories.Count == 0) return;
+            ModuleDirectories.Pop();
 
-            RestoreResolvers();
+            if (ModuleDirectories.Count == 0)
+            {
+                RestoreResolvers();
+            }
         }
     }
 
     private static Assembly? OnAssemblyResolve(object? sender, ResolveEventArgs args)
     {
-        string? directory;
+        string[] directories;
         lock (ResolveLock)
         {
-            directory = _moduleDirectory;
+            if (ModuleDirectories.Count == 0) return null;
+            directories = ModuleDirectories.ToArray();
         }
 
-        if (directory is null) return null;
-
         var assemblyName = new AssemblyName(args.Name).Name;
-        var assemblyPath = Path.Combine(directory, $"{assemblyName}.dll");
 
-        if (!File.Exists(assemblyPath)) return null;
+        // Search from innermost scope to outermost
+        foreach (var directory in directories)
+        {
+            var assemblyPath = Path.Combine(directory, $"{assemblyName}.dll");
+            if (File.Exists(assemblyPath))
+            {
+                return Assembly.LoadFrom(assemblyPath);
+            }
+        }
 
-        return Assembly.LoadFrom(assemblyPath);
+        return null;
     }
 
     private static void RestoreResolvers()
@@ -200,7 +215,6 @@ public static class ResolveHelper
 #endif
 
         _domainResolvers = null;
-        _moduleDirectory = null;
     }
 
     private sealed class AssemblyResolveScope : IDisposable
@@ -213,10 +227,13 @@ public static class ResolveHelper
 
             lock (ResolveLock)
             {
-                if (_scopeCount == 0) return;
-                if (--_scopeCount > 0) return;
+                if (ModuleDirectories.Count == 0) return;
+                ModuleDirectories.Pop();
 
-                RestoreResolvers();
+                if (ModuleDirectories.Count == 0)
+                {
+                    RestoreResolvers();
+                }
             }
         }
     }

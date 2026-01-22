@@ -1,3 +1,96 @@
+# Release 2027.0.0-preview.1.20260122
+
+## New Features
+
+- New **RevitContext** class for UI-level application context access
+- New **RevitApiContext** class for database-level application context access
+- New **AsyncExternalCommand** class for async/await support in external commands
+- New **BeginDialogSuppressionScope()** method with disposable pattern for dialog suppression
+- New **BeginFailureSuppressionScope()** method with disposable pattern for failure handling
+- New **BeginAssemblyResolveScope()** method with disposable pattern for dependency resolution
+- New **SetExceptionHandler()** method for `ActionEventHandler` and `IdlingEventHandler`
+- New **CancellationToken** support for `AsyncEventHandler` and `AsyncEventHandler<T>`
+- New overloads for `BeginDialogSuppressionScope()`: `MessageBoxResult`, `TaskDialogResult`, custom handler
+
+## Improvements
+
+- Event handlers now use `ConcurrentQueue` for thread-safe action queuing
+- Disposable scopes support nesting with reference counting
+- Thread safety improvements with `Lock` class and `Interlocked` operations
+- `UnsafeAccessor` usage for .NET 8+ to improve performance
+- Removed `SemaphoreSlim` from `AsyncEventHandler<T>` for better performance
+
+## Breaking Changes
+
+- **Context** class is now obsolete, use `RevitContext` or `RevitApiContext` instead
+- **SuppressDialogs()** / **RestoreDialogs()** are obsolete, use `BeginDialogSuppressionScope()` instead
+- **SuppressFailures()** / **RestoreFailures()** are obsolete, use `BeginFailureSuppressionScope()` instead
+- **BeginAssemblyResolve()** / **EndAssemblyResolve()** are obsolete, use `BeginAssemblyResolveScope()` instead
+- **ExternalCommand.Document** is obsolete, use `ActiveDocument` instead
+- **ExternalCommand.UiDocument** is obsolete, use `ActiveUiDocument` instead
+- **ActionEventHandler.Cancel()** method removed
+- **IdlingEventHandler.Cancel()** method removed
+
+## Automatic Migration with ReSharper/Rider
+
+All obsolete methods are marked with `[CodeTemplate]` attributes, enabling automatic code conversion in JetBrains ReSharper and Rider. Simply place your cursor on the obsolete method and use the suggested quick-fix to update to the new API.
+
+## Migration Guide
+
+Replace `Context` with `RevitContext` or `RevitApiContext`:
+```csharp
+// Before
+Context.ActiveDocument.Delete(elementId);
+Context.Application.Username;
+
+// After (auto-fix available)
+RevitContext.ActiveDocument.Delete(elementId);
+RevitApiContext.Application.Username;
+```
+
+Replace manual suppress/restore with disposable scopes:
+```csharp
+// Before
+try
+{
+    Context.SuppressDialogs();
+    Context.SuppressFailures();
+    // operations
+}
+finally
+{
+    Context.RestoreDialogs();
+    Context.RestoreFailures();
+}
+
+// After (auto-fix available)
+using (RevitContext.BeginDialogSuppressionScope())
+using (RevitApiContext.BeginFailureSuppressionScope())
+{
+    // operations
+}
+```
+
+Replace `BeginAssemblyResolve`/`EndAssemblyResolve` with scope:
+```csharp
+// Before
+try
+{
+    ResolveHelper.BeginAssemblyResolve<MyType>();
+    window.Show();
+}
+finally
+{
+    ResolveHelper.EndAssemblyResolve();
+}
+
+// After (auto-fix available)
+using (ResolveHelper.BeginAssemblyResolveScope<MyType>())
+{
+    window.Show();
+}
+```
+
 # Release 2026.0.0
 
 - New `Context.UiControlledApplication` property. Helps to manipulate with the Revit ribbon, context menus outside ExternalApplication. 

@@ -7,6 +7,7 @@ using Nice3point.Revit.Toolkit.Helpers;
 using System.Runtime.Loader;
 #endif
 
+// ReSharper disable once CheckNamespace
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>

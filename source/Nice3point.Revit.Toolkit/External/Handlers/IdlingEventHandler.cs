@@ -4,7 +4,8 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using JetBrains.Annotations;
 
-namespace Nice3point.Revit.Toolkit.External.Handlers;
+// ReSharper disable once CheckNamespace
+namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
 ///     Handler to provide access to modify the Revit document when UIApplication.Idling occurs.

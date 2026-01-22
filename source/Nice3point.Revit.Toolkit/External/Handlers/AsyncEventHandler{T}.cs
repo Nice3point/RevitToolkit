@@ -3,7 +3,8 @@ using System.ComponentModel;
 using Autodesk.Revit.UI;
 using JetBrains.Annotations;
 
-namespace Nice3point.Revit.Toolkit.External.Handlers;
+// ReSharper disable once CheckNamespace
+namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
 ///     Handler to provide access to modify the Revit document asynchronously with a return value.

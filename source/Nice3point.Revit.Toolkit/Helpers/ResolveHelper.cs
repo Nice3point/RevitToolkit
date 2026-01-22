@@ -22,6 +22,9 @@ namespace Nice3point.Revit.Toolkit.Helpers;
 [PublicAPI]
 public static class ResolveHelper
 {
+    private static readonly Lock ResolveLock = new();
+    private static int _scopeCount;
+
     private static string? _moduleDirectory;
     private static object? _domainResolvers;
 
@@ -70,27 +73,39 @@ public static class ResolveHelper
     /// </example>
     public static IDisposable BeginAssemblyResolveScope(Type type)
     {
-        if (_domainResolvers is not null) return new AssemblyResolveScope();
-        if (type.Module.FullyQualifiedName == "<Unknown>") return new AssemblyResolveScope();
+        lock (ResolveLock)
+        {
+            if (_scopeCount > 0)
+            {
+                _scopeCount++;
+                return new AssemblyResolveScope();
+            }
+
+            if (type.Module.FullyQualifiedName == "<Unknown>")
+            {
+                return DisposedAssemblyResolveScope.Instance;
+            }
+
+            _moduleDirectory = Path.GetDirectoryName(type.Module.FullyQualifiedName);
 
 #if NET
-        var loadContextType = typeof(AssemblyLoadContext);
-        var resolversField = loadContextType.GetField("AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;
-        var resolvers = (ResolveEventHandler?)resolversField.GetValue(null);
-        resolversField.SetValue(null, null);
+            var loadContextType = typeof(AssemblyLoadContext);
+            var resolversField = loadContextType.GetField("AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;
+            var resolvers = (ResolveEventHandler?)resolversField.GetValue(null);
+            resolversField.SetValue(null, null);
 #else
-        var domainType = AppDomain.CurrentDomain.GetType();
-        var resolversField = domainType.GetField("_AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
-        var resolvers = (ResolveEventHandler)resolversField.GetValue(AppDomain.CurrentDomain);
-        resolversField.SetValue(AppDomain.CurrentDomain, null);
+            var domainType = AppDomain.CurrentDomain.GetType();
+            var resolversField = domainType.GetField("_AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
+            var resolvers = (ResolveEventHandler)resolversField.GetValue(AppDomain.CurrentDomain);
+            resolversField.SetValue(AppDomain.CurrentDomain, null);
 #endif
 
-        _domainResolvers = resolvers;
-        _moduleDirectory = Path.GetDirectoryName(type.Module.FullyQualifiedName);
+            _domainResolvers = resolvers;
+            _scopeCount++;
 
-        // Set priority on the add-in's resolver
-        AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
-        AppDomain.CurrentDomain.AssemblyResolve += resolvers;
+            AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
+            AppDomain.CurrentDomain.AssemblyResolve += resolvers;
+        }
 
         return new AssemblyResolveScope();
     }
@@ -141,7 +156,38 @@ public static class ResolveHelper
     [Obsolete("Use BeginAssemblyResolveScope instead for automatic resource management")]
     public static void EndAssemblyResolve()
     {
+        lock (ResolveLock)
+        {
+            if (_scopeCount == 0) return;
+            if (--_scopeCount > 0) return;
+
+            RestoreResolvers();
+        }
+    }
+
+    private static Assembly? OnAssemblyResolve(object? sender, ResolveEventArgs args)
+    {
+        string? directory;
+        lock (ResolveLock)
+        {
+            directory = _moduleDirectory;
+        }
+
+        if (directory is null) return null;
+
+        var assemblyName = new AssemblyName(args.Name).Name;
+        var assemblyPath = Path.Combine(directory, $"{assemblyName}.dll");
+
+        if (!File.Exists(assemblyPath)) return null;
+
+        return Assembly.LoadFrom(assemblyPath);
+    }
+
+    private static void RestoreResolvers()
+    {
         if (_domainResolvers is null) return;
+
+        AppDomain.CurrentDomain.AssemblyResolve -= OnAssemblyResolve;
 
 #if NET
         var loadContextType = typeof(AssemblyLoadContext);
@@ -157,38 +203,34 @@ public static class ResolveHelper
         _moduleDirectory = null;
     }
 
-    private static Assembly? OnAssemblyResolve(object? sender, ResolveEventArgs args)
-    {
-        var assemblyName = new AssemblyName(args.Name).Name;
-        var assemblyPath = Path.Combine(_moduleDirectory!, $"{assemblyName}.dll");
-        if (!File.Exists(assemblyPath)) return null;
-
-        return Assembly.LoadFrom(assemblyPath);
-    }
-
     private sealed class AssemblyResolveScope : IDisposable
     {
-        private bool _disposed;
+        private int _disposed;
 
         public void Dispose()
         {
-            if (_disposed) return;
-            _disposed = true;
+            if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
 
-            if (_domainResolvers is null) return;
+            lock (ResolveLock)
+            {
+                if (_scopeCount == 0) return;
+                if (--_scopeCount > 0) return;
 
-#if NET
-            var loadContextType = typeof(AssemblyLoadContext);
-            var resolversField = loadContextType.GetField("AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;
-            resolversField.SetValue(null, _domainResolvers);
-#else
-            var domainType = AppDomain.CurrentDomain.GetType();
-            var resolversField = domainType.GetField("_AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
-            resolversField.SetValue(AppDomain.CurrentDomain, _domainResolvers);
-#endif
+                RestoreResolvers();
+            }
+        }
+    }
 
-            _domainResolvers = null;
-            _moduleDirectory = null;
+    private sealed class DisposedAssemblyResolveScope : IDisposable
+    {
+        public static readonly DisposedAssemblyResolveScope Instance = new();
+
+        private DisposedAssemblyResolveScope()
+        {
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

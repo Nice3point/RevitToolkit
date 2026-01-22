@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 #endif
 using System.Reflection;
+using System.Windows;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using JetBrains.Annotations;
@@ -16,7 +17,7 @@ public class RevitContext : RevitApiContext
 {
     //Global state
     private static readonly Lock DialogLock = new();
-    private static bool _suppressDialogs;
+    private static int _dialogScopeCount;
     private static int? _suppressDialogCode;
     private static Action<DialogBoxShowingEventArgs>? _suppressDialogHandler;
     private static readonly Func<bool> GetIsRevitInApiMode;
@@ -186,15 +187,99 @@ public class RevitContext : RevitApiContext
     {
         lock (DialogLock)
         {
-            if (_suppressDialogs)
-            {
-                _suppressDialogCode = resultCode;
-                return new DialogSuppressionScope();
-            }
-
-            _suppressDialogs = true;
             _suppressDialogCode = resultCode;
-            UiApplication.DialogBoxShowing += ResolveDialogBox;
+            _suppressDialogHandler = null;
+
+            if (_dialogScopeCount++ == 0)
+            {
+                UiApplication.DialogBoxShowing += ResolveDialogBox;
+            }
+        }
+
+        return new DialogSuppressionScope();
+    }
+
+    /// <summary>
+    ///     Begins a scope that suppresses the display of Revit dialogs.
+    ///     Dialogs are automatically restored when the returned scope is disposed.
+    /// </summary>
+    /// <param name="resultCode">The result code you wish the Revit dialog to return.</param>
+    /// <returns>A disposable scope. Call Dispose or use 'using' statement to restore dialogs.</returns>
+    /// <remarks>
+    ///     The range of valid result values depends on the type of dialog as follows:
+    ///     <list type="number">
+    ///         <item>
+    ///             MessageBox: Standard Message Box IDs, such as IDOK and IDCANCEL, are accepted.
+    ///             For all possible IDs, refer to the Windows API documentation.
+    ///             The ID used must be relevant to the buttons in a message box.
+    ///         </item>
+    ///     </list>
+    ///     This method is thread-safe.
+    /// </remarks>
+    /// <example>
+    ///     <code>
+    ///         using (RevitContext.BeginDialogSuppressionScope())
+    ///         {
+    ///             // Dialogs are suppressed here
+    ///         }
+    ///         // Dialogs are restored automatically
+    ///     </code>
+    /// </example>
+    public static IDisposable BeginDialogSuppressionScope(MessageBoxResult resultCode)
+    {
+        lock (DialogLock)
+        {
+            _suppressDialogCode = (int)resultCode;
+            _suppressDialogHandler = null;
+
+            if (_dialogScopeCount++ == 0)
+            {
+                UiApplication.DialogBoxShowing += ResolveDialogBox;
+            }
+        }
+
+        return new DialogSuppressionScope();
+    }
+
+    /// <summary>
+    ///     Begins a scope that suppresses the display of Revit dialogs.
+    ///     Dialogs are automatically restored when the returned scope is disposed.
+    /// </summary>
+    /// <param name="resultCode">The result code you wish the Revit dialog to return.</param>
+    /// <returns>A disposable scope. Call Dispose or use 'using' statement to restore dialogs.</returns>
+    /// <remarks>
+    ///     The range of valid result values depends on the type of dialog as follows:
+    ///     <list type="number">
+    ///         <item>
+    ///             TaskDialog: Standard Message Box IDs and Revit Custom IDs are accepted,
+    ///             depending on the buttons used in a dialog. Standard buttons, such as OK
+    ///             and Cancel, have standard IDs described in Windows API documentation.
+    ///             Buttons with custom text have custom IDs with incremental values
+    ///             starting at 1001 for the left-most or top-most button in a task dialog.
+    ///         </item>
+    ///     </list>
+    ///     This method is thread-safe.
+    /// </remarks>
+    /// <example>
+    ///     <code>
+    ///         using (RevitContext.BeginDialogSuppressionScope())
+    ///         {
+    ///             // Dialogs are suppressed here
+    ///         }
+    ///         // Dialogs are restored automatically
+    ///     </code>
+    /// </example>
+    public static IDisposable BeginDialogSuppressionScope(TaskDialogResult resultCode)
+    {
+        lock (DialogLock)
+        {
+            _suppressDialogCode = (int)resultCode;
+            _suppressDialogHandler = null;
+
+            if (_dialogScopeCount++ == 0)
+            {
+                UiApplication.DialogBoxShowing += ResolveDialogBox;
+            }
         }
 
         return new DialogSuppressionScope();
@@ -231,15 +316,13 @@ public class RevitContext : RevitApiContext
     {
         lock (DialogLock)
         {
-            if (_suppressDialogs)
-            {
-                _suppressDialogHandler = handler;
-                return new DialogSuppressionScope();
-            }
-
-            _suppressDialogs = true;
+            _suppressDialogCode = null;
             _suppressDialogHandler = handler;
-            UiApplication.DialogBoxShowing += ResolveDialogBox;
+
+            if (_dialogScopeCount++ == 0)
+            {
+                UiApplication.DialogBoxShowing += ResolveDialogBox;
+            }
         }
 
         return new DialogSuppressionScope();
@@ -247,30 +330,40 @@ public class RevitContext : RevitApiContext
 
     private static void ResolveDialogBox(object? sender, DialogBoxShowingEventArgs args)
     {
-        if (_suppressDialogCode.HasValue)
+        int? code;
+        Action<DialogBoxShowingEventArgs>? handler;
+
+        lock (DialogLock)
         {
-            args.OverrideResult(_suppressDialogCode.Value);
+            code = _suppressDialogCode;
+            handler = _suppressDialogHandler;
+        }
+
+        if (code.HasValue)
+        {
+            args.OverrideResult(code.Value);
             return;
         }
 
-        _suppressDialogHandler?.Invoke(args);
+        handler?.Invoke(args);
     }
 
     private sealed class DialogSuppressionScope : IDisposable
     {
-        private bool _disposed;
+        private int _disposed;
 
         public void Dispose()
         {
-            if (_disposed) return;
-            _disposed = true;
+            if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
 
             lock (DialogLock)
             {
-                _suppressDialogs = false;
-                _suppressDialogCode = null;
-                _suppressDialogHandler = null;
-                UiApplication.DialogBoxShowing -= ResolveDialogBox;
+                if (--_dialogScopeCount == 0)
+                {
+                    _suppressDialogCode = null;
+                    _suppressDialogHandler = null;
+                    UiApplication.DialogBoxShowing -= ResolveDialogBox;
+                }
             }
         }
     }

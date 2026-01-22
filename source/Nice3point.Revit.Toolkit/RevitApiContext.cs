@@ -18,14 +18,15 @@ public class RevitApiContext
 {
     //Global state
     private static readonly Lock FailureLock = new();
-    private static bool _suppressFailures;
+    private static int _failureScopeCount;
     private static bool _suppressFailureErrors;
 
     static RevitApiContext()
     {
-        var dbAssembly = AppDomain.CurrentDomain.GetAssemblies().First(assembly => assembly.GetName().Name == "RevitDBAPI");
-        var dbAssemblyMethods = dbAssembly.ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
+        var dbAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.GetName().Name == "RevitDBAPI");
+        ThrowWhen(dbAssembly is null);
 
+        var dbAssemblyMethods = dbAssembly.ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
         var getApplicationMethod = dbAssemblyMethods.FirstOrDefault(info => info.Name == "RevitApplication.getApplication_");
         ThrowWhen(getApplicationMethod is null);
 
@@ -87,15 +88,12 @@ public class RevitApiContext
     {
         lock (FailureLock)
         {
-            if (_suppressFailures)
-            {
-                _suppressFailureErrors = resolveErrors;
-                return new FailureSuppressionScope();
-            }
-
-            _suppressFailures = true;
             _suppressFailureErrors = resolveErrors;
-            Application.FailuresProcessing += ResolveFailures;
+
+            if (_failureScopeCount++ == 0)
+            {
+                Application.FailuresProcessing += ResolveFailures;
+            }
         }
 
         return new FailureSuppressionScope();
@@ -103,8 +101,16 @@ public class RevitApiContext
 
     private static void ResolveFailures(object? sender, FailuresProcessingEventArgs args)
     {
+        bool resolveErrors;
+        lock (FailureLock)
+        {
+            resolveErrors = _suppressFailureErrors;
+        }
+
         var failuresAccessor = args.GetFailuresAccessor();
-        var result = _suppressFailureErrors ? FailureUtils.ResolveFailures(failuresAccessor) : FailureUtils.DismissFailures(failuresAccessor);
+        var result = resolveErrors
+            ? FailureUtils.ResolveFailures(failuresAccessor)
+            : FailureUtils.DismissFailures(failuresAccessor);
 
         args.SetProcessingResult(result);
     }
@@ -122,17 +128,18 @@ public class RevitApiContext
 
     private sealed class FailureSuppressionScope : IDisposable
     {
-        private bool _disposed;
+        private int _disposed;
 
         public void Dispose()
         {
-            if (_disposed) return;
-            _disposed = true;
+            if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
 
             lock (FailureLock)
             {
-                _suppressFailures = false;
-                Application.FailuresProcessing -= ResolveFailures;
+                if (--_failureScopeCount == 0)
+                {
+                    Application.FailuresProcessing -= ResolveFailures;
+                }
             }
         }
     }

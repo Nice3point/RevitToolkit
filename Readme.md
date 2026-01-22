@@ -29,15 +29,21 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 
 ## Table of contents
 
-* [ExternalCommand](#externalcommand)
-* [ExternalApplication](#externalapplication)
-* [ExternalDBApplication](#externaldbapplication)
+<!-- TOC -->
+* [External Commands](#external-commands)
+  * [ExternalCommand](#externalcommand)
+  * [AsyncExternalCommand](#asyncexternalcommand)
+* [External Applications](#external-applications)
+  * [ExternalApplication](#externalapplication)
+  * [ExternalDBApplication](#externaldbapplication)
 * [External events](#external-events)
   * [ActionEventHandler](#actioneventhandler)
   * [IdlingEventHandler](#idlingeventhandler)
   * [AsyncEventHandler](#asynceventhandler)
   * [AsyncEventHandler\<T>](#asynceventhandlert)
 * [Context](#context)
+  * [RevitContext](#revitcontext)
+  * [RevitApiContext](#revitapicontext)
 * [Options](#options)
   * [FamilyLoadOptions](#familyloadoptions)
   * [DuplicateTypeNamesHandler](#duplicatetypenameshandler)
@@ -51,16 +57,21 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 * [Samples](#samples)
   * [External application flow control](#external-application-flow-control)
   * [External command flow control](#external-command-flow-control)
+<!-- TOC -->
 
 ## Features
 
-### ExternalCommand
+### External Commands
 
-Contains an implementation for **IExternalCommand**.
+The Toolkit provides base classes for Revit external commands that simplify development:
 
-Override method **Execute()** to implement and external command within Revit.
+- Automatic dependency resolution to avoid `FileNotFoundException` exceptions (dependencies are searched in the plugin folder)
+- Access to commonly used properties like `ActiveDocument`, `ActiveView`, `UiApplication`
+- Simplified method signatures — override `Execute()` instead of implementing full interface
 
-The following properties provide access to the external command execution context:
+#### ExternalCommand
+
+Implementation for **IExternalCommand**. Override `Execute()` to implement a command:
 
 ```c#
 [Transaction(TransactionMode.Manual)]
@@ -68,27 +79,58 @@ public class Command : ExternalCommand
 {
     public override void Execute()
     {
-        var title = Document.Title;
+        var title = ActiveDocument.Title;
         var viewName = ActiveView.Name;
         var username = Application.Username;
-        var selection = UiDocument.Selection;
+        var selection = ActiveUiDocument.Selection;
         var windowHandle = UiApplication.MainWindowHandle;
     }
 }
 ```
 
-**ExternalCommand** includes dependency resolution for external dependencies, to avoid `FileNotFoundException` exceptions. 
-Dependencies are searched for in the plugin folder.
+#### AsyncExternalCommand
 
-### ExternalApplication
+Implementation for asynchronous **IExternalCommand**. Override `ExecuteAsync()` for async/await support.
 
-Contains an implementation for **IExternalApplication**.
+Enables async/await patterns while maintaining execution on the Revit main thread.
+The Revit UI remains responsive during async operations through dispatcher message pumping.
+Ideal for I/O-bound operations such as HTTP requests, file operations, or database queries.
 
-Override method **OnStartup()** to execute some tasks when Revit starts.
+```c#
+[Transaction(TransactionMode.Manual)]
+public class Command : AsyncExternalCommand
+{
+    public override async Task ExecuteAsync()
+    {
+        var selectedIds = ActiveUiDocument.Selection.GetElementIds();
+    
+        using var httpClient = new HttpClient();
+        var response = await httpClient.GetStringAsync("https://example.com");
+    
+        using var transaction = new Transaction(ActiveDocument, "Update Parameters");
+        transaction.Start();
+    
+        foreach (var id in selectedIds)
+        {
+            var element = ActiveDocument.GetElement(id);
+            element?.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.Set(response);
+        }
+    
+        transaction.Commit();
+    }
+}
+```
 
-Override method **OnShutdown()** to execute some tasks when Revit shuts down.
+### External Applications
 
-The following properties provide access to the external application execution context:
+The Toolkit provides base classes for Revit external applications that simplify development:
+
+- Automatic dependency resolution to avoid `FileNotFoundException` exceptions (dependencies are searched in the plugin folder)
+- Simplified method signatures — override `OnStartup()`/`OnShutdown()` instead of implementing full interface
+
+#### ExternalApplication
+
+Implementation for **IExternalApplication**. Override `OnStartup()` and optionally `OnShutdown()`:
 
 ```c#
 public class Application : ExternalApplication
@@ -107,12 +149,9 @@ public class Application : ExternalApplication
 }
 ```
 
-**ExternalApplication** includes dependency resolution for external dependencies, to avoid `FileNotFoundException` exceptions.
-Dependencies are searched for in the plugin folder.
+#### ExternalDBApplication
 
-### ExternalDBApplication
-
-Contains an implementation for **IExternalDBApplication**.
+Implementation for **IExternalDBApplication**. Same as `ExternalApplication` but without UI access:
 
 ```c#
 public class Application : ExternalDBApplication
@@ -126,13 +165,6 @@ public class Application : ExternalDBApplication
     }
 }
 ```
-
-Override method **OnStartup()** to execute some tasks when Revit starts.
-
-Override method **OnShutdown()** to execute some tasks when Revit shuts down. You don't have to override this method if you don't plan to use it.
-
-**ExternalDBApplication** includes dependency resolution for external dependencies, to avoid `FileNotFoundException` exceptions.
-Dependencies are searched for in the plugin folder.
 
 ### External events
 
@@ -179,6 +211,15 @@ Deleted
 Command completed
 ```
 
+You can set an optional exception handler to be called when an action throws an exception:
+
+```c#
+_actionEventHandler.SetExceptionHandler(exception =>
+{
+    Debug.WriteLine($"Error: {exception.Message}");
+});
+```
+
 #### IdlingEventHandler
 
 With this handler, you can queue delegates for method calls when Revit becomes available again.
@@ -210,6 +251,15 @@ Command completed
 Idling
 ```
 
+You can set an optional exception handler to be called when an action throws an exception:
+
+```c#
+_idlingEventHandler.SetExceptionHandler(exception =>
+{
+    Debug.WriteLine($"Error: {exception.Message}");
+});
+```
+
 #### AsyncEventHandler
 
 With this handler, you can wait for the external event to complete.
@@ -218,7 +268,7 @@ Suitable for cases where you need to maintain the sequence of code execution.
 
 Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context.
 
-Calling the handler in a Revit context will call it immediately without adding it to the queue and awaiting with `await` keyword will not cause a context switch, 
+Calling the handler in a Revit context will call it immediately without adding it to the queue and awaiting with `await` keyword will not cause a context switch,
 and you can still call API requests in the main Revit thread.
 
 ```c#
@@ -243,6 +293,15 @@ Debug output:
 ```text
 Doors deleted
 Command completed
+```
+
+You can pass a cancellation token to cancel the operation before it executes:
+
+```c#
+await _asyncEventHandler.RaiseAsync(application =>
+{
+    // Action
+}, cancellationToken);
 ```
 
 #### AsyncEventHandler\<T>
@@ -284,30 +343,43 @@ Windows count 17
 Command completed
 ```
 
+You can pass a cancellation token to cancel the operation before it executes:
+
+```c#
+var count = await _asyncEventHandler.RaiseAsync(application =>
+{
+    // Action
+    return 42;
+}, cancellationToken);
+```
+
 ### Context
 
-Interface to global information about an application environment.
+Interfaces to global information about an application environment.
 
 It allows access to application-specific data, as well as up-calls for application-level operations such as dialog and failure handling.
 
+#### RevitContext
+
+Provides members for accessing the Revit application context at the UI level.
+
 List of available environment properties:
 
-- Context.Application
-- Context.UiApplication
-- Context.UiControlledApplication
-- Context.ActiveDocument
-- Context.ActiveUiDocument
-- Context.ActiveView
-- Context.ActiveGraphicalView
-- Context.IsRevitInApiMode
+- RevitContext.UiApplication
+- RevitContext.UiControlledApplication
+- RevitContext.ActiveDocument
+- RevitContext.ActiveUiDocument
+- RevitContext.ActiveView
+- RevitContext.ActiveGraphicalView
+- RevitContext.IsRevitInApiMode
 
-**Context** data can be accessed from any application execution location:
+**RevitContext** data can be accessed from any application execution location:
 
 ```C#
 public void Execute()
 {
-    Context.ActiveDocument.Delete(elementId);
-    Context.ActiveView = view;
+    RevitContext.ActiveDocument.Delete(elementId);
+    RevitContext.ActiveView = view;
 }
 ```
 
@@ -318,7 +390,7 @@ A direct API call should be used if Revit is currently within an API context, ot
 ```C#
 public void Execute()
 {
-    if (Context.IsRevitInApiMode)
+    if (RevitContext.IsRevitInApiMode)
     {
         ModifyDocument();
     }
@@ -329,46 +401,81 @@ public void Execute()
 }
 ```
 
-**Context** provides access to global application handlers for dialog and failure management:
+**RevitContext** provides access to dialog suppression using disposable scopes:
 
 ```C#
-try
+using (RevitContext.BeginDialogSuppressionScope())
 {
-    Context.SuppressDialogs();
-    Context.SuppressDialogs(resultCode: 2);
-    Context.SuppressDialogs(args =>
-    {
-        var result = args.DialogId == "TaskDialog_ModelUpdater" ? TaskDialogResult.Ok : TaskDialogResult.Close;
-        args.OverrideResult((int)result);
-    });
-    
     //User operations
     LoadFamilies();
 }
-finally
+// Dialogs are restored automatically
+```
+
+You can specify a result code for the suppressed dialogs:
+
+```C#
+using (RevitContext.BeginDialogSuppressionScope(resultCode: 2))
 {
-    Context.RestoreDialogs();
+    LoadFamilies();
+}
+
+using (RevitContext.BeginDialogSuppressionScope(TaskDialogResult.Ok))
+{
+    LoadFamilies();
+}
+
+using (RevitContext.BeginDialogSuppressionScope(MessageBoxResult.Yes))
+{
+    LoadFamilies();
 }
 ```
 
+Or use a custom handler for more control:
+
+```C#
+using (RevitContext.BeginDialogSuppressionScope(args =>
+{
+    var result = args.DialogId == "TaskDialog_ModelUpdater" ? TaskDialogResult.Ok : TaskDialogResult.Close;
+    args.OverrideResult((int)result);
+}))
+{
+    LoadFamilies();
+}
+```
+
+#### RevitApiContext
+
+Provides members for accessing the Revit application context at the database level.
+
+List of available environment properties:
+
+- RevitApiContext.Application
+
+**RevitApiContext** provides access to failure suppression using disposable scopes.
+
 By default, Revit uses manual error resolution control with user interaction.
-Context provides automatic resolution of all failures without notifying the user or interrupting the program.
+RevitApiContext provides automatic resolution of all failures without notifying the user or interrupting the program:
+
+```C#
+using (RevitApiContext.BeginFailureSuppressionScope())
+{
+    using var transaction = new Transaction(document, "Operation");
+    transaction.Start();
+    // Operations that may cause failures
+    transaction.Commit();
+}
+// Failure handling is restored automatically
+```
 
 By default, all errors are handled for successful completion of the transaction.
 However, if you want to cancel the transaction and undo all failed changes, pass false as the parameter:
 
 ```C#
-try
+using (RevitApiContext.BeginFailureSuppressionScope(resolveErrors: false))
 {
-    Context.SuppressFailures();
-    Context.SuppressFailures(resolveErrors: false);
-    
     //User transactions
     ModifyDocument();
-}
-finally
-{
-    Context.RestoreFailures();
 }
 ```
 
@@ -406,7 +513,7 @@ Contains an implementation for **ISaveSharedCoordinatesCallback**.
 Provides a handler for control Revit when trying to unload or reload a Revit link with changes in shared coordinates.
 
 ```c#
-var linkType = elementId.ToElement<RevitLinkType>(Context.ActiveDocument);
+var linkType = elementId.ToElement<RevitLinkType>(RevitContext.ActiveDocument);
 linkType.Unload(new SaveSharedCoordinatesCallback());
 linkType.Unload(new SaveSharedCoordinatesCallback(SaveModifiedLinksOptions.DoNotSaveLinks));
 linkType.Unload(new SaveSharedCoordinatesCallback(type =>
@@ -493,25 +600,30 @@ Provides auxiliary components
 Provides handlers to resolve dependencies for Revit 2025 and older.
 
 ```c#
-try
+using (ResolveHelper.BeginAssemblyResolveScope<Application>())
 {
-    ResolveHelper.BeginAssemblyResolve<Application>();
     window.Show();
 }
-finally
+// Assembly resolution is restored automatically
+```
+
+You can also pass a type directly:
+
+```c#
+using (ResolveHelper.BeginAssemblyResolveScope(typeof(ViewModel)))
 {
-    ResolveHelper.EndAssemblyResolve();
+    return new Window();
 }
 ```
 
-Enabled by default for `ExternalCommand`, `ExternalApplication` and `ExternalDBApplication`.
+Enabled by default for `ExternalCommand`, `AsyncExternalCommand`, `ExternalApplication` and `ExternalDBApplication`.
 
 ### Samples
 
 #### External application flow control
 
-Adding a button to the Revit ribbon based on the username. 
-`IExternalApplication` does not provide access to `Application`, but you can use the **Context** class to access the environment data to get the username:
+Adding a button to the Revit ribbon based on the username.
+`IExternalApplication` does not provide access to `Application`, but you can use the **RevitApiContext** class to access the environment data to get the username:
 
 ```c#                                                                                
 public class Application : ExternalApplication                                       
@@ -521,7 +633,7 @@ public class Application : ExternalApplication
         var panel = Application.CreatePanel("Commands", "RevitAddin");
         panel.AddPushButton<Command>("Execute");
         
-        var userName = Context.Application.Username;                                 
+        var userName = RevitApiContext.Application.Username;                                 
         if (userName == "Administrator")                                                
         {                                                                            
             var panel = Application.CreatePanel("Secret Panel", "RevitAddin");
@@ -573,25 +685,18 @@ public class Command : ExternalCommand
     public override void Execute()
     {
         //Suppresses all possible warnings and errors during command execution
-        Context.SuppressDialogs();
-        Context.SuppressFailures();
-        
-        try
+        using (RevitContext.BeginDialogSuppressionScope())
+        using (RevitApiContext.BeginFailureSuppressionScope())
         {
             //Action
-            var selectedIds = UiDocument.Selection.GetElementIds();
+            var selectedIds = ActiveUiDocument.Selection.GetElementIds();
             
-            using var transaction = new Transaction(Document);
+            using var transaction = new Transaction(ActiveDocument);
             transaction.Start("Delete elements");
-            Document.Delete(selectedIds);
+            ActiveDocument.Delete(selectedIds);
             transaction.Commit();
         }
-        finally
-        {
-            //Restore normal application error and dialogs handling when exiting an external command            
-            Context.RestoreDialogs();
-            Context.RestoreFailures();
-        }
+        //Normal application error and dialogs handling is restored automatically
     }
 }
 ```
@@ -604,14 +709,14 @@ public class Command : ExternalCommand
 {
     public override void Execute()
     {
-        var selectedIds = UiDocument.Selection.GetElementIds();
+        var selectedIds = ActiveUiDocument.Selection.GetElementIds();
         
         try
         {
             //Action
-            using var transaction = new Transaction(Document);
+            using var transaction = new Transaction(ActiveDocument);
             transaction.Start("Delete elements");
-            Document.Delete(selectedIds);
+            ActiveDocument.Delete(selectedIds);
             transaction.Commit();
         }
         catch
@@ -621,7 +726,7 @@ public class Command : ExternalCommand
             ErrorMessage = "Unable to delete selected elements";
             foreach (var selectedId in selectedIds)
             {
-                ElementSet.Insert(selectedId.ToElement(Document));
+                ElementSet.Insert(selectedId.ToElement(ActiveDocument));
             }
         }
     }

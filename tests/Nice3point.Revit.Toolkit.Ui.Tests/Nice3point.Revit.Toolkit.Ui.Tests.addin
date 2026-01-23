@@ -1,0 +1,14 @@
+﻿<RevitAddIns>
+    <AddIn Type="Application">
+        <Name>Nice3point.Revit.Toolkit.Ui.Tests</Name>
+        <Assembly>Nice3point.Revit.Toolkit.Ui.Tests\Nice3point.Revit.Toolkit.Ui.Tests.dll</Assembly>
+        <AddInId>4B6CAFB7-C76D-416E-BB9B-B8A815D9F9C0</AddInId>
+        <FullClassName>Nice3point.Revit.Toolkit.Ui.Tests.Application</FullClassName>
+        <VendorId>Development</VendorId>
+        <VendorDescription></VendorDescription>
+    </AddIn>
+    <ManifestSettings>
+        <UseRevitContext>False</UseRevitContext>
+        <ContextName>Nice3point.Revit.Toolkit.Ui.Tests</ContextName>
+    </ManifestSettings>
+</RevitAddIns>

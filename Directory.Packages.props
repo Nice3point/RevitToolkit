@@ -14,6 +14,7 @@
         <PackageVersion Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
         <PackageVersion Include="Nice3point.Revit.Api.UIFramework" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
         <PackageVersion Include="Nice3point.Revit.Api.UIFrameworkServices" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
+        <PackageVersion Include="Nice3point.Revit.Extensions" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
         <PackageVersion Include="Nice3point.TUnit.Revit" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
 
         <!-- Build Automation -->

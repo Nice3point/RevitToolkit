@@ -51,6 +51,10 @@
             <Build Solution="Debug.R20|*" Project="false" />
             <Build Solution="Release.R20|*" Project="false" />
         </Project>
+        <Project Path="tests/Nice3point.Revit.Toolkit.Ui.Tests/Nice3point.Revit.Toolkit.Ui.Tests.csproj">
+            <BuildType Solution="Debug.R20|*" Project="Debug.R21" />
+            <BuildType Solution="Release.R20|*" Project="Debug.R21" />
+        </Project>
     </Folder>
     <Project Path="source/Nice3point.Revit.Toolkit/Nice3point.Revit.Toolkit.csproj" />
 </Solution>

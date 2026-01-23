@@ -1,0 +1,29 @@
+<Project Sdk="Nice3point.Revit.Sdk/6.0.2">
+
+    <PropertyGroup>
+        <UseWPF>true</UseWPF>
+        <DeployAddin>true</DeployAddin>
+        <LaunchRevit>true</LaunchRevit>
+        <IsRepackable>false</IsRepackable>
+        <EnableDynamicLoading>true</EnableDynamicLoading>
+        <Configurations>Debug.R20;Debug.R21;Debug.R22;Debug.R23;Debug.R24;Debug.R25;Debug.R26;Debug.R27</Configurations>
+        <Configurations>$(Configurations);Release.R20;Release.R21;Release.R22;Release.R23;Release.R24;Release.R25;Release.R26;Release.R27</Configurations>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI"/>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI"/>
+        <PackageReference Include="Nice3point.Revit.Extensions"/>
+        <PackageReference Include="JetBrains.Annotations"/>
+        <PackageReference Include="Shouldly"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit\Nice3point.Revit.Toolkit.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Resource Include="Resources\Icons\**\*.png"/>
+    </ItemGroup>
+
+</Project>

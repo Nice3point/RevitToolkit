@@ -1,10 +1,11 @@
 ﻿using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Diagnostics;
 using Autodesk.Revit.UI;
 using JetBrains.Annotations;
 
 // ReSharper disable once CheckNamespace
-namespace Nice3point.Revit.Toolkit.External.Handlers;
+namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
 ///     Handler to provide access to modify the Revit document asynchronously.
@@ -12,11 +13,7 @@ namespace Nice3point.Revit.Toolkit.External.Handlers;
 [PublicAPI]
 public sealed class AsyncEventHandler : ExternalEventHandler
 {
-#if NET
     private readonly ConcurrentQueue<(Action<UIApplication> Action, TaskCompletionSource Tcs, CancellationToken CancellationToken)> _queue = new();
-#else
-    private readonly ConcurrentQueue<(Action<UIApplication> Action, TaskCompletionSource<object?> Tcs, CancellationToken CancellationToken)> _queue = new();
-#endif
 
     /// <summary>Callback invoked by Revit. Not used to be called in user code.</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -33,11 +30,7 @@ public sealed class AsyncEventHandler : ExternalEventHandler
             try
             {
                 item.Action(uiApplication);
-#if NET
                 item.Tcs.SetResult();
-#else
-                item.Tcs.SetResult(null);
-#endif
             }
             catch (Exception exception)
             {
@@ -74,11 +67,7 @@ public sealed class AsyncEventHandler : ExternalEventHandler
             }
         }
 
-#if NET
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-#else
-        var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-#endif
         _queue.Enqueue((handler, tcs, cancellationToken));
         Raise();
 

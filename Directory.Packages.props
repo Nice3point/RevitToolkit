@@ -14,8 +14,8 @@
         <PackageVersion Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
         <PackageVersion Include="Nice3point.Revit.Api.UIFramework" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
         <PackageVersion Include="Nice3point.Revit.Api.UIFrameworkServices" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
-        <PackageVersion Include="Nice3point.Revit.Extensions" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
-        <PackageVersion Include="Nice3point.TUnit.Revit" Version="$(RevitVersion).*-*" Condition="$(RevitVersion) != ''"/>
+        <PackageVersion Include="Nice3point.Revit.Extensions" Version="$(RevitVersion).*" Condition="$(RevitVersion) != ''"/>
+        <PackageVersion Include="Nice3point.TUnit.Revit" Version="$(RevitVersion).*" Condition="$(RevitVersion) != ''"/>
 
         <!-- Build Automation -->
         <PackageVersion Include="Sourcy.DotNet" Version="1.1.1"/>
@@ -34,6 +34,26 @@
         <PackageVersion Include="JetBrains.Annotations" Version="2025.2.4"/>
         <PackageVersion Include="JetBrains.Annotations.Sources" Version="2025.2.4"/>
         <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.102"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Extensions pinned versions -->
+        <PackageVersion Update="Nice3point.Revit.Extensions" Version="2021.5.0-preview.1.20260120" Condition="$(RevitVersion) == '2021'"/>
+        <PackageVersion Update="Nice3point.Revit.Extensions" Version="2022.5.0-preview.1.20260120" Condition="$(RevitVersion) == '2022'"/>
+        <PackageVersion Update="Nice3point.Revit.Extensions" Version="2023.5.0-preview.1.20260120" Condition="$(RevitVersion) == '2023'"/>
+        <PackageVersion Update="Nice3point.Revit.Extensions" Version="2024.3.0-preview.1.20260120" Condition="$(RevitVersion) == '2024'"/>
+        <PackageVersion Update="Nice3point.Revit.Extensions" Version="2025.2.0-preview.1.20260120" Condition="$(RevitVersion) == '2025'"/>
+        <PackageVersion Update="Nice3point.Revit.Extensions" Version="2026.1.0-preview.1.20260120" Condition="$(RevitVersion) == '2026'"/>
+        <PackageVersion Update="Nice3point.Revit.Extensions" Version="2027.0.0-preview.1.20260120" Condition="$(RevitVersion) == '2027'"/>
+
+        <!-- TUnit pinned versions -->
+        <PackageVersion Update="Nice3point.TUnit.Revit" Version="2021.1.0-preview.2.20260203" Condition="$(RevitVersion) == '2021'"/>
+        <PackageVersion Update="Nice3point.TUnit.Revit" Version="2022.1.0-preview.2.20260203" Condition="$(RevitVersion) == '2022'"/>
+        <PackageVersion Update="Nice3point.TUnit.Revit" Version="2023.1.0-preview.2.20260203" Condition="$(RevitVersion) == '2023'"/>
+        <PackageVersion Update="Nice3point.TUnit.Revit" Version="2024.1.0-preview.2.20260203" Condition="$(RevitVersion) == '2024'"/>
+        <PackageVersion Update="Nice3point.TUnit.Revit" Version="2025.1.0-preview.2.20260203" Condition="$(RevitVersion) == '2025'"/>
+        <PackageVersion Update="Nice3point.TUnit.Revit" Version="2026.1.0-preview.2.20260203" Condition="$(RevitVersion) == '2026'"/>
+        <PackageVersion Update="Nice3point.TUnit.Revit" Version="2027.0.0-preview.2.20260203" Condition="$(RevitVersion) == '2027'"/>
     </ItemGroup>
 
     <!-- Development References -->

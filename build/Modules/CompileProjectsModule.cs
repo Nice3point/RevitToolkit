@@ -22,7 +22,7 @@ public sealed class CompileProjectsModule : Module
         }
     }
 
-    private static async Task<CommandResult> CompileAsync(IPipelineContext context, string configuration, CancellationToken cancellationToken)
+    private static async Task<CommandResult> CompileAsync(IModuleContext context, string configuration, CancellationToken cancellationToken)
     {
         return await context.DotNet().Build(new DotNetBuildOptions
         {

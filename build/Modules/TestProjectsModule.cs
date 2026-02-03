@@ -31,7 +31,7 @@ public sealed class TestProjectsModule : Module
     /// <summary>
     ///     Test the add-in project for the specified configuration.
     /// </summary>
-    private static async Task<CommandResult> CompileAsync(IPipelineContext context, string configuration, CancellationToken cancellationToken)
+    private static async Task<CommandResult> CompileAsync(IModuleContext context, string configuration, CancellationToken cancellationToken)
     {
         return await context.DotNet().Test(new DotNetTestOptions
         {

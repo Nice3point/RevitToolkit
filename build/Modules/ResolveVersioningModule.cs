@@ -29,7 +29,7 @@ public sealed class ResolveVersioningModule(IOptions<PublishOptions> publishOpti
     /// <summary>
     ///     Resolve versions using the specified version string.
     /// </summary>
-    private static async Task<ResolveVersioningResult> CreateFromVersionStringAsync(IPipelineContext context, string version)
+    private static async Task<ResolveVersioningResult> CreateFromVersionStringAsync(IModuleContext context, string version)
     {
         var versionParts = version.Split('-');
 
@@ -46,7 +46,7 @@ public sealed class ResolveVersioningModule(IOptions<PublishOptions> publishOpti
     /// <summary>
     ///     Retrieves the previous version from the git history.
     /// </summary>
-    private static async Task<string> FetchPreviousVersionAsync(IPipelineContext context)
+    private static async Task<string> FetchPreviousVersionAsync(IModuleContext context)
     {
         var describeResult = await context.Git().Commands.Describe(
             new GitDescribeOptions

@@ -2,7 +2,6 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
 using Nice3point.Revit.Toolkit.External;
-using Nice3point.Revit.Toolkit.External.Handlers;
 using Nice3point.Revit.Toolkit.Ui.Tests.Engine.Commands;
 using Shouldly;
 

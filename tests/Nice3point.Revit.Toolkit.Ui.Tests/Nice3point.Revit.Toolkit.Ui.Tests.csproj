@@ -19,6 +19,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Reference Include="System.Net.Http" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'"/>
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit\Nice3point.Revit.Toolkit.csproj"/>
     </ItemGroup>
 

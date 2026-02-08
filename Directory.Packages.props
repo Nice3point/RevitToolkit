@@ -19,10 +19,10 @@
 
         <!-- Build Automation -->
         <PackageVersion Include="Sourcy.DotNet" Version="1.1.1"/>
-        <PackageVersion Include="ModularPipelines" Version="3.1.6"/>
-        <PackageVersion Include="ModularPipelines.Git" Version="3.1.6"/>
-        <PackageVersion Include="ModularPipelines.GitHub" Version="3.1.6"/>
-        <PackageVersion Include="ModularPipelines.DotNet" Version="3.1.6"/>
+        <PackageVersion Include="ModularPipelines" Version="3.1.90"/>
+        <PackageVersion Include="ModularPipelines.Git" Version="3.1.90"/>
+        <PackageVersion Include="ModularPipelines.GitHub" Version="3.1.90"/>
+        <PackageVersion Include="ModularPipelines.DotNet" Version="3.1.90"/>
         <PackageVersion Include="Microsoft.VisualStudio.SolutionPersistence" Version="1.0.52"/>
 
         <!-- Testing -->

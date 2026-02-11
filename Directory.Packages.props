@@ -33,7 +33,7 @@
         <!-- Development Tools -->
         <PackageVersion Include="JetBrains.Annotations" Version="2025.2.4"/>
         <PackageVersion Include="JetBrains.Annotations.Sources" Version="2025.2.4"/>
-        <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.102"/>
+        <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.103"/>
     </ItemGroup>
 
     <ItemGroup>

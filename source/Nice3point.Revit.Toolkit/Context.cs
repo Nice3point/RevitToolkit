@@ -1,7 +1,4 @@
-﻿#if NET8_0_OR_GREATER
-using System.Runtime.CompilerServices;
-#endif
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB.Events;
@@ -64,7 +61,7 @@ public static class Context
         };
 
 #if NET8_0_OR_GREATER
-        Application = CreateApplication(proxy);
+        Application = UnsafeAccessors.CreateApplication(proxy);
 #else
         var applicationType = typeof(Application);
         var applicationConstructor = applicationType.GetConstructor(internalFlags, null, [proxyType], null);
@@ -101,7 +98,7 @@ public static class Context
         ReplaceMessage = "Replace with RevitContext.UiControlledApplication")]
     public static UIControlledApplication UiControlledApplication =>
 #if NET8_0_OR_GREATER
-        CreateUiControlledApplication(UiApplication);
+        UnsafeAccessors.CreateUiControlledApplication(UiApplication);
 #else
         (UIControlledApplication)Activator.CreateInstance(
             typeof(UIControlledApplication),
@@ -346,14 +343,6 @@ public static class Context
 
         args.SetProcessingResult(result);
     }
-
-#if NET8_0_OR_GREATER
-    [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
-    private static extern Application CreateApplication(object proxy);
-
-    [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
-    private static extern UIControlledApplication CreateUiControlledApplication(UIApplication uiApplication);
-#endif
 
     /// <summary>
     ///     Dynamically throw when the <paramref name="condition"/> is <c>true</c>.

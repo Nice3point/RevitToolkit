@@ -117,7 +117,11 @@ public static class ResolveHelper
 
     private static void OverrideDomainResolvers()
     {
-#if NET
+#if NET8_0_OR_GREATER
+        ref var resolversRef = ref UnsafeAccessors.GetAssemblyResolveField(null!);
+        var resolvers = resolversRef;
+        resolversRef = null;
+#elif NET
         var loadContextType = typeof(AssemblyLoadContext);
         var resolversField = loadContextType.GetField("AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;
         var resolvers = (ResolveEventHandler?)resolversField.GetValue(null);
@@ -223,7 +227,9 @@ public static class ResolveHelper
 
         AppDomain.CurrentDomain.AssemblyResolve -= OnAssemblyResolve;
 
-#if NET
+#if NET8_0_OR_GREATER
+        UnsafeAccessors.GetAssemblyResolveField(null!) = (ResolveEventHandler?)_domainResolvers;
+#elif NET
         var loadContextType = typeof(AssemblyLoadContext);
         var resolversField = loadContextType.GetField("AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;
         resolversField.SetValue(null, _domainResolvers);

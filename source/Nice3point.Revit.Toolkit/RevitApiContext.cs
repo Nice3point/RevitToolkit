@@ -1,7 +1,4 @@
-﻿#if NET8_0_OR_GREATER
-using System.Runtime.CompilerServices;
-#endif
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB.Events;
@@ -41,7 +38,7 @@ public class RevitApiContext
         ThrowWhen(proxy is null);
 
 #if NET8_0_OR_GREATER
-        Application = CreateApplication(proxy);
+        Application = UnsafeAccessors.CreateApplication(proxy);
 #else
         var applicationType = typeof(Application);
         var applicationConstructor = applicationType.GetConstructor(internalFlags, null, [proxyType], null);
@@ -144,8 +141,4 @@ public class RevitApiContext
         }
     }
 
-#if NET8_0_OR_GREATER
-    [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
-    private static extern Application CreateApplication(object proxy);
-#endif
 }

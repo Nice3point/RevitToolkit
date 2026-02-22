@@ -1,7 +1,4 @@
-﻿#if NET8_0_OR_GREATER
-using System.Runtime.CompilerServices;
-#endif
-using System.Reflection;
+﻿using System.Reflection;
 using System.Windows;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
@@ -54,7 +51,7 @@ public class RevitContext : RevitApiContext
     /// </summary>
     public static UIControlledApplication UiControlledApplication =>
 #if NET8_0_OR_GREATER
-        CreateUiControlledApplication(UiApplication);
+        UnsafeAccessors.CreateUiControlledApplication(UiApplication);
 #else
         (UIControlledApplication)Activator.CreateInstance(
             typeof(UIControlledApplication),
@@ -368,8 +365,4 @@ public class RevitContext : RevitApiContext
         }
     }
 
-#if NET8_0_OR_GREATER
-    [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
-    private static extern UIControlledApplication CreateUiControlledApplication(UIApplication uiApplication);
-#endif
 }

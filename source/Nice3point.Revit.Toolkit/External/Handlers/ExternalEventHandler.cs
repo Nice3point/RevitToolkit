@@ -11,14 +11,17 @@ namespace Nice3point.Revit.Toolkit.External;
 public abstract class ExternalEventHandler : IExternalEventHandler
 {
     private string? _identifier;
-    private readonly ExternalEvent _externalEvent;
+    private readonly Autodesk.Revit.UI.ExternalEvent _externalEvent;
 
     /// <summary>
     ///     Creates an instance of external event.
     /// </summary>
     protected ExternalEventHandler()
     {
-        _externalEvent = ExternalEvent.Create(this);
+        using (RevitContext.BeginApiContextScope())
+        {
+            _externalEvent = Autodesk.Revit.UI.ExternalEvent.Create(this);
+        }
     }
 
     /// <summary>
@@ -50,7 +53,7 @@ public abstract class ExternalEventHandler : IExternalEventHandler
     ///     the event would be added to the event queue and its handler will
     ///     be executed in the next event-processing cycle.
     /// </returns>
-    public void Raise()
+    public virtual void Raise()
     {
         _externalEvent.Raise();
     }

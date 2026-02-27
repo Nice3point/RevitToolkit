@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Windows;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
@@ -12,24 +13,35 @@ namespace Nice3point.Revit.Toolkit;
 [PublicAPI]
 public class RevitContext : RevitApiContext
 {
-    //Global state
+    private static readonly Func<bool> GetIsRevitInApiMode;
+    private static readonly IntPtr IncrementConstructorPointer;
+    private static readonly IntPtr IncrementDestructorPointer;
+    
     private static readonly Lock DialogLock = new();
     private static int _dialogScopeCount;
     private static int? _suppressDialogCode;
     private static Action<DialogBoxShowingEventArgs>? _suppressDialogHandler;
-    private static readonly Func<bool> GetIsRevitInApiMode;
 
     static RevitContext()
     {
-        var apiUiAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.GetName().Name == "APIUIAPI");
-        ThrowWhen(apiUiAssembly is null);
+        var assemblies = FindAssemblies("APIUIAPI", "RevitAPIUI");
 
-        var apiAssemblyMethods = apiUiAssembly.ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
-        var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.singletonfactory");
+        var apiAssemblyMethods = assemblies[0].ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
+        var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(method => method.Name == "APICallDepthManager.singletonfactory");
         ThrowWhen(apiCallDepthManagerMethod is null);
 
-        var isRevitInApiModeMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.isRevitInAPIMode");
+        var isRevitInApiModeMethod = apiAssemblyMethods.FirstOrDefault(method => method.Name == "APICallDepthManager.isRevitInAPIMode");
         ThrowWhen(isRevitInApiModeMethod is null);
+        
+        var uiAssemblyMethods = assemblies[1].ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
+        var incrementConstructor = uiAssemblyMethods.FirstOrDefault(method => method.Name == "IncrementAPICallDepth.{ctor}");
+        ThrowWhen(incrementConstructor is null);
+
+        var incrementDestructor = uiAssemblyMethods.FirstOrDefault(method => method.Name == "IncrementAPICallDepth.{dtor}");
+        ThrowWhen(incrementDestructor is null);
+
+        IncrementConstructorPointer = incrementConstructor.MethodHandle.GetFunctionPointer();
+        IncrementDestructorPointer = incrementDestructor.MethodHandle.GetFunctionPointer();
 
         GetIsRevitInApiMode = () =>
         {
@@ -324,6 +336,11 @@ public class RevitContext : RevitApiContext
 
         return new DialogSuppressionScope();
     }
+    
+    internal static IDisposable BeginApiContextScope()
+    {
+        return new ApiContextScope(IncrementConstructorPointer, IncrementDestructorPointer);
+    }
 
     private static void ResolveDialogBox(object? sender, DialogBoxShowingEventArgs args)
     {
@@ -343,6 +360,33 @@ public class RevitContext : RevitApiContext
         }
 
         handler?.Invoke(args);
+    }
+
+    private sealed class ApiContextScope : IDisposable
+    {
+        private readonly IntPtr _memory;
+        private readonly IntPtr _deconstructorPointer;
+        private int _disposed;
+
+        internal ApiContextScope(IntPtr constructorPointer, IntPtr deconstructorPointer)
+        {
+            _deconstructorPointer = deconstructorPointer;
+            _memory = Marshal.AllocHGlobal(8);
+            Marshal.WriteInt64(_memory, 0);
+
+            var constructorDelegate = Marshal.GetDelegateForFunctionPointer<IncrementCtor>(constructorPointer);
+            constructorDelegate(_memory);
+        }
+
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
+
+            var deconstructorDelegate = Marshal.GetDelegateForFunctionPointer<IncrementDtor>(_deconstructorPointer);
+            deconstructorDelegate(_memory);
+
+            Marshal.FreeHGlobal(_memory);
+        }
     }
 
     private sealed class DialogSuppressionScope : IDisposable
@@ -365,4 +409,9 @@ public class RevitContext : RevitApiContext
         }
     }
 
+    [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+    private delegate IntPtr IncrementCtor(IntPtr self);
+
+    [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+    private delegate void IncrementDtor(IntPtr self);
 }

@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Reflection;
 using JetBrains.Annotations;
-#if NET
+#if !NET8_0_OR_GREATER && NET
 using System.Runtime.Loader;
 #endif
 

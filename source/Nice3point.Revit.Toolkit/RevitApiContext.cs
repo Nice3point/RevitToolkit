@@ -13,21 +13,20 @@ namespace Nice3point.Revit.Toolkit;
 [PublicAPI]
 public class RevitApiContext
 {
-    //Global state
     private static readonly Lock FailureLock = new();
+
     private static int _failureScopeCount;
     private static bool _suppressFailureErrors;
 
     static RevitApiContext()
     {
-        var dbAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.GetName().Name == "RevitDBAPI");
-        ThrowWhen(dbAssembly is null);
+        var assemblies = FindAssemblies("RevitDBAPI");
 
-        var dbAssemblyMethods = dbAssembly.ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
+        var dbAssemblyMethods = assemblies[0].ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
         var getApplicationMethod = dbAssemblyMethods.FirstOrDefault(info => info.Name == "RevitApplication.getApplication_");
         ThrowWhen(getApplicationMethod is null);
 
-        var proxyType = dbAssembly.DefinedTypes.FirstOrDefault(info => info.FullName == "Autodesk.Revit.Proxy.ApplicationServices.ApplicationProxy");
+        var proxyType = assemblies[0].DefinedTypes.FirstOrDefault(info => info.FullName == "Autodesk.Revit.Proxy.ApplicationServices.ApplicationProxy");
         ThrowWhen(proxyType is null);
 
         const BindingFlags internalFlags = BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance;
@@ -96,6 +95,28 @@ public class RevitApiContext
         return new FailureSuppressionScope();
     }
 
+    /// <summary>
+    ///     Finds assemblies loaded in the current application domain that match the specified names.
+    /// </summary>
+    protected static Assembly[] FindAssemblies(params string[] names)
+    {
+        var remaining = new HashSet<string>(names);
+        var result = new Dictionary<string, Assembly>(names.Length);
+
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            var name = assembly.GetName().Name;
+            if (name is not null && remaining.Remove(name))
+            {
+                result[name] = assembly;
+                if (remaining.Count == 0) break;
+            }
+        }
+
+        ThrowWhen(remaining.Count > 0);
+        return names.Select(name => result[name]).ToArray();
+    }
+
     private static void ResolveFailures(object? sender, FailuresProcessingEventArgs args)
     {
         bool resolveErrors;
@@ -140,5 +161,4 @@ public class RevitApiContext
             }
         }
     }
-
 }

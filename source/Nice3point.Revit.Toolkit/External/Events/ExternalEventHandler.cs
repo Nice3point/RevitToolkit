@@ -44,14 +44,19 @@ public abstract class ExternalEventHandler : IExternalEventHandler
     /// <summary>
     ///     Raises (signals) the external event, instructing Revit to execute the handler within the Revit API context.
     /// </summary>
+    /// <returns>
+    ///     The result of event raising request. If the request is 'Accepted',
+    ///     the event would be added to the event queue and its handler will
+    ///     be executed in the next event-processing cycle.
+    /// </returns>
     /// <remarks>
     ///     Revit will wait until it is ready to process the event and then it will execute its event handler
     ///     by calling the <see cref="Execute"/> method. Revit processes external events only when no other commands
     ///     or edit modes are currently active in Revit, which is the same policy like the one that applies
     ///     to evoking external commands.
     /// </remarks>
-    public virtual void Raise()
+    public virtual ExternalEventRequest Raise()
     {
-        var eventRequest = _externalEvent.Raise();
+        return _externalEvent.Raise();
     }
 }

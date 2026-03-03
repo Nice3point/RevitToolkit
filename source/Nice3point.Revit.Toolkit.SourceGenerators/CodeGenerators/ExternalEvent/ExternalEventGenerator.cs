@@ -13,6 +13,8 @@ namespace Nice3point.Revit.Toolkit.SourceGenerators;
 [Generator(LanguageNames.CSharp)]
 public sealed partial class ExternalEventGenerator : IIncrementalGenerator
 {
+    private const string GeneratorName = "Nice3point.Revit.Toolkit.SourceGenerators.ExternalEventGenerator";
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var methodResults = context.SyntaxProvider

@@ -6,8 +6,6 @@ partial class ExternalEventGenerator
 {
     internal static class Emitter
     {
-        private const string GeneratorName = "Nice3point.Revit.Toolkit.SourceGenerators.ExternalEventGenerator";
-        
         private static readonly string AssemblyVersion = typeof(ExternalEventGenerator).Assembly.GetName().Version?.ToString() ?? "1.0.0";
 
         /// <summary>
@@ -149,12 +147,16 @@ partial class ExternalEventGenerator
 
             if (useFieldKeyword)
             {
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"public {staticModifier}{externalEvent} {info.MethodName}Event => field ??= new {externalEvent}({info.MethodName}{optionsArgument});");
             }
             else
             {
                 var backingFieldName = BuildBackingFieldName(info.MethodName, "Event");
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"private {staticModifier}{externalEvent}? {backingFieldName};");
+                writer.AppendLine();
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"public {staticModifier}{externalEvent} {info.MethodName}Event => {backingFieldName} ??= new {externalEvent}({info.MethodName}{optionsArgument});");
             }
         }
@@ -173,12 +175,16 @@ partial class ExternalEventGenerator
 
             if (useFieldKeyword)
             {
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"public {staticModifier}{asyncExternalEvent} {info.MethodName}AsyncEvent => field ??= new {asyncExternalEvent}({info.MethodName}{optionsArgument});");
             }
             else
             {
                 var backingFieldName = BuildBackingFieldName(info.MethodName, "AsyncEvent");
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"private {staticModifier}{asyncExternalEvent}? {backingFieldName};");
+                writer.AppendLine();
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"public {staticModifier}{asyncExternalEvent} {info.MethodName}AsyncEvent => {backingFieldName} ??= new {asyncExternalEvent}({info.MethodName}{optionsArgument});");
             }
         }
@@ -197,12 +203,16 @@ partial class ExternalEventGenerator
 
             if (useFieldKeyword)
             {
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"public {staticModifier}{genericTypeName} {info.MethodName}AsyncEvent => field ??= new {genericTypeName}({info.MethodName}{optionsArgument});");
             }
             else
             {
                 var backingFieldName = BuildBackingFieldName(info.MethodName, "AsyncEvent");
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"private {staticModifier}{genericTypeName}? {backingFieldName};");
+                writer.AppendLine();
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"public {staticModifier}{genericTypeName} {info.MethodName}AsyncEvent => {backingFieldName} ??= new {genericTypeName}({info.MethodName}{optionsArgument});");
             }
         }
@@ -221,12 +231,16 @@ partial class ExternalEventGenerator
 
             if (useFieldKeyword)
             {
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"public {staticModifier}{className} {info.MethodName}Event => field ??= new {className}({info.MethodName}{optionsArgument});");
             }
             else
             {
                 var backingFieldName = BuildBackingFieldName(info.MethodName, "Event");
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"private {staticModifier}{className}? {backingFieldName};");
+                writer.AppendLine();
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"public {staticModifier}{className} {info.MethodName}Event => {backingFieldName} ??= new {className}({info.MethodName}{optionsArgument});");
             }
         }
@@ -245,12 +259,16 @@ partial class ExternalEventGenerator
 
             if (useFieldKeyword)
             {
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"public {staticModifier}{className} {info.MethodName}AsyncEvent => field ??= new {className}({info.MethodName}{optionsArgument});");
             }
             else
             {
                 var backingFieldName = BuildBackingFieldName(info.MethodName, "AsyncEvent");
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"private {staticModifier}{className}? {backingFieldName};");
+                writer.AppendLine();
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"public {staticModifier}{className} {info.MethodName}AsyncEvent => {backingFieldName} ??= new {className}({info.MethodName}{optionsArgument});");
             }
         }

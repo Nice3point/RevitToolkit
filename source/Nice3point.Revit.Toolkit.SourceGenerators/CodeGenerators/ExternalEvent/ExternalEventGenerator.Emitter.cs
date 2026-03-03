@@ -10,7 +10,7 @@ partial class ExternalEventGenerator
 
         /// <summary>
         ///     Generates the complete source code for an external event method,
-        ///     including properties and nested handler classes.
+        ///     including properties, records, and nested handler classes where needed.
         /// </summary>
         public static string Generate(ExternalEventInfo info, bool useFieldKeyword)
         {
@@ -19,8 +19,8 @@ partial class ExternalEventGenerator
             var namespaceBlock = EmitNamespaceBlock(writer, info);
             var typeBlocks = EmitTypeHierarchy(writer, info);
 
+            EmitArgsRecord(writer, info);
             EmitProperties(writer, info, useFieldKeyword);
-            EmitNestedClasses(writer, info);
 
             CloseBlocks(typeBlocks);
             namespaceBlock?.Dispose();
@@ -58,67 +58,151 @@ partial class ExternalEventGenerator
         }
 
         /// <summary>
-        ///     Emits event properties (sync and/or async) based on method return type and parameters.
+        ///     Emits a sealed record for methods with 2+ extra parameters,
+        ///     bundling them into a single argument type.
         /// </summary>
-        private static void EmitProperties(CodeWriter writer, ExternalEventInfo info, bool useFieldKeyword)
+        private static void EmitArgsRecord(CodeWriter writer, ExternalEventInfo info)
         {
-            var hasExtraParameters = info.ExtraParameters.Length > 0;
-
-            if (info.IsVoidReturn)
-            {
-                if (hasExtraParameters)
-                {
-                    EmitCustomSyncProperty(writer, info, useFieldKeyword);
-                }
-                else
-                {
-                    EmitSimpleSyncProperty(writer, info, useFieldKeyword);
-                }
-
-                writer.AppendLine();
-
-                if (hasExtraParameters)
-                {
-                    EmitCustomAsyncProperty(writer, info, useFieldKeyword);
-                }
-                else
-                {
-                    EmitSimpleAsyncProperty(writer, info, useFieldKeyword);
-                }
-            }
-            else
-            {
-                if (hasExtraParameters)
-                {
-                    EmitCustomAsyncProperty(writer, info, useFieldKeyword);
-                }
-                else
-                {
-                    EmitSimpleAsyncGenericProperty(writer, info, useFieldKeyword);
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Emits nested event handler classes for methods with extra parameters.
-        /// </summary>
-        private static void EmitNestedClasses(CodeWriter writer, ExternalEventInfo info)
-        {
-            if (info.ExtraParameters.Length == 0)
+            if (info.ExtraParameters.Length < 2)
             {
                 return;
             }
 
+            var recordName = $"{info.MethodName}Args";
+            var recordParameters = new List<string>();
+            for (var paramIndex = 0; paramIndex < info.ExtraParameters.Length; paramIndex++)
+            {
+                var parameter = info.ExtraParameters[paramIndex];
+                var pascalName = ToPascalCase(parameter.Name);
+                recordParameters.Add($"{parameter.FullyQualifiedType} {pascalName}");
+            }
+
+            EmitGeneratedCodeAttributes(writer);
+            writer.AppendLine($"public sealed record {recordName}({string.Join(", ", recordParameters)});");
             writer.AppendLine();
+        }
+
+        /// <summary>
+        ///     Emits event properties (sync and/or async) based on method return type and parameters.
+        /// </summary>
+        private static void EmitProperties(CodeWriter writer, ExternalEventInfo info, bool useFieldKeyword)
+        {
             if (info.IsVoidReturn)
             {
-                EmitCustomSyncClass(writer, info);
-                writer.AppendLine();
-                EmitCustomAsyncVoidClass(writer, info);
+                EmitSyncProperty(writer, info, useFieldKeyword);
+
+                if (info.ExtraParameters.Length == 0)
+                {
+                    writer.AppendLine();
+                    EmitAsyncVoidProperty(writer, info, useFieldKeyword);
+                }
             }
             else
             {
-                EmitCustomAsyncGenericClass(writer, info);
+                EmitAsyncResultProperty(writer, info, useFieldKeyword);
+            }
+        }
+
+        /// <summary>
+        ///     Emits a synchronous property using <c>ExternalEvent</c> or <c>ExternalEvent&lt;T&gt;</c>.
+        /// </summary>
+        private static void EmitSyncProperty(CodeWriter writer, ExternalEventInfo info, bool useFieldKeyword)
+        {
+            var staticModifier = info.IsStatic ? "static " : "";
+            var optionsArgument = info.AllowDirectInvocation
+                ? $", {WellKnownFullyQualifiedClassNames.ExternalEventOptions}.AllowDirectInvocation"
+                : "";
+
+            if (info.ExtraParameters.Length == 0)
+            {
+                // ExternalEvent (no args)
+                var eventType = WellKnownFullyQualifiedClassNames.ExternalEvent.WithGlobalPrefix;
+                EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
+                    eventType, "Event",
+                    $"new {eventType}({info.MethodName}{optionsArgument})");
+            }
+            else if (info.ExtraParameters.Length == 1)
+            {
+                // ExternalEvent<T> (single arg)
+                var argType = info.ExtraParameters[0].FullyQualifiedType;
+                var eventType = $"{WellKnownFullyQualifiedClassNames.ExternalEvent.WithGlobalPrefix}<{argType}>";
+                var interfaceType = $"{WellKnownFullyQualifiedClassNames.ExternalEventInterface.WithGlobalPrefix}<{argType}>";
+                EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
+                    interfaceType, "Event",
+                    $"new {eventType}({info.MethodName}{optionsArgument})");
+            }
+            else
+            {
+                // ExternalEvent<RecordType> (multi args, with lambda)
+                var recordName = $"{info.MethodName}Args";
+                var eventType = $"{WellKnownFullyQualifiedClassNames.ExternalEvent.WithGlobalPrefix}<{recordName}>";
+                var interfaceType = $"{WellKnownFullyQualifiedClassNames.ExternalEventInterface.WithGlobalPrefix}<{recordName}>";
+                var lambda = BuildRecordLambda(info, "args");
+                EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
+                    interfaceType, "Event",
+                    $"new {eventType}(({BuildLambdaParams(info)}) => {lambda}{optionsArgument})");
+            }
+        }
+
+        /// <summary>
+        ///     Emits an asynchronous property for void methods without extra parameters,
+        ///     using the built-in <c>AsyncExternalEvent</c> type.
+        /// </summary>
+        private static void EmitAsyncVoidProperty(CodeWriter writer, ExternalEventInfo info, bool useFieldKeyword)
+        {
+            var staticModifier = info.IsStatic ? "static " : "";
+            var optionsArgument = info.AllowDirectInvocation
+                ? $", {WellKnownFullyQualifiedClassNames.ExternalEventOptions}.AllowDirectInvocation"
+                : "";
+
+            var eventType = WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix;
+            EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
+                eventType, "AsyncEvent",
+                $"new {eventType}({info.MethodName}{optionsArgument})");
+        }
+
+        /// <summary>
+        ///     Emits an asynchronous property for methods that return a value.
+        ///     For 0 extra params, uses <c>AsyncExternalEvent&lt;TResult&gt;</c>.
+        ///     For 1 extra param, uses <c>AsyncExternalEvent&lt;T, TResult&gt;</c>.
+        ///     For 2+ extra params, uses <c>AsyncExternalEvent&lt;RecordType, TResult&gt;</c> with lambda.
+        /// </summary>
+        private static void EmitAsyncResultProperty(CodeWriter writer, ExternalEventInfo info, bool useFieldKeyword)
+        {
+            var staticModifier = info.IsStatic ? "static " : "";
+            var returnType = info.ReturnTypeFullyQualified!;
+            var optionsArgument = info.AllowDirectInvocation
+                ? $", {WellKnownFullyQualifiedClassNames.ExternalEventOptions}.AllowDirectInvocation"
+                : "";
+
+            if (info.ExtraParameters.Length == 0)
+            {
+                // AsyncExternalEvent<TResult> (no args)
+                var eventType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix}<{returnType}>";
+                EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
+                    eventType, "AsyncEvent",
+                    $"new {eventType}({info.MethodName}{optionsArgument})");
+            }
+            else if (info.ExtraParameters.Length == 1)
+            {
+                // AsyncExternalEvent<T, TResult> (single arg)
+                var argType = info.ExtraParameters[0].FullyQualifiedType;
+                var eventType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix}<{argType}, {returnType}>";
+                var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEventGenericInterface.WithGlobalPrefix}<{argType}, {returnType}>";
+                EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
+                    interfaceType, "AsyncEvent",
+                    $"new {eventType}({info.MethodName}{optionsArgument})");
+            }
+            else
+            {
+                // AsyncExternalEvent<RecordType, TResult> (multi args, with lambda)
+                var recordName = $"{info.MethodName}Args";
+                var eventType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix}<{recordName}, {returnType}>";
+                var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEventGenericInterface.WithGlobalPrefix}<{recordName}, {returnType}>";
+                var lambda = BuildRecordLambda(info, "args");
+                EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
+                    interfaceType, "AsyncEvent",
+                    $"new {eventType}(({BuildLambdaParams(info)}) => {lambda}{optionsArgument})");
             }
         }
 
@@ -134,171 +218,31 @@ partial class ExternalEventGenerator
         }
 
         /// <summary>
-        ///     Emits a synchronous property using built-in <see cref="WellKnownFullyQualifiedClassNames.ExternalEvent"/> type
-        ///     for methods without extra parameters.
+        ///     Emits a property with optional backing field, including generated code attributes.
         /// </summary>
-        private static void EmitSimpleSyncProperty(CodeWriter writer, ExternalEventInfo info, bool useFieldKeyword)
+        private static void EmitPropertyWithBackingField(
+            CodeWriter writer,
+            ExternalEventInfo info,
+            bool useFieldKeyword,
+            string staticModifier,
+            string propertyType,
+            string propertySuffix,
+            string initializer)
         {
-            var staticModifier = info.IsStatic ? "static " : "";
-            var optionsArgument = info.AllowDirectInvocation
-                ? $", {WellKnownFullyQualifiedClassNames.ExternalEventOptions}.AllowDirectInvocation"
-                : "";
-            var externalEvent = WellKnownFullyQualifiedClassNames.ExternalEvent.WithGlobalPrefix;
-
             if (useFieldKeyword)
             {
                 EmitGeneratedCodeAttributes(writer);
-                writer.AppendLine($"public {staticModifier}{externalEvent} {info.MethodName}Event => field ??= new {externalEvent}({info.MethodName}{optionsArgument});");
+                writer.AppendLine($"public {staticModifier}{propertyType} {info.MethodName}{propertySuffix} => field ??= {initializer};");
             }
             else
             {
-                var backingFieldName = BuildBackingFieldName(info.MethodName, "Event");
+                var backingFieldName = BuildBackingFieldName(info.MethodName, propertySuffix);
                 EmitGeneratedCodeAttributes(writer);
-                writer.AppendLine($"private {staticModifier}{externalEvent}? {backingFieldName};");
+                writer.AppendLine($"private {staticModifier}{propertyType}? {backingFieldName};");
                 writer.AppendLine();
                 EmitGeneratedCodeAttributes(writer);
-                writer.AppendLine($"public {staticModifier}{externalEvent} {info.MethodName}Event => {backingFieldName} ??= new {externalEvent}({info.MethodName}{optionsArgument});");
+                writer.AppendLine($"public {staticModifier}{propertyType} {info.MethodName}{propertySuffix} => {backingFieldName} ??= {initializer};");
             }
-        }
-
-        /// <summary>
-        ///     Emits an asynchronous property using built-in <see cref="WellKnownFullyQualifiedClassNames.AsyncExternalEvent"/> type
-        ///     for void methods without extra parameters.
-        /// </summary>
-        private static void EmitSimpleAsyncProperty(CodeWriter writer, ExternalEventInfo info, bool useFieldKeyword)
-        {
-            var staticModifier = info.IsStatic ? "static " : "";
-            var optionsArgument = info.AllowDirectInvocation
-                ? $", {WellKnownFullyQualifiedClassNames.ExternalEventOptions}.AllowDirectInvocation"
-                : "";
-            var asyncExternalEvent = WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix;
-
-            if (useFieldKeyword)
-            {
-                EmitGeneratedCodeAttributes(writer);
-                writer.AppendLine($"public {staticModifier}{asyncExternalEvent} {info.MethodName}AsyncEvent => field ??= new {asyncExternalEvent}({info.MethodName}{optionsArgument});");
-            }
-            else
-            {
-                var backingFieldName = BuildBackingFieldName(info.MethodName, "AsyncEvent");
-                EmitGeneratedCodeAttributes(writer);
-                writer.AppendLine($"private {staticModifier}{asyncExternalEvent}? {backingFieldName};");
-                writer.AppendLine();
-                EmitGeneratedCodeAttributes(writer);
-                writer.AppendLine($"public {staticModifier}{asyncExternalEvent} {info.MethodName}AsyncEvent => {backingFieldName} ??= new {asyncExternalEvent}({info.MethodName}{optionsArgument});");
-            }
-        }
-
-        /// <summary>
-        ///     Emits an asynchronous generic property using <see cref="WellKnownFullyQualifiedClassNames.AsyncExternalEvent"/>
-        ///     with a type parameter for methods that return a value, without extra parameters.
-        /// </summary>
-        private static void EmitSimpleAsyncGenericProperty(CodeWriter writer, ExternalEventInfo info, bool useFieldKeyword)
-        {
-            var staticModifier = info.IsStatic ? "static " : "";
-            var optionsArgument = info.AllowDirectInvocation
-                ? $", {WellKnownFullyQualifiedClassNames.ExternalEventOptions}.AllowDirectInvocation"
-                : "";
-            var genericTypeName = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix}<{info.ReturnTypeFullyQualified}>";
-
-            if (useFieldKeyword)
-            {
-                EmitGeneratedCodeAttributes(writer);
-                writer.AppendLine($"public {staticModifier}{genericTypeName} {info.MethodName}AsyncEvent => field ??= new {genericTypeName}({info.MethodName}{optionsArgument});");
-            }
-            else
-            {
-                var backingFieldName = BuildBackingFieldName(info.MethodName, "AsyncEvent");
-                EmitGeneratedCodeAttributes(writer);
-                writer.AppendLine($"private {staticModifier}{genericTypeName}? {backingFieldName};");
-                writer.AppendLine();
-                EmitGeneratedCodeAttributes(writer);
-                writer.AppendLine($"public {staticModifier}{genericTypeName} {info.MethodName}AsyncEvent => {backingFieldName} ??= new {genericTypeName}({info.MethodName}{optionsArgument});");
-            }
-        }
-
-        /// <summary>
-        ///     Emits a synchronous property using a generated nested class
-        ///     for methods with extra parameters.
-        /// </summary>
-        private static void EmitCustomSyncProperty(CodeWriter writer, ExternalEventInfo info, bool useFieldKeyword)
-        {
-            var staticModifier = info.IsStatic ? "static " : "";
-            var className = $"{info.MethodName}ExternalEvent";
-            var optionsArgument = info.AllowDirectInvocation
-                ? $", {WellKnownFullyQualifiedClassNames.ExternalEventOptions}.AllowDirectInvocation"
-                : "";
-
-            if (useFieldKeyword)
-            {
-                EmitGeneratedCodeAttributes(writer);
-                writer.AppendLine($"public {staticModifier}{className} {info.MethodName}Event => field ??= new {className}({info.MethodName}{optionsArgument});");
-            }
-            else
-            {
-                var backingFieldName = BuildBackingFieldName(info.MethodName, "Event");
-                EmitGeneratedCodeAttributes(writer);
-                writer.AppendLine($"private {staticModifier}{className}? {backingFieldName};");
-                writer.AppendLine();
-                EmitGeneratedCodeAttributes(writer);
-                writer.AppendLine($"public {staticModifier}{className} {info.MethodName}Event => {backingFieldName} ??= new {className}({info.MethodName}{optionsArgument});");
-            }
-        }
-
-        /// <summary>
-        ///     Emits an asynchronous property using a generated nested class
-        ///     for methods with extra parameters.
-        /// </summary>
-        private static void EmitCustomAsyncProperty(CodeWriter writer, ExternalEventInfo info, bool useFieldKeyword)
-        {
-            var staticModifier = info.IsStatic ? "static " : "";
-            var className = $"{info.MethodName}AsyncExternalEvent";
-            var optionsArgument = info.AllowDirectInvocation
-                ? $", {WellKnownFullyQualifiedClassNames.ExternalEventOptions}.AllowDirectInvocation"
-                : "";
-
-            if (useFieldKeyword)
-            {
-                EmitGeneratedCodeAttributes(writer);
-                writer.AppendLine($"public {staticModifier}{className} {info.MethodName}AsyncEvent => field ??= new {className}({info.MethodName}{optionsArgument});");
-            }
-            else
-            {
-                var backingFieldName = BuildBackingFieldName(info.MethodName, "AsyncEvent");
-                EmitGeneratedCodeAttributes(writer);
-                writer.AppendLine($"private {staticModifier}{className}? {backingFieldName};");
-                writer.AppendLine();
-                EmitGeneratedCodeAttributes(writer);
-                writer.AppendLine($"public {staticModifier}{className} {info.MethodName}AsyncEvent => {backingFieldName} ??= new {className}({info.MethodName}{optionsArgument});");
-            }
-        }
-
-        /// <summary>
-        ///     Builds the fully qualified delegate type (Action or Func) for the method signature,
-        ///     including UIApplication parameter and extra parameters.
-        /// </summary>
-        private static string BuildDelegateType(ExternalEventInfo info)
-        {
-            var parameterTypes = new List<string>();
-            if (info.HasUiApplicationParam)
-            {
-                parameterTypes.Add(WellKnownFullyQualifiedClassNames.UiApplication.WithGlobalPrefix);
-            }
-
-            foreach (var parameter in info.ExtraParameters)
-            {
-                parameterTypes.Add(parameter.FullyQualifiedType);
-            }
-
-            if (info.IsVoidReturn)
-            {
-                return parameterTypes.Count == 0
-                    ? WellKnownFullyQualifiedClassNames.Action.WithGlobalPrefix
-                    : $"{WellKnownFullyQualifiedClassNames.Action.WithGlobalPrefix}<{string.Join(", ", parameterTypes)}>";
-            }
-
-            parameterTypes.Add(info.ReturnTypeFullyQualified!);
-            return $"{WellKnownFullyQualifiedClassNames.Func.WithGlobalPrefix}<{string.Join(", ", parameterTypes)}>";
         }
 
         /// <summary>
@@ -307,215 +251,41 @@ partial class ExternalEventGenerator
         /// </summary>
         private static void EmitGeneratedCodeAttributes(CodeWriter writer)
         {
-            writer.AppendLine($"[global::System.CodeDom.Compiler.GeneratedCode(\"{GeneratorName}\", \"{AssemblyVersion}\")]");
             writer.AppendLine("[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]");
+            writer.AppendLine($"[global::System.CodeDom.Compiler.GeneratedCode(\"{GeneratorName}\", \"{AssemblyVersion}\")]");
         }
 
         /// <summary>
-        ///     Emits a synchronous nested handler class for void methods with extra parameters.
+        ///     Builds the lambda expression that unpacks a record into method arguments.
         /// </summary>
-        private static void EmitCustomSyncClass(CodeWriter writer, ExternalEventInfo info)
+        private static string BuildRecordLambda(ExternalEventInfo info, string argsParamName)
         {
-            var className = $"{info.MethodName}ExternalEvent";
-            var delegateType = BuildDelegateType(info);
-            var hasOptions = info.AllowDirectInvocation;
-
-            var constructorParameters = $"{delegateType} handler";
-            if (hasOptions)
+            var arguments = new List<string>();
+            if (info.HasUiApplicationParam)
             {
-                constructorParameters += $", {WellKnownFullyQualifiedClassNames.ExternalEventOptions} options";
+                arguments.Add("application");
             }
 
-            EmitGeneratedCodeAttributes(writer);
-            using (writer.BeginBlock($"public sealed class {className}({constructorParameters}) : {WellKnownFullyQualifiedClassNames.ExternalEventHandler}, {WellKnownFullyQualifiedClassNames.ExternalEventInterface}"))
+            for (var paramIndex = 0; paramIndex < info.ExtraParameters.Length; paramIndex++)
             {
-                for (var paramIndex = 0; paramIndex < info.ExtraParameters.Length; paramIndex++)
-                {
-                    writer.AppendLine($"private {info.ExtraParameters[paramIndex].FullyQualifiedType} _arg{paramIndex + 1};");
-                }
-
-                writer.AppendLine();
-
-                using (writer.BeginBlock($"public override void Execute({WellKnownFullyQualifiedClassNames.UiApplication} uiApplication)"))
-                {
-                    var invokeArguments = BuildInvokeArguments(info, "uiApplication");
-                    writer.AppendLine($"handler.Invoke({invokeArguments});");
-                }
-
-                writer.AppendLine();
-
-                var raiseParameters = BuildRaiseParameters(info);
-                using (writer.BeginBlock($"public void Raise({raiseParameters})"))
-                {
-                    EmitArgumentAssignments(writer, info);
-
-                    if (hasOptions)
-                    {
-                        writer.AppendLine();
-                        using (writer.BeginBlock($"if ((options & {WellKnownFullyQualifiedClassNames.ExternalEventOptions}.AllowDirectInvocation) != 0 && {WellKnownFullyQualifiedClassNames.RevitContext}.IsRevitInApiMode)"))
-                        {
-                            writer.AppendLine($"Execute({WellKnownFullyQualifiedClassNames.RevitContext}.UiApplication);");
-                            writer.AppendLine("return;");
-                        }
-                    }
-
-                    writer.AppendLine();
-                    writer.AppendLine("base.Raise();");
-                }
+                var pascalName = ToPascalCase(info.ExtraParameters[paramIndex].Name);
+                arguments.Add($"{argsParamName}.{pascalName}");
             }
+
+            return $"{info.MethodName}({string.Join(", ", arguments)})";
         }
 
         /// <summary>
-        ///     Emits an asynchronous nested handler class for void methods with extra parameters.
+        ///     Builds the lambda parameter list for record-based event constructors.
         /// </summary>
-        private static void EmitCustomAsyncVoidClass(CodeWriter writer, ExternalEventInfo info)
+        private static string BuildLambdaParams(ExternalEventInfo info)
         {
-            var className = $"{info.MethodName}AsyncExternalEvent";
-            var delegateType = BuildDelegateType(info);
-            var hasOptions = info.AllowDirectInvocation;
-
-            var constructorParameters = $"{delegateType} handler";
-            if (hasOptions)
+            if (info.HasUiApplicationParam)
             {
-                constructorParameters += $", {WellKnownFullyQualifiedClassNames.ExternalEventOptions} options";
+                return "application, args";
             }
 
-            EmitGeneratedCodeAttributes(writer);
-            using (writer.BeginBlock($"public sealed class {className}({constructorParameters}) : {WellKnownFullyQualifiedClassNames.ExternalEventHandler}, {WellKnownFullyQualifiedClassNames.AsyncExternalEventInterface}"))
-            {
-                for (var paramIndex = 0; paramIndex < info.ExtraParameters.Length; paramIndex++)
-                {
-                    writer.AppendLine($"private {info.ExtraParameters[paramIndex].FullyQualifiedType} _arg{paramIndex + 1};");
-                }
-
-                writer.AppendLine($"private {WellKnownFullyQualifiedClassNames.TaskCompletionSource}? _taskCompletionSource;");
-                writer.AppendLine();
-
-                using (writer.BeginBlock($"public override void Execute({WellKnownFullyQualifiedClassNames.UiApplication} uiApplication)"))
-                {
-                    using (writer.BeginBlock("try"))
-                    {
-                        var invokeArguments = BuildInvokeArguments(info, "uiApplication");
-                        writer.AppendLine($"handler.Invoke({invokeArguments});");
-                        writer.AppendLine("_taskCompletionSource?.SetResult();");
-                    }
-
-                    using (writer.BeginBlock($"catch ({WellKnownFullyQualifiedClassNames.Exception} exception)"))
-                    {
-                        writer.AppendLine("_taskCompletionSource?.SetException(exception);");
-                    }
-                }
-
-                writer.AppendLine();
-
-                var raiseParameters = BuildRaiseParameters(info);
-                using (writer.BeginBlock($"public {WellKnownFullyQualifiedClassNames.Task} RaiseAsync({raiseParameters})"))
-                {
-                    EmitArgumentAssignments(writer, info);
-
-                    if (hasOptions)
-                    {
-                        writer.AppendLine();
-                        using (writer.BeginBlock($"if ((options & {WellKnownFullyQualifiedClassNames.ExternalEventOptions}.AllowDirectInvocation) != 0 && {WellKnownFullyQualifiedClassNames.RevitContext}.IsRevitInApiMode)"))
-                        {
-                            using (writer.BeginBlock("try"))
-                            {
-                                var directInvokeArguments = BuildInvokeArguments(info, $"{WellKnownFullyQualifiedClassNames.RevitContext}.UiApplication");
-                                writer.AppendLine($"handler.Invoke({directInvokeArguments});");
-                                writer.AppendLine($"return {WellKnownFullyQualifiedClassNames.Task}.CompletedTask;");
-                            }
-
-                            using (writer.BeginBlock($"catch ({WellKnownFullyQualifiedClassNames.Exception} exception)"))
-                            {
-                                writer.AppendLine($"return {WellKnownFullyQualifiedClassNames.Task}.FromException(exception);");
-                            }
-                        }
-                    }
-
-                    writer.AppendLine();
-                    writer.AppendLine($"_taskCompletionSource = new {WellKnownFullyQualifiedClassNames.TaskCompletionSource}({WellKnownFullyQualifiedClassNames.TaskCreationOptions}.RunContinuationsAsynchronously);");
-                    writer.AppendLine("base.Raise();");
-                    writer.AppendLine("return _taskCompletionSource.Task;");
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Emits an asynchronous nested handler class for methods that return a value, with extra parameters.
-        /// </summary>
-        private static void EmitCustomAsyncGenericClass(CodeWriter writer, ExternalEventInfo info)
-        {
-            var className = $"{info.MethodName}AsyncExternalEvent";
-            var delegateType = BuildDelegateType(info);
-            var returnType = info.ReturnTypeFullyQualified!;
-            var hasOptions = info.AllowDirectInvocation;
-            var taskOfReturnType = $"{WellKnownFullyQualifiedClassNames.Task}<{returnType}>";
-            var taskCompletionSourceOfReturnType = $"{WellKnownFullyQualifiedClassNames.TaskCompletionSource}<{returnType}>";
-
-            var constructorParameters = $"{delegateType} handler";
-            if (hasOptions)
-            {
-                constructorParameters += $", {WellKnownFullyQualifiedClassNames.ExternalEventOptions} options";
-            }
-
-            EmitGeneratedCodeAttributes(writer);
-            using (writer.BeginBlock($"public sealed class {className}({constructorParameters}) : {WellKnownFullyQualifiedClassNames.ExternalEventHandler}, {WellKnownFullyQualifiedClassNames.AsyncExternalEventInterface}<{returnType}>"))
-            {
-                for (var paramIndex = 0; paramIndex < info.ExtraParameters.Length; paramIndex++)
-                {
-                    writer.AppendLine($"private {info.ExtraParameters[paramIndex].FullyQualifiedType} _arg{paramIndex + 1};");
-                }
-
-                writer.AppendLine($"private {taskCompletionSourceOfReturnType}? _taskCompletionSource;");
-                writer.AppendLine();
-
-                using (writer.BeginBlock($"public override void Execute({WellKnownFullyQualifiedClassNames.UiApplication} uiApplication)"))
-                {
-                    using (writer.BeginBlock("try"))
-                    {
-                        var invokeArguments = BuildInvokeArguments(info, "uiApplication");
-                        writer.AppendLine($"var result = handler.Invoke({invokeArguments});");
-                        writer.AppendLine("_taskCompletionSource?.SetResult(result);");
-                    }
-
-                    using (writer.BeginBlock($"catch ({WellKnownFullyQualifiedClassNames.Exception} exception)"))
-                    {
-                        writer.AppendLine("_taskCompletionSource?.SetException(exception);");
-                    }
-                }
-
-                writer.AppendLine();
-
-                var raiseParameters = BuildRaiseParameters(info);
-                using (writer.BeginBlock($"public {taskOfReturnType} RaiseAsync({raiseParameters})"))
-                {
-                    EmitArgumentAssignments(writer, info);
-
-                    if (hasOptions)
-                    {
-                        writer.AppendLine();
-                        using (writer.BeginBlock($"if ((options & {WellKnownFullyQualifiedClassNames.ExternalEventOptions}.AllowDirectInvocation) != 0 && {WellKnownFullyQualifiedClassNames.RevitContext}.IsRevitInApiMode)"))
-                        {
-                            using (writer.BeginBlock("try"))
-                            {
-                                var directInvokeArguments = BuildInvokeArguments(info, $"{WellKnownFullyQualifiedClassNames.RevitContext}.UiApplication");
-                                writer.AppendLine($"var result = handler.Invoke({directInvokeArguments});");
-                                writer.AppendLine($"return {WellKnownFullyQualifiedClassNames.Task}.FromResult<{returnType}>(result);");
-                            }
-
-                            using (writer.BeginBlock($"catch ({WellKnownFullyQualifiedClassNames.Exception} exception)"))
-                            {
-                                writer.AppendLine($"return {WellKnownFullyQualifiedClassNames.Task}.FromException<{returnType}>(exception);");
-                            }
-                        }
-                    }
-
-                    writer.AppendLine();
-                    writer.AppendLine($"_taskCompletionSource = new {taskCompletionSourceOfReturnType}({WellKnownFullyQualifiedClassNames.TaskCreationOptions}.RunContinuationsAsynchronously);");
-                    writer.AppendLine("base.Raise();");
-                    writer.AppendLine("return _taskCompletionSource.Task;");
-                }
-            }
+            return "args";
         }
 
         /// <summary>
@@ -527,47 +297,16 @@ partial class ExternalEventGenerator
         }
 
         /// <summary>
-        ///     Builds the comma-separated invoke arguments including UIApplication and extra parameter fields.
+        ///     Converts a camelCase parameter name to PascalCase for record properties.
         /// </summary>
-        private static string BuildInvokeArguments(ExternalEventInfo info, string uiApplicationExpression)
+        private static string ToPascalCase(string name)
         {
-            var arguments = new List<string>();
-            if (info.HasUiApplicationParam)
+            if (string.IsNullOrEmpty(name))
             {
-                arguments.Add(uiApplicationExpression);
+                return name;
             }
 
-            for (var paramIndex = 0; paramIndex < info.ExtraParameters.Length; paramIndex++)
-            {
-                arguments.Add($"_arg{paramIndex + 1}");
-            }
-
-            return string.Join(", ", arguments);
-        }
-
-        /// <summary>
-        ///     Builds the comma-separated parameter declarations for the Raise/RaiseAsync methods.
-        /// </summary>
-        private static string BuildRaiseParameters(ExternalEventInfo info)
-        {
-            var parameters = new List<string>();
-            for (var paramIndex = 0; paramIndex < info.ExtraParameters.Length; paramIndex++)
-            {
-                parameters.Add($"{info.ExtraParameters[paramIndex].FullyQualifiedType} arg{paramIndex + 1}");
-            }
-
-            return string.Join(", ", parameters);
-        }
-
-        /// <summary>
-        ///     Emits assignment statements that copy Raise method arguments to backing fields.
-        /// </summary>
-        private static void EmitArgumentAssignments(CodeWriter writer, ExternalEventInfo info)
-        {
-            for (var paramIndex = 0; paramIndex < info.ExtraParameters.Length; paramIndex++)
-            {
-                writer.AppendLine($"_arg{paramIndex + 1} = arg{paramIndex + 1};");
-            }
+            return char.ToUpperInvariant(name[0]) + name.Substring(1);
         }
     }
 }

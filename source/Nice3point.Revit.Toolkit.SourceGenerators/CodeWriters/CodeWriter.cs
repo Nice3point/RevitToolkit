@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Text;
 
 namespace Nice3point.Revit.Toolkit.SourceGenerators;
@@ -12,7 +12,7 @@ internal sealed class CodeWriter : ICodeWriter
     private readonly StringBuilder _builder = new();
     private readonly string _indentString;
     private int _indentLevel;
-    private bool _isNewLine;
+    private bool _atLineStart = true;
 
     private static readonly ConcurrentDictionary<string, string> IndentCache = new();
 
@@ -26,11 +26,6 @@ internal sealed class CodeWriter : ICodeWriter
             _builder.AppendLine("#pragma warning disable");
             _builder.AppendLine("#nullable enable");
             _builder.AppendLine();
-            _isNewLine = true;
-        }
-        else
-        {
-            _isNewLine = false;
         }
     }
 
@@ -71,10 +66,10 @@ internal sealed class CodeWriter : ICodeWriter
             return this;
         }
 
-        if (_isNewLine)
+        if (_atLineStart)
         {
             _builder.Append(GetIndentation(_indentLevel));
-            _isNewLine = false;
+            _atLineStart = false;
         }
 
         _builder.Append(text);
@@ -82,15 +77,32 @@ internal sealed class CodeWriter : ICodeWriter
     }
 
     /// <summary>
-    ///     Appends text and then ensures a newline.
+    ///     Appends a line of text with proper indentation.
+    ///     When called without arguments or with an empty string, emits a blank line.
     /// </summary>
     public ICodeWriter AppendLine(string text = "")
     {
-        Append(text);
-        EnsureNewLine();
+        if (string.IsNullOrEmpty(text))
+        {
+            _builder.AppendLine();
+        }
+        else
+        {
+            if (_atLineStart)
+            {
+                _builder.Append(GetIndentation(_indentLevel));
+            }
+
+            _builder.AppendLine(text);
+        }
+
+        _atLineStart = true;
         return this;
     }
 
+    /// <summary>
+    ///     Appends multiple lines of code.
+    /// </summary>
     public ICodeWriter AppendLines(IEnumerable<string> lines)
     {
         foreach (var line in lines)
@@ -102,26 +114,11 @@ internal sealed class CodeWriter : ICodeWriter
     }
 
     /// <summary>
-    ///     Ensures that the next text appended will start on a new line.
-    /// </summary>
-    public ICodeWriter EnsureNewLine()
-    {
-        if (!_isNewLine)
-        {
-            _builder.AppendLine();
-            _isNewLine = true;
-        }
-
-        return this;
-    }
-
-    /// <summary>
     ///     Increases the indentation level.
     /// </summary>
     public ICodeWriter Indent()
     {
         _indentLevel++;
-        EnsureNewLine();
         return this;
     }
 
@@ -135,27 +132,29 @@ internal sealed class CodeWriter : ICodeWriter
             _indentLevel--;
         }
 
-        EnsureNewLine();
         return this;
     }
 
     /// <summary>
-    ///     Begins a code block with automatic formatting.
+    ///     Begins a code block with automatic formatting, handling opening brace and indentation.
+    ///     Returns an IDisposable that will unindent and append closing brace when disposed.
     /// </summary>
     public IDisposable BeginBlock(string leadingText = "")
     {
         if (!string.IsNullOrEmpty(leadingText))
         {
-            Append(leadingText);
+            AppendLine(leadingText);
         }
 
-        AppendLine();
         AppendLine("{");
         Indent();
 
         return new IndentScope(this);
     }
 
+    /// <summary>
+    ///     Appends a code block with automatic braces and indentation.
+    /// </summary>
     public ICodeWriter AppendBlock(string header, Action<ICodeWriter> body)
     {
         using (BeginBlock(header))
@@ -166,6 +165,9 @@ internal sealed class CodeWriter : ICodeWriter
         return this;
     }
 
+    /// <summary>
+    ///     Conditionally appends a line.
+    /// </summary>
     public ICodeWriter AppendLineIf(bool condition, string line)
     {
         if (condition)
@@ -176,11 +178,17 @@ internal sealed class CodeWriter : ICodeWriter
         return this;
     }
 
+    /// <summary>
+    ///     Gets the generated code as a string.
+    /// </summary>
     public override string ToString()
     {
         return _builder.ToString();
     }
 
+    /// <summary>
+    ///     Clears the internal buffer.
+    /// </summary>
     public void Dispose()
     {
         _builder.Clear();

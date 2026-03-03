@@ -208,7 +208,7 @@ partial class ExternalEventGenerator
                     continue;
                 }
 
-                extraParameters.Add(new ParameterData(parameterTypeFullyQualified));
+                extraParameters.Add(new ParameterData(parameter.Name, parameterTypeFullyQualified));
             }
 
             return (hasUiApplicationParameter, extraParameters.ToImmutable().ToEquatableArray());

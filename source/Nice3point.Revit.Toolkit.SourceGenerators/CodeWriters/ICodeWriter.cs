@@ -1,4 +1,4 @@
-namespace Nice3point.Revit.Toolkit.SourceGenerators;
+﻿namespace Nice3point.Revit.Toolkit.SourceGenerators;
 
 /// <summary>
 ///     Interface for fluent code generation with automatic formatting and indentation.
@@ -11,7 +11,8 @@ internal interface ICodeWriter : IDisposable
     int IndentLevel { get; }
 
     /// <summary>
-    ///     Appends a line of code with proper indentation.
+    ///     Appends a line of text with proper indentation.
+    ///     When called without arguments or with an empty string, emits a blank line.
     /// </summary>
     ICodeWriter AppendLine(string line = "");
 
@@ -29,11 +30,6 @@ internal interface ICodeWriter : IDisposable
     ///     Appends a code block with automatic braces and indentation.
     /// </summary>
     ICodeWriter AppendBlock(string header, Action<ICodeWriter> body);
-
-    /// <summary>
-    ///     Ensures that the next text appended will start on a new line.
-    /// </summary>
-    ICodeWriter EnsureNewLine();
 
     /// <summary>
     ///     Increases the indentation level.

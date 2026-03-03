@@ -28,4 +28,5 @@ internal sealed record TypeDeclarationInfo(
 ///     Describes an extra parameter of the annotated method beyond the UIApplication parameter.
 /// </summary>
 internal sealed record ParameterData(
+    string Name,
     string FullyQualifiedType);

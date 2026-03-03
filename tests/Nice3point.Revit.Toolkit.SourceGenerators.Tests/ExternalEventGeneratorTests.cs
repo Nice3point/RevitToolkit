@@ -85,7 +85,7 @@ public sealed class ExternalEventGeneratorTests
     }
 
     [Test]
-    public async Task MethodWithExtraParams_GeneratesCustomClasses()
+    public async Task MethodWithExtraParams_GeneratesBuiltInGenericProperty()
     {
         const string source = """
                               using Nice3point.Revit.Toolkit.External;
@@ -105,12 +105,39 @@ public sealed class ExternalEventGeneratorTests
         await Assert.That(generated).Count().IsEqualTo(1);
 
         var output = generated[0];
-        await Assert.That(output).Contains("DoWorkExternalEvent");
-        await Assert.That(output).Contains("DoWorkAsyncExternalEvent");
-        await Assert.That(output).Contains("sealed class DoWorkExternalEvent");
-        await Assert.That(output).Contains("sealed class DoWorkAsyncExternalEvent");
+        await Assert.That(output).Contains("IExternalEvent<string>");
+        await Assert.That(output).Contains("ExternalEvent<string>");
+        await Assert.That(output).Contains("DoWorkEvent");
         await Assert.That(output).Contains("[global::System.CodeDom.Compiler.GeneratedCode(");
         await Assert.That(output).Contains("[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]");
+    }
+
+    [Test]
+    public async Task MethodWithMultipleExtraParams_GeneratesRecordAndProperty()
+    {
+        const string source = """
+                              using Nice3point.Revit.Toolkit.External;
+
+                              namespace TestApplication;
+
+                              public partial class MyViewModel
+                              {
+                                  [ExternalEvent]
+                                  private void DoWork(string title, int count) { }
+                              }
+                              """;
+
+        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
+        await Assert.That(generated).Count().IsEqualTo(1);
+
+        var output = generated[0];
+        await Assert.That(output).Contains("sealed record DoWorkArgs(string Title, int Count)");
+        await Assert.That(output).Contains("IExternalEvent<DoWorkArgs>");
+        await Assert.That(output).Contains("ExternalEvent<DoWorkArgs>");
+        await Assert.That(output).Contains("args.Title, args.Count");
+        await Assert.That(output).Contains("DoWorkEvent");
     }
 
     [Test]
@@ -180,7 +207,7 @@ public sealed class ExternalEventGeneratorTests
 
         var (diagnostics, _) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.TaskReturnNotSupported.Id)).IsNotEmpty();
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == "RVTTK0001")).IsNotEmpty();
     }
 
     [Test]
@@ -200,7 +227,7 @@ public sealed class ExternalEventGeneratorTests
 
         var (diagnostics, _) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ContainingTypeNotPartial.Id)).IsNotEmpty();
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == "RVTTK0002")).IsNotEmpty();
     }
 
     [Test]
@@ -220,7 +247,7 @@ public sealed class ExternalEventGeneratorTests
 
         var (diagnostics, _) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.MethodIsGeneric.Id)).IsNotEmpty();
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == "RVTTK0003")).IsNotEmpty();
     }
 
 
@@ -244,7 +271,7 @@ public sealed class ExternalEventGeneratorTests
 
         var (diagnostics, _) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.DuplicateMethodOverload.Id)).IsNotEmpty();
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == "RVTTK0004")).IsNotEmpty();
     }
 
     [Test]
@@ -264,7 +291,7 @@ public sealed class ExternalEventGeneratorTests
 
         var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.MethodIsAsyncVoid.Id)).IsNotEmpty();
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == "RVTTK0005")).IsNotEmpty();
         await Assert.That(generated).IsNotEmpty();
     }
 

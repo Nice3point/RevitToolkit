@@ -7,12 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="TUnit" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+        <PackageReference Include="TUnit"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit.SourceGenerators\Nice3point.Revit.Toolkit.SourceGenerators.csproj" />
+        <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit.SourceGenerators\Nice3point.Revit.Toolkit.SourceGenerators.csproj"/>
     </ItemGroup>
 
 </Project>

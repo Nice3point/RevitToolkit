@@ -156,6 +156,67 @@ public sealed class ExternalEventGeneratorTests
     }
 
     [Test]
+    public async Task MethodWithMultipleExtraParams_GeneratesExtensionMethod()
+    {
+        const string source = """
+                              using Nice3point.Revit.Toolkit.External;
+
+                              namespace TestApplication;
+
+                              public partial class MyViewModel
+                              {
+                                  [ExternalEvent]
+                                  private void DoWork(string title, int count) { }
+                              }
+                              """;
+
+        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
+        await Assert.That(generated).Count().IsEqualTo(1);
+
+        var output = generated[0];
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).Contains("public static partial class MyViewModelExtensions");
+            await Assert.That(output).Contains("this global::Nice3point.Revit.Toolkit.External.IExternalEvent<MyViewModel.DoWorkArgs> externalEvent");
+            await Assert.That(output).Contains("string title, int count");
+            await Assert.That(output).Contains("return externalEvent.Raise(new MyViewModel.DoWorkArgs(title, count));");
+        }
+    }
+
+    [Test]
+    public async Task ReturningMethodWithMultipleExtraParams_GeneratesAsyncExtensionMethod()
+    {
+        const string source = """
+                              using Autodesk.Revit.UI;
+                              using Nice3point.Revit.Toolkit.External;
+
+                              namespace TestApplication;
+
+                              public partial class MyViewModel
+                              {
+                                  [ExternalEvent]
+                                  private int Calculate(UIApplication app, string title, int count) => 42;
+                              }
+                              """;
+
+        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
+        await Assert.That(generated).Count().IsEqualTo(1);
+
+        var output = generated[0];
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).Contains("public static partial class MyViewModelExtensions");
+            await Assert.That(output).Contains("RaiseAsync(this");
+            await Assert.That(output).Contains("IAsyncExternalEvent<MyViewModel.CalculateArgs, int>");
+            await Assert.That(output).Contains("return externalEvent.RaiseAsync(new MyViewModel.CalculateArgs(title, count));");
+        }
+    }
+
+    [Test]
     public async Task AllowDirectInvocation_GeneratesOptionsCode()
     {
         const string source = """

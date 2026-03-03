@@ -18,6 +18,7 @@ internal static class WellKnownFullyQualifiedClassNames
 
     // Revit types
     public static readonly FullyQualifiedTypeName UiApplication = "Autodesk.Revit.UI.UIApplication";
+    public static readonly FullyQualifiedTypeName ExternalEventRequest = "Autodesk.Revit.UI.ExternalEventRequest";
 
     // System types
     public static readonly FullyQualifiedTypeName Task = "System.Threading.Tasks.Task";

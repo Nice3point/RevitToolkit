@@ -23,6 +23,7 @@ partial class ExternalEventGenerator
             EmitArgumentsRecord(writer, info);
 
             CloseBlocks(typeBlocks);
+            EmitExtensionClass(writer, info);
             namespaceBlock?.Dispose();
 
             return writer.ToString();
@@ -77,10 +78,9 @@ partial class ExternalEventGenerator
                 recordParameters.Add($"{parameter.FullyQualifiedType} {pascalName}");
             }
 
-            EmitGeneratedCodeAttributes(writer);
             EmitExcludeFromCodeCoverageAttributes(writer);
+            EmitGeneratedCodeAttributes(writer);
             writer.AppendLine($"public sealed record {recordName}({string.Join(", ", recordParameters)});");
-            writer.AppendLine();
         }
 
         /// <summary>
@@ -219,6 +219,119 @@ partial class ExternalEventGenerator
         }
 
         /// <summary>
+        ///     Emits a static partial extension class with convenience <c>Raise</c> / <c>RaiseAsync</c>
+        ///     overloads that accept individual parameters instead of the generated record.
+        /// </summary>
+        private static void EmitExtensionClass(CodeWriter writer, ExternalEventInfo info)
+        {
+            if (info.ExtraParameters.Length < 2)
+            {
+                return;
+            }
+
+            var outermostTypeName = info.TypeHierarchy[0].Name;
+            var recordName = $"{info.MethodName}Args";
+            var qualifiedRecordType = BuildQualifiedRecordType(info, recordName);
+
+            writer.AppendLine();
+
+            EmitExcludeFromCodeCoverageAttributes(writer);
+            EmitGeneratedCodeAttributes(writer);
+            using (writer.BeginBlock($"public static partial class {outermostTypeName}Extensions"))
+            {
+                if (info.IsVoidReturn)
+                {
+                    EmitRaiseExtensionMethod(writer, info, qualifiedRecordType);
+                }
+                else
+                {
+                    EmitRaiseAsyncExtensionMethod(writer, info, qualifiedRecordType);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Emits a synchronous <c>Raise</c> extension method for <see cref="IExternalEvent{T}"/>.
+        /// </summary>
+        private static void EmitRaiseExtensionMethod(CodeWriter writer, ExternalEventInfo info, string qualifiedRecordType)
+        {
+            var interfaceType = $"{WellKnownFullyQualifiedClassNames.ExternalEventInterface.WithGlobalPrefix}<{qualifiedRecordType}>";
+            var returnType = WellKnownFullyQualifiedClassNames.ExternalEventRequest.WithGlobalPrefix;
+            var parameters = BuildExtensionMethodParameters(info);
+            var recordArguments = BuildRecordConstructorArguments(info);
+
+            EmitExcludeFromCodeCoverageAttributes(writer);
+            EmitGeneratedCodeAttributes(writer);
+            using (writer.BeginBlock($"public static {returnType} Raise(this {interfaceType} externalEvent, {parameters})"))
+            {
+                writer.AppendLine($"return externalEvent.Raise(new {qualifiedRecordType}({recordArguments}));");
+            }
+        }
+
+        /// <summary>
+        ///     Emits an asynchronous <c>RaiseAsync</c> extension method for <see cref="IAsyncExternalEvent{T, TResult}"/>.
+        /// </summary>
+        private static void EmitRaiseAsyncExtensionMethod(CodeWriter writer, ExternalEventInfo info, string qualifiedRecordType)
+        {
+            var returnType = info.ReturnTypeFullyQualified!;
+            var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEventGenericInterface.WithGlobalPrefix}<{qualifiedRecordType}, {returnType}>";
+            var taskReturnType = $"{WellKnownFullyQualifiedClassNames.Task.WithGlobalPrefix}<{returnType}>";
+            var parameters = BuildExtensionMethodParameters(info);
+            var recordArguments = BuildRecordConstructorArguments(info);
+
+            EmitExcludeFromCodeCoverageAttributes(writer);
+            EmitGeneratedCodeAttributes(writer);
+            using (writer.BeginBlock($"public static {taskReturnType} RaiseAsync(this {interfaceType} externalEvent, {parameters})"))
+            {
+                writer.AppendLine($"return externalEvent.RaiseAsync(new {qualifiedRecordType}({recordArguments}));");
+            }
+        }
+
+        /// <summary>
+        ///     Builds the fully qualified record type path through the type hierarchy.
+        /// </summary>
+        private static string BuildQualifiedRecordType(ExternalEventInfo info, string recordName)
+        {
+            var parts = new List<string>();
+            for (var typeIndex = 0; typeIndex < info.TypeHierarchy.Length; typeIndex++)
+            {
+                parts.Add(info.TypeHierarchy[typeIndex].Name);
+            }
+
+            parts.Add(recordName);
+            return string.Join(".", parts);
+        }
+
+        /// <summary>
+        ///     Builds the parameter list for extension method signatures using original parameter names.
+        /// </summary>
+        private static string BuildExtensionMethodParameters(ExternalEventInfo info)
+        {
+            var parameters = new List<string>();
+            for (var paramIndex = 0; paramIndex < info.ExtraParameters.Length; paramIndex++)
+            {
+                var parameter = info.ExtraParameters[paramIndex];
+                parameters.Add($"{parameter.FullyQualifiedType} {parameter.Name}");
+            }
+
+            return string.Join(", ", parameters);
+        }
+
+        /// <summary>
+        ///     Builds the argument list for the record constructor call inside the extension method body.
+        /// </summary>
+        private static string BuildRecordConstructorArguments(ExternalEventInfo info)
+        {
+            var arguments = new List<string>();
+            for (var paramIndex = 0; paramIndex < info.ExtraParameters.Length; paramIndex++)
+            {
+                arguments.Add(info.ExtraParameters[paramIndex].Name);
+            }
+
+            return string.Join(", ", arguments);
+        }
+
+        /// <summary>
         ///     Emits a property with optional backing field, including generated code attributes.
         /// </summary>
         private static void EmitPropertyWithBackingField(
@@ -232,8 +345,8 @@ partial class ExternalEventGenerator
         {
             if (useFieldKeyword)
             {
-                EmitGeneratedCodeAttributes(writer);
                 EmitExcludeFromCodeCoverageAttributes(writer);
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"public {staticModifier}{propertyType} {info.MethodName}{propertySuffix} => field ??= {initializer};");
             }
             else
@@ -242,8 +355,8 @@ partial class ExternalEventGenerator
                 writer.AppendLine($"private {staticModifier}{propertyType}? {backingFieldName};");
                 writer.AppendLine();
                 
-                EmitGeneratedCodeAttributes(writer);
                 EmitExcludeFromCodeCoverageAttributes(writer);
+                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"public {staticModifier}{propertyType} {info.MethodName}{propertySuffix} => {backingFieldName} ??= {initializer};");
             }
         }

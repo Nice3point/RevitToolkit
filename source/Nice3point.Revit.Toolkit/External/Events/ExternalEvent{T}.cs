@@ -6,7 +6,8 @@ using JetBrains.Annotations;
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
-///     A synchronous external event that accepts an argument of type <typeparamref name="T"/>
+///     A generic synchronous external event expanding <see cref="ExternalEvent"/>
+///     that accepts an argument of type <typeparamref name="T"/>
 ///     and relays its functionality by invoking delegates within the Revit API context.
 /// </summary>
 /// <typeparam name="T">The type of the argument passed to the handler.</typeparam>

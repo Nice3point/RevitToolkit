@@ -17,7 +17,7 @@ namespace Nice3point.Revit.Toolkit.External;
 ///     partial class MyViewModel
 ///     {
 ///         [ExternalEvent]
-///         private void ShowGreeting()
+///         private void ShowGreeting(UIApplication application)
 ///         {
 ///             TaskDialog.Show("Greeting", "Hello from Revit!");
 ///         }
@@ -28,26 +28,51 @@ namespace Nice3point.Revit.Toolkit.External;
 ///     partial class MyViewModel
 ///     {
 ///         public IExternalEvent ShowGreetingEvent => field ??= new ExternalEvent(ShowGreeting);
+///         public IAsyncExternalEvent ShowGreetingAsyncEvent => field ??= new AsyncExternalEvent(ShowGreeting);
 ///     }
 ///     </code>
 ///     </para>
 ///     <para>
-///     The following signatures are supported for annotated methods:
+///     <b>Methods without extra parameters.</b> The following signatures generate both sync and async properties:
 ///     <code>
 ///     void Method();
 ///     void Method(UIApplication);
 ///     </code>
-///     Will generate an <see cref="IExternalEvent"/> property (using an <see cref="Nice3point.Revit.Toolkit.External.ExternalEvent"/> instance).
-///     <code>
-///     Task Method();
-///     Task Method(UIApplication);
-///     </code>
-///     Will generate an <see cref="IAsyncExternalEvent"/> property (using an <see cref="Nice3point.Revit.Toolkit.External.AsyncExternalEvent"/> instance).
+///     Will generate an <see cref="IExternalEvent"/> property (using an <see cref="Nice3point.Revit.Toolkit.External.ExternalEvent"/> instance)
+///     and an <see cref="IAsyncExternalEvent"/> property (using an <see cref="Nice3point.Revit.Toolkit.External.AsyncExternalEvent"/> instance).
 ///     <code>
 ///     Task&lt;T&gt; Method();
 ///     Task&lt;T&gt; Method(UIApplication);
 ///     </code>
 ///     Will generate an <see cref="IAsyncExternalEvent{T}"/> property (using an <see cref="Nice3point.Revit.Toolkit.External.AsyncExternalEvent{T}"/> instance).
+///     </para>
+///     <para>
+///     <b>Methods with extra parameters.</b> When a method has additional parameters beyond the optional <c>UIApplication</c>,
+///     the generator creates typed event properties:
+///     <code>
+///     void Method(UIApplication, string);
+///     </code>
+///     Will generate an <see cref="IExternalEvent{T}"/> property (using an <see cref="ExternalEvent{T}"/> instance).
+///     <code>
+///     Task&lt;TResult&gt; Method(UIApplication, string);
+///     </code>
+///     Will generate an <see cref="IAsyncExternalEvent{T, TResult}"/> property (using an <see cref="AsyncExternalEvent{T, TResult}"/> instance).
+///     </para>
+///     <para>
+///     <b>Methods with multiple extra parameters.</b> When a method has two or more extra parameters, the generator
+///     creates a <c>sealed record</c> to bundle them into a single argument type, along with convenience extension methods:
+///     <code>
+///     [ExternalEvent]
+///     private void GetDocumentInfo(UIApplication application, string title, int elementCount) { }
+///     </code>
+///     Will generate:
+///     <code>
+///     public sealed record GetDocumentInfoArgs(string Title, int ElementCount);
+///     public IExternalEvent&lt;GetDocumentInfoArgs&gt; GetDocumentInfoEvent => field ??= new ExternalEvent&lt;GetDocumentInfoArgs&gt;(...);
+///     
+///     // Extension method:
+///     public static ExternalEventRequest Raise(this IExternalEvent&lt;GetDocumentInfoArgs&gt; externalEvent, string title, int elementCount);
+///     </code>
 ///     </para>
 /// </summary>
 [PublicAPI]

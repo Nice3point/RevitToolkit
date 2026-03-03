@@ -6,8 +6,8 @@ using JetBrains.Annotations;
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
-///     A generic asynchronous external event expanding <see cref="AsyncExternalEvent"/> to return
-///     a result of type <typeparamref name="T"/> via <see cref="RaiseAsync"/>.
+///     A generic asynchronous external event expanding <see cref="AsyncExternalEvent"/>
+///     to return a result of type <typeparamref name="T"/> via <see cref="RaiseAsync"/>.
 /// </summary>
 /// <typeparam name="T">The type of the result produced by the handler.</typeparam>
 [PublicAPI]

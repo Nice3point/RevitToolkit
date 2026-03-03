@@ -6,8 +6,8 @@ using JetBrains.Annotations;
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
-///     An asynchronous external event expanding <see cref="Nice3point.Revit.Toolkit.External.ExternalEvent"/> with the ability
-///     to await completion of the handler execution via <see cref="RaiseAsync"/>.
+///     An asynchronous external event expanding <see cref="Nice3point.Revit.Toolkit.External.ExternalEvent"/>
+///     with the ability to await completion of the handler execution.
 /// </summary>
 [PublicAPI]
 public sealed class AsyncExternalEvent : ExternalEventHandler, IAsyncExternalEvent

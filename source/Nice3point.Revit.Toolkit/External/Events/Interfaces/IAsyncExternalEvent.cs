@@ -10,7 +10,7 @@ namespace Nice3point.Revit.Toolkit.External;
 public interface IAsyncExternalEvent
 {
     /// <summary>
-    ///     Raises the external event asynchronously, instructing Revit to execute the handler within the Revit API context.
+    ///     Raises (signals) the external event, instructing Revit to execute the handler within the Revit API context and wait for completion asynchronously.
     /// </summary>
     /// <returns>The <see cref="Task"/> representing the async operation being executed.</returns>
     Task RaiseAsync();

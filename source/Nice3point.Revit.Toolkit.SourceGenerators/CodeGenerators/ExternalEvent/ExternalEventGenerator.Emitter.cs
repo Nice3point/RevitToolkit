@@ -19,8 +19,8 @@ partial class ExternalEventGenerator
             var namespaceBlock = EmitNamespaceBlock(writer, info);
             var typeBlocks = EmitTypeHierarchy(writer, info);
 
-            EmitArgsRecord(writer, info);
             EmitProperties(writer, info, useFieldKeyword);
+            EmitArgumentsRecord(writer, info);
 
             CloseBlocks(typeBlocks);
             namespaceBlock?.Dispose();
@@ -49,7 +49,6 @@ partial class ExternalEventGenerator
             {
                 var typeDeclaration = info.TypeHierarchy[typeIndex];
                 var staticModifier = typeDeclaration.IsStatic ? "static " : "";
-                writer.AppendLine("/// <inheritdoc/>");
                 var block = writer.BeginBlock($"{staticModifier}partial {typeDeclaration.Keyword} {typeDeclaration.Name}");
                 typeBlocks.Add(block);
             }
@@ -58,15 +57,16 @@ partial class ExternalEventGenerator
         }
 
         /// <summary>
-        ///     Emits a sealed record for methods with 2+ extra parameters,
-        ///     bundling them into a single argument type.
+        ///     Emits a sealed record for methods with 2+ extra parameters, bundling them into a single argument type.
         /// </summary>
-        private static void EmitArgsRecord(CodeWriter writer, ExternalEventInfo info)
+        private static void EmitArgumentsRecord(CodeWriter writer, ExternalEventInfo info)
         {
             if (info.ExtraParameters.Length < 2)
             {
                 return;
             }
+            
+            writer.AppendLine();
 
             var recordName = $"{info.MethodName}Args";
             var recordParameters = new List<string>();
@@ -78,6 +78,7 @@ partial class ExternalEventGenerator
             }
 
             EmitGeneratedCodeAttributes(writer);
+            EmitExcludeFromCodeCoverageAttributes(writer);
             writer.AppendLine($"public sealed record {recordName}({string.Join(", ", recordParameters)});");
             writer.AppendLine();
         }
@@ -177,7 +178,7 @@ partial class ExternalEventGenerator
 
             if (info.ExtraParameters.Length == 0)
             {
-                // AsyncExternalEvent<TResult> (no args)
+                // AsyncExternalEvent<TResult>
                 var eventType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix}<{returnType}>";
                 EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
                     eventType, "AsyncEvent",
@@ -185,7 +186,7 @@ partial class ExternalEventGenerator
             }
             else if (info.ExtraParameters.Length == 1)
             {
-                // AsyncExternalEvent<T, TResult> (single arg)
+                // AsyncExternalEvent<T, TResult>
                 var argType = info.ExtraParameters[0].FullyQualifiedType;
                 var eventType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix}<{argType}, {returnType}>";
                 var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEventGenericInterface.WithGlobalPrefix}<{argType}, {returnType}>";
@@ -232,26 +233,34 @@ partial class ExternalEventGenerator
             if (useFieldKeyword)
             {
                 EmitGeneratedCodeAttributes(writer);
+                EmitExcludeFromCodeCoverageAttributes(writer);
                 writer.AppendLine($"public {staticModifier}{propertyType} {info.MethodName}{propertySuffix} => field ??= {initializer};");
             }
             else
             {
                 var backingFieldName = BuildBackingFieldName(info.MethodName, propertySuffix);
-                EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"private {staticModifier}{propertyType}? {backingFieldName};");
                 writer.AppendLine();
+                
                 EmitGeneratedCodeAttributes(writer);
+                EmitExcludeFromCodeCoverageAttributes(writer);
                 writer.AppendLine($"public {staticModifier}{propertyType} {info.MethodName}{propertySuffix} => {backingFieldName} ??= {initializer};");
             }
         }
 
         /// <summary>
-        ///     Emits <c>[GeneratedCode]</c> and <c>[ExcludeFromCodeCoverage]</c> attributes
-        ///     for generated members.
+        ///     Emits <c>[ExcludeFromCodeCoverage]</c> attribute for generated members.
+        /// </summary>
+        private static void EmitExcludeFromCodeCoverageAttributes(CodeWriter writer)
+        {
+            writer.AppendLine("[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]");
+        }
+
+        /// <summary>
+        ///     Emits <c>[GeneratedCode]</c> attribute for generated members.
         /// </summary>
         private static void EmitGeneratedCodeAttributes(CodeWriter writer)
         {
-            writer.AppendLine("[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]");
             writer.AppendLine($"[global::System.CodeDom.Compiler.GeneratedCode(\"{GeneratorName}\", \"{AssemblyVersion}\")]");
         }
 
@@ -306,7 +315,7 @@ partial class ExternalEventGenerator
                 return name;
             }
 
-            return char.ToUpperInvariant(name[0]) + name.Substring(1);
+            return char.ToUpperInvariant(name[0]) + name[1..];
         }
     }
 }

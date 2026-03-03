@@ -60,7 +60,7 @@
 
     <!-- Development References -->
     <ItemGroup>
-        <GlobalPackageReference Include="Polyfill" Version="9.10.0"/>
+        <GlobalPackageReference Include="Polyfill" Version="9.15.0"/>
     </ItemGroup>
 
 </Project>

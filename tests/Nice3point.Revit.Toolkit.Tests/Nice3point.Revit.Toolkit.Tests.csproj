@@ -15,8 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit.SourceGenerators\Nice3point.Revit.Toolkit.SourceGenerators.csproj" />
-      <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit\Nice3point.Revit.Toolkit.csproj" />
+        <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit\Nice3point.Revit.Toolkit.csproj"/>
     </ItemGroup>
 
 </Project>

@@ -26,10 +26,13 @@ public sealed class ExternalEventGeneratorTests
         await Assert.That(generated).Count().IsEqualTo(1);
 
         var output = generated[0];
-        await Assert.That(output).Contains("DoWorkEvent");
-        await Assert.That(output).Contains("DoWorkAsyncEvent");
-        await Assert.That(output).Contains("ExternalEvent");
-        await Assert.That(output).Contains("AsyncExternalEvent");
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).Contains("DoWorkEvent");
+            await Assert.That(output).Contains("DoWorkAsyncEvent");
+            await Assert.That(output).Contains("ExternalEvent");
+            await Assert.That(output).Contains("AsyncExternalEvent");
+        }
     }
 
     [Test]
@@ -54,8 +57,11 @@ public sealed class ExternalEventGeneratorTests
         await Assert.That(generated).Count().IsEqualTo(1);
 
         var output = generated[0];
-        await Assert.That(output).Contains("DoWorkEvent");
-        await Assert.That(output).Contains("DoWorkAsyncEvent");
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).Contains("DoWorkEvent");
+            await Assert.That(output).Contains("DoWorkAsyncEvent");
+        }
     }
 
     [Test]
@@ -79,9 +85,12 @@ public sealed class ExternalEventGeneratorTests
         await Assert.That(generated).Count().IsEqualTo(1);
 
         var output = generated[0];
-        await Assert.That(output).DoesNotContain("CalculateEvent ");
-        await Assert.That(output).Contains("CalculateAsyncEvent");
-        await Assert.That(output).Contains("AsyncExternalEvent<int>");
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).DoesNotContain("CalculateEvent ");
+            await Assert.That(output).Contains("CalculateAsyncEvent");
+            await Assert.That(output).Contains("AsyncExternalEvent<int>");
+        }
     }
 
     [Test]
@@ -105,11 +114,14 @@ public sealed class ExternalEventGeneratorTests
         await Assert.That(generated).Count().IsEqualTo(1);
 
         var output = generated[0];
-        await Assert.That(output).Contains("IExternalEvent<string>");
-        await Assert.That(output).Contains("ExternalEvent<string>");
-        await Assert.That(output).Contains("DoWorkEvent");
-        await Assert.That(output).Contains("[global::System.CodeDom.Compiler.GeneratedCode(");
-        await Assert.That(output).Contains("[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]");
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).Contains("IExternalEvent<string>");
+            await Assert.That(output).Contains("ExternalEvent<string>");
+            await Assert.That(output).Contains("DoWorkEvent");
+            await Assert.That(output).Contains("[global::System.CodeDom.Compiler.GeneratedCode(");
+            await Assert.That(output).Contains("[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]");
+        }
     }
 
     [Test]
@@ -133,11 +145,14 @@ public sealed class ExternalEventGeneratorTests
         await Assert.That(generated).Count().IsEqualTo(1);
 
         var output = generated[0];
-        await Assert.That(output).Contains("sealed record DoWorkArgs(string Title, int Count)");
-        await Assert.That(output).Contains("IExternalEvent<DoWorkArgs>");
-        await Assert.That(output).Contains("ExternalEvent<DoWorkArgs>");
-        await Assert.That(output).Contains("args.Title, args.Count");
-        await Assert.That(output).Contains("DoWorkEvent");
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).Contains("sealed record DoWorkArgs(string Title, int Count)");
+            await Assert.That(output).Contains("IExternalEvent<DoWorkArgs>");
+            await Assert.That(output).Contains("ExternalEvent<DoWorkArgs>");
+            await Assert.That(output).Contains("args.Title, args.Count");
+            await Assert.That(output).Contains("DoWorkEvent");
+        }
     }
 
     [Test]
@@ -161,8 +176,11 @@ public sealed class ExternalEventGeneratorTests
         await Assert.That(generated).Count().IsEqualTo(1);
 
         var output = generated[0];
-        await Assert.That(output).Contains("ExternalEventOptions");
-        await Assert.That(output).Contains("AllowDirectInvocation");
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).Contains("ExternalEventOptions");
+            await Assert.That(output).Contains("AllowDirectInvocation");
+        }
     }
 
     [Test]
@@ -186,7 +204,10 @@ public sealed class ExternalEventGeneratorTests
         await Assert.That(generated).Count().IsEqualTo(1);
 
         var output = generated[0];
-        await Assert.That(output).Contains("static");
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).Contains("static");
+        }
     }
 
     [Test]

@@ -1,0 +1,35 @@
+<Project>
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+        <IsRoslynComponent>true</IsRoslynComponent>
+    </PropertyGroup>
+    
+    <!-- Roslyn-versioned source generator projects (e.g., *.Roslyn414 → Roslyn 4.14) -->
+    <PropertyGroup Condition="$(MSBuildProjectName.Contains('.Roslyn'))">
+        <_BaseProjectName>$([System.Text.RegularExpressions.Regex]::Replace($(MSBuildProjectName), '\.Roslyn\d+$', ''))</_BaseProjectName>
+        <_RoslynDigits>$([System.Text.RegularExpressions.Regex]::Match($(MSBuildProjectName), 'Roslyn(\d+)$').Groups[1].Value)</_RoslynDigits>
+        <RoslynVersion>$([System.Text.RegularExpressions.Regex]::Replace($(_RoslynDigits), '^(\d)', '$1.'))</RoslynVersion>
+        <AssemblyName>$(_BaseProjectName)</AssemblyName>
+        <RootNamespace>$(_BaseProjectName)</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup Condition="$(MSBuildProjectName.Contains('.Roslyn'))">
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(RoslynVersion).*" PrivateAssets="all" />
+    </ItemGroup>
+
+    <!-- Link source files from the base project -->
+    <ItemGroup Condition="$(MSBuildProjectName.Contains('.Roslyn'))">
+        <Compile Include="..\$(_BaseProjectName)\**\*.cs" Exclude="..\$(_BaseProjectName)\obj\**\*.cs" />
+        <AdditionalFiles Include="..\$(_BaseProjectName)\AnalyzerReleases.Shipped.md" />
+        <AdditionalFiles Include="..\$(_BaseProjectName)\AnalyzerReleases.Unshipped.md" />
+    </ItemGroup>
+
+    <PropertyGroup>
+        <RoslynVersion Condition="'$(RoslynVersion)' == ''">5.0</RoslynVersion>
+        <DefineConstants Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(RoslynVersion)', '4.14'))">$(DefineConstants);ROSLYN4_14_0_OR_GREATER</DefineConstants>
+        <DefineConstants Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(RoslynVersion)', '5.0'))">$(DefineConstants);ROSLYN5_0_0_OR_GREATER</DefineConstants>
+    </PropertyGroup>
+
+</Project>

@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\Nice3point.Revit.Toolkit.SourceGenerators\Nice3point.Revit.Toolkit.SourceGenerators.props" />
+</Project>

@@ -39,9 +39,25 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Nice3point.Revit.Toolkit.SourceGenerators\Nice3point.Revit.Toolkit.SourceGenerators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+        <ProjectReference Include="..\Nice3point.Revit.Toolkit.SourceGenerators.Roslyn414\Nice3point.Revit.Toolkit.SourceGenerators.Roslyn414.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    </ItemGroup>
+
+    <PropertyGroup>
+        <_GeneratorConfiguration Condition="$(Configuration.StartsWith('Debug'))">Debug</_GeneratorConfiguration>
+        <_GeneratorConfiguration Condition="$(Configuration.StartsWith('Release'))">Release</_GeneratorConfiguration>
+    </PropertyGroup>
+
+    <ItemGroup>
         <None Include="..\..\.nuget\PackageIcon.png" PackagePath="images\" Pack="true" Visible="false"/>
         <None Include="..\..\License.md" PackagePath="" Pack="true" Visible="false"/>
         <None Include="..\..\Readme.md" PackagePath="" Pack="true" Visible="false"/>
+        <None Include="..\Nice3point.Revit.Toolkit.SourceGenerators\bin\$(_GeneratorConfiguration)\netstandard2.0\Nice3point.Revit.Toolkit.SourceGenerators.dll"
+              PackagePath="analyzers\dotnet\roslyn5.0\cs" Pack="true" Visible="false"/>
+        <None Include="..\Nice3point.Revit.Toolkit.SourceGenerators.Roslyn414\bin\$(_GeneratorConfiguration)\netstandard2.0\Nice3point.Revit.Toolkit.SourceGenerators.dll"
+              PackagePath="analyzers\dotnet\roslyn4.14\cs" Pack="true" Visible="false"/>
     </ItemGroup>
 
 </Project>

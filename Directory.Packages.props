@@ -33,6 +33,9 @@
         <!-- Development Tools -->
         <PackageVersion Include="JetBrains.Annotations" Version="2025.2.4"/>
         <PackageVersion Include="JetBrains.Annotations.Sources" Version="2025.2.4"/>
+
+        <!-- Source Generators -->
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0"/>
     </ItemGroup>
 
     <ItemGroup>

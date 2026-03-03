@@ -12,6 +12,8 @@ internal static class WellKnownFullyQualifiedClassNames
     public static readonly FullyQualifiedTypeName ExternalEvent = "Nice3point.Revit.Toolkit.External.ExternalEvent";
     public static readonly FullyQualifiedTypeName AsyncExternalEvent = "Nice3point.Revit.Toolkit.External.AsyncExternalEvent";
     public static readonly FullyQualifiedTypeName ExternalEventInterface = "Nice3point.Revit.Toolkit.External.IExternalEvent";
+    public static readonly FullyQualifiedTypeName AsyncExternalEventInterface = "Nice3point.Revit.Toolkit.External.IAsyncExternalEvent";
+    public static readonly FullyQualifiedTypeName AsyncExternalEventResultInterface = "Nice3point.Revit.Toolkit.External.IAsyncExternalEvent";
     public static readonly FullyQualifiedTypeName AsyncExternalEventGenericInterface = "Nice3point.Revit.Toolkit.External.IAsyncExternalEvent";
     public static readonly FullyQualifiedTypeName ExternalEventOptions = "Nice3point.Revit.Toolkit.External.ExternalEventOptions";
     public static readonly FullyQualifiedTypeName ExternalEventAttribute = "Nice3point.Revit.Toolkit.External.ExternalEventAttribute";

@@ -118,8 +118,9 @@ partial class ExternalEventGenerator
             {
                 // ExternalEvent (no args)
                 var eventType = WellKnownFullyQualifiedClassNames.ExternalEvent.WithGlobalPrefix;
+                var interfaceType = WellKnownFullyQualifiedClassNames.ExternalEventInterface.WithGlobalPrefix;
                 EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
-                    eventType, "Event",
+                    interfaceType, "Event",
                     $"new {eventType}({info.MethodName}{optionsArgument})");
             }
             else if (info.ExtraParameters.Length == 1)
@@ -157,8 +158,9 @@ partial class ExternalEventGenerator
                 : "";
 
             var eventType = WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix;
+            var interfaceType = WellKnownFullyQualifiedClassNames.AsyncExternalEventInterface.WithGlobalPrefix;
             EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
-                eventType, "AsyncEvent",
+                interfaceType, "AsyncEvent",
                 $"new {eventType}({info.MethodName}{optionsArgument})");
         }
 
@@ -180,8 +182,9 @@ partial class ExternalEventGenerator
             {
                 // AsyncExternalEvent<TResult>
                 var eventType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix}<{returnType}>";
+                var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEventResultInterface.WithGlobalPrefix}<{returnType}>";
                 EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
-                    eventType, "AsyncEvent",
+                    interfaceType, "AsyncEvent",
                     $"new {eventType}({info.MethodName}{optionsArgument})");
             }
             else if (info.ExtraParameters.Length == 1)

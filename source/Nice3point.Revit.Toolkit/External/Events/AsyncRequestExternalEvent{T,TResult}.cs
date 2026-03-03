@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Autodesk.Revit.UI;
 using JetBrains.Annotations;
 
@@ -13,7 +13,7 @@ namespace Nice3point.Revit.Toolkit.External;
 /// <typeparam name="T">The type of the argument passed to the handler.</typeparam>
 /// <typeparam name="TResult">The type of the result produced by the handler.</typeparam>
 [PublicAPI]
-public sealed class AsyncExternalEvent<T, TResult> : ExternalEventHandler, IAsyncExternalEvent<T, TResult>
+public sealed class AsyncRequestExternalEvent<T, TResult> : ExternalEventHandler, IAsyncRequestExternalEvent<T, TResult>
 {
     private readonly Func<T, TResult>? _handler;
     private readonly Func<UIApplication, T, TResult>? _uiHandler;
@@ -22,11 +22,11 @@ public sealed class AsyncExternalEvent<T, TResult> : ExternalEventHandler, IAsyn
     private TaskCompletionSource<TResult>? _taskCompletionSource;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AsyncExternalEvent{T, TResult}"/> class.
+    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{T, TResult}"/> class.
     /// </summary>
     /// <param name="handler">The execution logic that receives an argument of type <typeparamref name="T"/> and returns a result of type <typeparamref name="TResult"/>.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler"/> is <see langword="null"/>.</exception>
-    public AsyncExternalEvent(Func<T, TResult> handler)
+    public AsyncRequestExternalEvent(Func<T, TResult> handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -34,12 +34,12 @@ public sealed class AsyncExternalEvent<T, TResult> : ExternalEventHandler, IAsyn
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AsyncExternalEvent{T, TResult}"/> class.
+    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{T, TResult}"/> class.
     /// </summary>
     /// <param name="handler">The execution logic that receives an argument of type <typeparamref name="T"/> and returns a result of type <typeparamref name="TResult"/>.</param>
     /// <param name="options">The options to use to configure the external event.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler"/> is <see langword="null"/>.</exception>
-    public AsyncExternalEvent(Func<T, TResult> handler, ExternalEventOptions options)
+    public AsyncRequestExternalEvent(Func<T, TResult> handler, ExternalEventOptions options)
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -48,12 +48,12 @@ public sealed class AsyncExternalEvent<T, TResult> : ExternalEventHandler, IAsyn
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AsyncExternalEvent{T, TResult}"/> class
+    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{T, TResult}"/> class
     ///     with access to the <see cref="UIApplication"/> instance.
     /// </summary>
     /// <param name="handler">The execution logic that receives the current <see cref="UIApplication"/> and an argument of type <typeparamref name="T"/>, returning a result of type <typeparamref name="TResult"/>.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler"/> is <see langword="null"/>.</exception>
-    public AsyncExternalEvent(Func<UIApplication, T, TResult> handler)
+    public AsyncRequestExternalEvent(Func<UIApplication, T, TResult> handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -61,13 +61,13 @@ public sealed class AsyncExternalEvent<T, TResult> : ExternalEventHandler, IAsyn
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AsyncExternalEvent{T, TResult}"/> class
+    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{T, TResult}"/> class
     ///     with access to the <see cref="UIApplication"/> instance.
     /// </summary>
     /// <param name="handler">The execution logic that receives the current <see cref="UIApplication"/> and an argument of type <typeparamref name="T"/>, returning a result of type <typeparamref name="TResult"/>.</param>
     /// <param name="options">The options to use to configure the external event.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler"/> is <see langword="null"/>.</exception>
-    public AsyncExternalEvent(Func<UIApplication, T, TResult> handler, ExternalEventOptions options)
+    public AsyncRequestExternalEvent(Func<UIApplication, T, TResult> handler, ExternalEventOptions options)
     {
         ArgumentNullException.ThrowIfNull(handler);
 

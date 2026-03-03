@@ -1,5 +1,5 @@
 using Microsoft.CodeAnalysis;
-using Nice3point.Revit.Toolkit.SourceGenerators.Diagnostics;
+using Nice3point.Revit.Toolkit.SourceGenerators.Tests.Helpers;
 
 namespace Nice3point.Revit.Toolkit.SourceGenerators.Tests;
 
@@ -89,7 +89,7 @@ public sealed class ExternalEventGeneratorTests
         {
             await Assert.That(output).DoesNotContain("CalculateEvent ");
             await Assert.That(output).Contains("CalculateAsyncEvent");
-            await Assert.That(output).Contains("AsyncExternalEvent<int>");
+            await Assert.That(output).Contains("AsyncRequestExternalEvent<int>");
         }
     }
 
@@ -119,6 +119,9 @@ public sealed class ExternalEventGeneratorTests
             await Assert.That(output).Contains("IExternalEvent<string>");
             await Assert.That(output).Contains("ExternalEvent<string>");
             await Assert.That(output).Contains("DoWorkEvent");
+            await Assert.That(output).Contains("IAsyncExternalEvent<string>");
+            await Assert.That(output).Contains("AsyncExternalEvent<string>");
+            await Assert.That(output).Contains("DoWorkAsyncEvent");
             await Assert.That(output).Contains("[global::System.CodeDom.Compiler.GeneratedCode(");
             await Assert.That(output).Contains("[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]");
         }
@@ -150,8 +153,11 @@ public sealed class ExternalEventGeneratorTests
             await Assert.That(output).Contains("sealed record DoWorkArgs(string Title, int Count)");
             await Assert.That(output).Contains("IExternalEvent<DoWorkArgs>");
             await Assert.That(output).Contains("ExternalEvent<DoWorkArgs>");
+            await Assert.That(output).Contains("IAsyncExternalEvent<DoWorkArgs>");
+            await Assert.That(output).Contains("AsyncExternalEvent<DoWorkArgs>");
             await Assert.That(output).Contains("args.Title, args.Count");
             await Assert.That(output).Contains("DoWorkEvent");
+            await Assert.That(output).Contains("DoWorkAsyncEvent");
         }
     }
 
@@ -180,8 +186,10 @@ public sealed class ExternalEventGeneratorTests
         {
             await Assert.That(output).Contains("public static partial class MyViewModelExtensions");
             await Assert.That(output).Contains("this global::Nice3point.Revit.Toolkit.External.IExternalEvent<MyViewModel.DoWorkArgs> externalEvent");
+            await Assert.That(output).Contains("this global::Nice3point.Revit.Toolkit.External.IAsyncExternalEvent<MyViewModel.DoWorkArgs> externalEvent");
             await Assert.That(output).Contains("string title, int count");
             await Assert.That(output).Contains("return externalEvent.Raise(new MyViewModel.DoWorkArgs(title, count));");
+            await Assert.That(output).Contains("return externalEvent.RaiseAsync(new MyViewModel.DoWorkArgs(title, count));");
         }
     }
 
@@ -211,7 +219,7 @@ public sealed class ExternalEventGeneratorTests
         {
             await Assert.That(output).Contains("public static partial class MyViewModelExtensions");
             await Assert.That(output).Contains("RaiseAsync(this");
-            await Assert.That(output).Contains("IAsyncExternalEvent<MyViewModel.CalculateArgs, int>");
+            await Assert.That(output).Contains("IAsyncRequestExternalEvent<MyViewModel.CalculateArgs, int>");
             await Assert.That(output).Contains("return externalEvent.RaiseAsync(new MyViewModel.CalculateArgs(title, count));");
         }
     }

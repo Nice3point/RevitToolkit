@@ -21,11 +21,10 @@ partial class ExternalEventGenerator
 
             EmitProperties(writer, info, useFieldKeyword);
             EmitArgumentsRecord(writer, info);
-
             CloseBlocks(typeBlocks);
             EmitExtensionClass(writer, info);
+            
             namespaceBlock?.Dispose();
-
             return writer.ToString();
         }
 
@@ -66,7 +65,7 @@ partial class ExternalEventGenerator
             {
                 return;
             }
-            
+
             writer.AppendLine();
 
             var recordName = $"{info.MethodName}Args";
@@ -91,12 +90,8 @@ partial class ExternalEventGenerator
             if (info.IsVoidReturn)
             {
                 EmitSyncProperty(writer, info, useFieldKeyword);
-
-                if (info.ExtraParameters.Length == 0)
-                {
-                    writer.AppendLine();
-                    EmitAsyncVoidProperty(writer, info, useFieldKeyword);
-                }
+                writer.AppendLine();
+                EmitAsyncProperty(writer, info, useFieldKeyword);
             }
             else
             {
@@ -147,28 +142,53 @@ partial class ExternalEventGenerator
         }
 
         /// <summary>
-        ///     Emits an asynchronous property for void methods without extra parameters,
-        ///     using the built-in <c>AsyncExternalEvent</c> type.
+        ///     Emits an asynchronous property for void methods,
+        ///     using the built-in <c>AsyncExternalEvent</c> or <c>AsyncExternalEvent&lt;T&gt;</c> type.
         /// </summary>
-        private static void EmitAsyncVoidProperty(CodeWriter writer, ExternalEventInfo info, bool useFieldKeyword)
+        private static void EmitAsyncProperty(CodeWriter writer, ExternalEventInfo info, bool useFieldKeyword)
         {
             var staticModifier = info.IsStatic ? "static " : "";
             var optionsArgument = info.AllowDirectInvocation
                 ? $", {WellKnownFullyQualifiedClassNames.ExternalEventOptions}.AllowDirectInvocation"
                 : "";
 
-            var eventType = WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix;
-            var interfaceType = WellKnownFullyQualifiedClassNames.AsyncExternalEventInterface.WithGlobalPrefix;
-            EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
-                interfaceType, "AsyncEvent",
-                $"new {eventType}({info.MethodName}{optionsArgument})");
+            if (info.ExtraParameters.Length == 0)
+            {
+                // AsyncExternalEvent (no args)
+                var eventType = WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix;
+                var interfaceType = WellKnownFullyQualifiedClassNames.AsyncExternalEventInterface.WithGlobalPrefix;
+                EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
+                    interfaceType, "AsyncEvent",
+                    $"new {eventType}({info.MethodName}{optionsArgument})");
+            }
+            else if (info.ExtraParameters.Length == 1)
+            {
+                // AsyncExternalEvent<T> (single arg)
+                var argType = info.ExtraParameters[0].FullyQualifiedType;
+                var eventType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix}<{argType}>";
+                var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEventInterface.WithGlobalPrefix}<{argType}>";
+                EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
+                    interfaceType, "AsyncEvent",
+                    $"new {eventType}({info.MethodName}{optionsArgument})");
+            }
+            else
+            {
+                // AsyncExternalEvent<RecordType> (multi args, with lambda)
+                var recordName = $"{info.MethodName}Args";
+                var eventType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix}<{recordName}>";
+                var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEventInterface.WithGlobalPrefix}<{recordName}>";
+                var lambda = BuildRecordLambda(info, "args");
+                EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
+                    interfaceType, "AsyncEvent",
+                    $"new {eventType}(({BuildLambdaParams(info)}) => {lambda}{optionsArgument})");
+            }
         }
 
         /// <summary>
         ///     Emits an asynchronous property for methods that return a value.
-        ///     For 0 extra params, uses <c>AsyncExternalEvent&lt;TResult&gt;</c>.
-        ///     For 1 extra param, uses <c>AsyncExternalEvent&lt;T, TResult&gt;</c>.
-        ///     For 2+ extra params, uses <c>AsyncExternalEvent&lt;RecordType, TResult&gt;</c> with lambda.
+        ///     For 0 extra params, uses <c>AsyncRequestExternalEvent&lt;TResult&gt;</c>.
+        ///     For 1 extra param, uses <c>AsyncRequestExternalEvent&lt;T, TResult&gt;</c>.
+        ///     For 2+ extra params, uses <c>AsyncRequestExternalEvent&lt;RecordType, TResult&gt;</c> with lambda.
         /// </summary>
         private static void EmitAsyncResultProperty(CodeWriter writer, ExternalEventInfo info, bool useFieldKeyword)
         {
@@ -180,29 +200,29 @@ partial class ExternalEventGenerator
 
             if (info.ExtraParameters.Length == 0)
             {
-                // AsyncExternalEvent<TResult>
-                var eventType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix}<{returnType}>";
-                var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEventResultInterface.WithGlobalPrefix}<{returnType}>";
+                // AsyncRequestExternalEvent<TResult>
+                var eventType = $"{WellKnownFullyQualifiedClassNames.AsyncRequestExternalEvent.WithGlobalPrefix}<{returnType}>";
+                var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncRequestExternalEventInterface.WithGlobalPrefix}<{returnType}>";
                 EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
                     interfaceType, "AsyncEvent",
                     $"new {eventType}({info.MethodName}{optionsArgument})");
             }
             else if (info.ExtraParameters.Length == 1)
             {
-                // AsyncExternalEvent<T, TResult>
+                // AsyncRequestExternalEvent<T, TResult>
                 var argType = info.ExtraParameters[0].FullyQualifiedType;
-                var eventType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix}<{argType}, {returnType}>";
-                var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEventGenericInterface.WithGlobalPrefix}<{argType}, {returnType}>";
+                var eventType = $"{WellKnownFullyQualifiedClassNames.AsyncRequestExternalEvent.WithGlobalPrefix}<{argType}, {returnType}>";
+                var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncRequestExternalEventInterface.WithGlobalPrefix}<{argType}, {returnType}>";
                 EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
                     interfaceType, "AsyncEvent",
                     $"new {eventType}({info.MethodName}{optionsArgument})");
             }
             else
             {
-                // AsyncExternalEvent<RecordType, TResult> (multi args, with lambda)
+                // AsyncRequestExternalEvent<RecordType, TResult> (multi args, with lambda)
                 var recordName = $"{info.MethodName}Args";
-                var eventType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEvent.WithGlobalPrefix}<{recordName}, {returnType}>";
-                var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEventGenericInterface.WithGlobalPrefix}<{recordName}, {returnType}>";
+                var eventType = $"{WellKnownFullyQualifiedClassNames.AsyncRequestExternalEvent.WithGlobalPrefix}<{recordName}, {returnType}>";
+                var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncRequestExternalEventInterface.WithGlobalPrefix}<{recordName}, {returnType}>";
                 var lambda = BuildRecordLambda(info, "args");
                 EmitPropertyWithBackingField(writer, info, useFieldKeyword, staticModifier,
                     interfaceType, "AsyncEvent",
@@ -238,17 +258,17 @@ partial class ExternalEventGenerator
 
             writer.AppendLine();
 
-            EmitExcludeFromCodeCoverageAttributes(writer);
-            EmitGeneratedCodeAttributes(writer);
             using (writer.BeginBlock($"public static partial class {outermostTypeName}Extensions"))
             {
                 if (info.IsVoidReturn)
                 {
-                    EmitRaiseExtensionMethod(writer, info, qualifiedRecordType);
+                    EmitRaiseVoidExtensionMethod(writer, info, qualifiedRecordType);
+                    writer.AppendLine();
+                    EmitRaiseAsyncVoidExtensionMethod(writer, info, qualifiedRecordType);
                 }
                 else
                 {
-                    EmitRaiseAsyncExtensionMethod(writer, info, qualifiedRecordType);
+                    EmitRaiseAsyncResultExtensionMethod(writer, info, qualifiedRecordType);
                 }
             }
         }
@@ -256,7 +276,7 @@ partial class ExternalEventGenerator
         /// <summary>
         ///     Emits a synchronous <c>Raise</c> extension method for <see cref="IExternalEvent{T}"/>.
         /// </summary>
-        private static void EmitRaiseExtensionMethod(CodeWriter writer, ExternalEventInfo info, string qualifiedRecordType)
+        private static void EmitRaiseVoidExtensionMethod(CodeWriter writer, ExternalEventInfo info, string qualifiedRecordType)
         {
             var interfaceType = $"{WellKnownFullyQualifiedClassNames.ExternalEventInterface.WithGlobalPrefix}<{qualifiedRecordType}>";
             var returnType = WellKnownFullyQualifiedClassNames.ExternalEventRequest.WithGlobalPrefix;
@@ -272,12 +292,30 @@ partial class ExternalEventGenerator
         }
 
         /// <summary>
-        ///     Emits an asynchronous <c>RaiseAsync</c> extension method for <see cref="IAsyncExternalEvent{T, TResult}"/>.
+        ///     Emits an asynchronous <c>RaiseAsync</c> extension method for void methods with <see cref="IAsyncExternalEvent{T}"/>.
         /// </summary>
-        private static void EmitRaiseAsyncExtensionMethod(CodeWriter writer, ExternalEventInfo info, string qualifiedRecordType)
+        private static void EmitRaiseAsyncVoidExtensionMethod(CodeWriter writer, ExternalEventInfo info, string qualifiedRecordType)
+        {
+            var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEventInterface.WithGlobalPrefix}<{qualifiedRecordType}>";
+            var taskReturnType = WellKnownFullyQualifiedClassNames.Task.WithGlobalPrefix;
+            var parameters = BuildExtensionMethodParameters(info);
+            var recordArguments = BuildRecordConstructorArguments(info);
+
+            EmitExcludeFromCodeCoverageAttributes(writer);
+            EmitGeneratedCodeAttributes(writer);
+            using (writer.BeginBlock($"public static {taskReturnType} RaiseAsync(this {interfaceType} externalEvent, {parameters})"))
+            {
+                writer.AppendLine($"return externalEvent.RaiseAsync(new {qualifiedRecordType}({recordArguments}));");
+            }
+        }
+
+        /// <summary>
+        ///     Emits an asynchronous <c>RaiseAsync</c> extension method for <see cref="IAsyncRequestExternalEvent{T, TResult}"/>.
+        /// </summary>
+        private static void EmitRaiseAsyncResultExtensionMethod(CodeWriter writer, ExternalEventInfo info, string qualifiedRecordType)
         {
             var returnType = info.ReturnTypeFullyQualified!;
-            var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncExternalEventGenericInterface.WithGlobalPrefix}<{qualifiedRecordType}, {returnType}>";
+            var interfaceType = $"{WellKnownFullyQualifiedClassNames.AsyncRequestExternalEventInterface.WithGlobalPrefix}<{qualifiedRecordType}, {returnType}>";
             var taskReturnType = $"{WellKnownFullyQualifiedClassNames.Task.WithGlobalPrefix}<{returnType}>";
             var parameters = BuildExtensionMethodParameters(info);
             var recordArguments = BuildRecordConstructorArguments(info);
@@ -357,7 +395,7 @@ partial class ExternalEventGenerator
                 var backingFieldName = BuildBackingFieldName(info.MethodName, propertySuffix);
                 writer.AppendLine($"private {staticModifier}{propertyType}? {backingFieldName};");
                 writer.AppendLine();
-                
+
                 EmitExcludeFromCodeCoverageAttributes(writer);
                 EmitGeneratedCodeAttributes(writer);
                 writer.AppendLine($"public {staticModifier}{propertyType} {info.MethodName}{propertySuffix} => {backingFieldName} ??= {initializer};");

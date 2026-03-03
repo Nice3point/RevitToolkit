@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace Nice3point.Revit.Toolkit.SourceGenerators.Tests;
+namespace Nice3point.Revit.Toolkit.SourceGenerators.Tests.Helpers;
 
 public static class GeneratorTestHelper
 {
@@ -45,6 +45,11 @@ public static class GeneratorTestHelper
                 Autodesk.Revit.UI.ExternalEventRequest Raise();
             }
 
+            public interface IExternalEvent<T>
+            {
+                Autodesk.Revit.UI.ExternalEventRequest Raise(T args);
+            }
+
             public interface IAsyncExternalEvent
             {
                 System.Threading.Tasks.Task RaiseAsync();
@@ -52,7 +57,17 @@ public static class GeneratorTestHelper
 
             public interface IAsyncExternalEvent<T>
             {
-                System.Threading.Tasks.Task<T> RaiseAsync();
+                System.Threading.Tasks.Task RaiseAsync(T args);
+            }
+
+            public interface IAsyncRequestExternalEvent<TResult>
+            {
+                System.Threading.Tasks.Task<TResult> RaiseAsync();
+            }
+
+            public interface IAsyncRequestExternalEvent<T, TResult>
+            {
+                System.Threading.Tasks.Task<TResult> RaiseAsync(T args);
             }
 
             public class ExternalEvent : ExternalEventHandler, IExternalEvent
@@ -62,6 +77,16 @@ public static class GeneratorTestHelper
                 public ExternalEvent(System.Action<Autodesk.Revit.UI.UIApplication> handler) { }
                 public ExternalEvent(System.Action<Autodesk.Revit.UI.UIApplication> handler, ExternalEventOptions options) { }
                 public override void Execute(Autodesk.Revit.UI.UIApplication uiApplication) { }
+            }
+
+            public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
+            {
+                public ExternalEvent(System.Action<T> handler) { }
+                public ExternalEvent(System.Action<T> handler, ExternalEventOptions options) { }
+                public ExternalEvent(System.Action<Autodesk.Revit.UI.UIApplication, T> handler) { }
+                public ExternalEvent(System.Action<Autodesk.Revit.UI.UIApplication, T> handler, ExternalEventOptions options) { }
+                public override void Execute(Autodesk.Revit.UI.UIApplication uiApplication) { }
+                public Autodesk.Revit.UI.ExternalEventRequest Raise(T args) => default;
             }
 
             public sealed class AsyncExternalEvent : ExternalEventHandler, IAsyncExternalEvent
@@ -76,12 +101,32 @@ public static class GeneratorTestHelper
 
             public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternalEvent<T>
             {
-                public AsyncExternalEvent(System.Func<T> handler) { }
-                public AsyncExternalEvent(System.Func<T> handler, ExternalEventOptions options) { }
-                public AsyncExternalEvent(System.Func<Autodesk.Revit.UI.UIApplication, T> handler) { }
-                public AsyncExternalEvent(System.Func<Autodesk.Revit.UI.UIApplication, T> handler, ExternalEventOptions options) { }
+                public AsyncExternalEvent(System.Action<T> handler) { }
+                public AsyncExternalEvent(System.Action<T> handler, ExternalEventOptions options) { }
+                public AsyncExternalEvent(System.Action<Autodesk.Revit.UI.UIApplication, T> handler) { }
+                public AsyncExternalEvent(System.Action<Autodesk.Revit.UI.UIApplication, T> handler, ExternalEventOptions options) { }
                 public override void Execute(Autodesk.Revit.UI.UIApplication uiApplication) { }
-                public System.Threading.Tasks.Task<T> RaiseAsync() => System.Threading.Tasks.Task.FromResult<T>(default!);
+                public System.Threading.Tasks.Task RaiseAsync(T args) => System.Threading.Tasks.Task.CompletedTask;
+            }
+
+            public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, IAsyncRequestExternalEvent<TResult>
+            {
+                public AsyncRequestExternalEvent(System.Func<TResult> handler) { }
+                public AsyncRequestExternalEvent(System.Func<TResult> handler, ExternalEventOptions options) { }
+                public AsyncRequestExternalEvent(System.Func<Autodesk.Revit.UI.UIApplication, TResult> handler) { }
+                public AsyncRequestExternalEvent(System.Func<Autodesk.Revit.UI.UIApplication, TResult> handler, ExternalEventOptions options) { }
+                public override void Execute(Autodesk.Revit.UI.UIApplication uiApplication) { }
+                public System.Threading.Tasks.Task<TResult> RaiseAsync() => System.Threading.Tasks.Task.FromResult<TResult>(default!);
+            }
+
+            public sealed class AsyncRequestExternalEvent<T, TResult> : ExternalEventHandler, IAsyncRequestExternalEvent<T, TResult>
+            {
+                public AsyncRequestExternalEvent(System.Func<T, TResult> handler) { }
+                public AsyncRequestExternalEvent(System.Func<T, TResult> handler, ExternalEventOptions options) { }
+                public AsyncRequestExternalEvent(System.Func<Autodesk.Revit.UI.UIApplication, T, TResult> handler) { }
+                public AsyncRequestExternalEvent(System.Func<Autodesk.Revit.UI.UIApplication, T, TResult> handler, ExternalEventOptions options) { }
+                public override void Execute(Autodesk.Revit.UI.UIApplication uiApplication) { }
+                public System.Threading.Tasks.Task<TResult> RaiseAsync(T args) => System.Threading.Tasks.Task.FromResult<TResult>(default!);
             }
 
             public static class RevitContext

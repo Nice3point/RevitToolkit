@@ -41,37 +41,41 @@ namespace Nice3point.Revit.Toolkit.External;
 ///     Will generate an <see cref="IExternalEvent"/> property (using an <see cref="Nice3point.Revit.Toolkit.External.ExternalEvent"/> instance)
 ///     and an <see cref="IAsyncExternalEvent"/> property (using an <see cref="Nice3point.Revit.Toolkit.External.AsyncExternalEvent"/> instance).
 ///     <code>
-///     Task&lt;T&gt; Method();
-///     Task&lt;T&gt; Method(UIApplication);
+///     T Method();
+///     T Method(UIApplication);
 ///     </code>
-///     Will generate an <see cref="IAsyncExternalEvent{T}"/> property (using an <see cref="Nice3point.Revit.Toolkit.External.AsyncExternalEvent{T}"/> instance).
+///     Will generate an <see cref="IAsyncRequestExternalEvent{TResult}"/> property (using an <see cref="Nice3point.Revit.Toolkit.External.AsyncRequestExternalEvent{TResult}"/> instance).
 ///     </para>
 ///     <para>
-///     <b>Methods with extra parameters.</b> When a method has additional parameters beyond the optional <c>UIApplication</c>,
+///     <b>Methods with one extra parameter.</b> When a method has one additional parameter beyond the optional <c>UIApplication</c>,
 ///     the generator creates typed event properties:
 ///     <code>
 ///     void Method(UIApplication, string);
 ///     </code>
-///     Will generate an <see cref="IExternalEvent{T}"/> property (using an <see cref="ExternalEvent{T}"/> instance).
+///     Will generate an <see cref="IExternalEvent{T}"/> property (using an <see cref="ExternalEvent{T}"/> instance)
+///     and an <see cref="IAsyncExternalEvent{T}"/> property (using an <see cref="Nice3point.Revit.Toolkit.External.AsyncExternalEvent{T}"/> instance).
 ///     <code>
-///     Task&lt;TResult&gt; Method(UIApplication, string);
+///     TResult Method(UIApplication, string);
 ///     </code>
-///     Will generate an <see cref="IAsyncExternalEvent{T, TResult}"/> property (using an <see cref="AsyncExternalEvent{T, TResult}"/> instance).
+///     Will generate an <see cref="IAsyncRequestExternalEvent{T, TResult}"/> property (using an <see cref="AsyncRequestExternalEvent{T, TResult}"/> instance).
 ///     </para>
 ///     <para>
 ///     <b>Methods with multiple extra parameters.</b> When a method has two or more extra parameters, the generator
 ///     creates a <c>sealed record</c> to bundle them into a single argument type, along with convenience extension methods:
 ///     <code>
 ///     [ExternalEvent]
-///     private void GetDocumentInfo(UIApplication application, string title, int elementCount) { }
+///     private void DeleteInstances(UIApplication application, BuiltInCategory category, int count) { }
 ///     </code>
 ///     Will generate:
 ///     <code>
-///     public sealed record GetDocumentInfoArgs(string Title, int ElementCount);
-///     public IExternalEvent&lt;GetDocumentInfoArgs&gt; GetDocumentInfoEvent => field ??= new ExternalEvent&lt;GetDocumentInfoArgs&gt;(...);
+///     public IExternalEvent&lt;DeleteInstancesArgs&gt; DeleteInstancesEvent => field ??= new ExternalEvent&lt;DeleteInstancesArgs&gt;(...);
+///     public IAsyncExternalEvent&lt;DeleteInstancesArgs&gt; DeleteInstancesAsyncEvent => field ??= new AsyncExternalEvent&lt;DeleteInstancesArgs&gt;(...);
 ///     
-///     // Extension method:
-///     public static ExternalEventRequest Raise(this IExternalEvent&lt;GetDocumentInfoArgs&gt; externalEvent, string title, int elementCount);
+///     public sealed record DeleteInstancesArgs(BuiltInCategory Category, int Count);
+///     
+///     // Extension methods:
+///     public static ExternalEventRequest Raise(this IExternalEvent&lt;DeleteInstancesArgs&gt; externalEvent, BuiltInCategory category, int count);
+///     public static Task RaiseAsync(this IAsyncExternalEvent&lt;DeleteInstancesArgs&gt; externalEvent, BuiltInCategory category, int count);
 ///     </code>
 ///     </para>
 /// </summary>
@@ -84,7 +88,7 @@ public sealed class ExternalEventAttribute : Attribute
     ///     when Revit is in API mode, instead of being queued via <see cref="ExternalEventHandler.Raise"/>.
     ///     <para>
     ///     When set for an attribute used on a method that would result in an <see cref="Nice3point.Revit.Toolkit.External.ExternalEvent"/>,
-    ///     <see cref="Nice3point.Revit.Toolkit.External.AsyncExternalEvent"/>, or <see cref="Nice3point.Revit.Toolkit.External.AsyncExternalEvent{T}"/> property to be generated,
+    ///     <see cref="Nice3point.Revit.Toolkit.External.AsyncExternalEvent"/>, or <see cref="Nice3point.Revit.Toolkit.External.AsyncRequestExternalEvent{TResult}"/> property to be generated,
     ///     this will modify the behavior of these events when the handler is raised from within the Revit API context.
     ///     It is the same as creating an instance of these event types with a constructor such as
     ///     <see cref="Nice3point.Revit.Toolkit.External.ExternalEvent(System.Action, ExternalEventOptions)"/> and using the

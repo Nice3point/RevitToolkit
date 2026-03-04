@@ -4,6 +4,7 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>net10.0</TargetFramework>
         <EnableTUnitPolyfills>false</EnableTUnitPolyfills>
+        <NoWarn>$(NoWarn);RS2008</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,6 +14,11 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit.SourceGenerators\Nice3point.Revit.Toolkit.SourceGenerators.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\..\source\Nice3point.Revit.Toolkit.Analyzers\Diagnostics\DiagnosticDescriptors.cs"
+                 Link="Diagnostics\DiagnosticDescriptors.cs" />
     </ItemGroup>
 
 </Project>

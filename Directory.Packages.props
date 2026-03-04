@@ -36,6 +36,9 @@
 
         <!-- Source Generators -->
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0"/>
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.0.0"/>
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.3"/>
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="1.1.3"/>
     </ItemGroup>
 
     <ItemGroup>

@@ -1,10 +1,10 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 
-namespace Nice3point.Revit.Toolkit.SourceGenerators.Diagnostics;
+namespace Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
 
 /// <summary>
 ///     Contains all <see cref="DiagnosticDescriptor"/> instances for errors and warnings
-///     reported by the source generators in this project.
+///     reported by the analyzers and source generators in this project.
 /// </summary>
 internal static class DiagnosticDescriptors
 {

@@ -39,12 +39,13 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Nice3point.Revit.Toolkit.SourceGenerators\Nice3point.Revit.Toolkit.SourceGenerators.csproj"
-                          OutputItemType="Analyzer"
-                          ReferenceOutputAssembly="false" />
-        <ProjectReference Include="..\Nice3point.Revit.Toolkit.SourceGenerators.Roslyn414\Nice3point.Revit.Toolkit.SourceGenerators.Roslyn414.csproj"
-                          OutputItemType="Analyzer" 
-                          ReferenceOutputAssembly="false" />
+        <!-- Build order references -->
+        <ProjectReference Include="..\Nice3point.Revit.Toolkit.Analyzers\Nice3point.Revit.Toolkit.Analyzers.csproj" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\Nice3point.Revit.Toolkit.Analyzers.Roslyn414\Nice3point.Revit.Toolkit.Analyzers.Roslyn414.csproj" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\Nice3point.Revit.Toolkit.Analyzers.CodeFixers\Nice3point.Revit.Toolkit.Analyzers.CodeFixers.csproj" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Roslyn414\Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Roslyn414.csproj" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\Nice3point.Revit.Toolkit.SourceGenerators\Nice3point.Revit.Toolkit.SourceGenerators.csproj" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\Nice3point.Revit.Toolkit.SourceGenerators.Roslyn414\Nice3point.Revit.Toolkit.SourceGenerators.Roslyn414.csproj" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 
     <PropertyGroup>
@@ -53,17 +54,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="..\..\.nuget\PackageIcon.png" PackagePath="images\" Pack="true" Visible="false"/>
-        <None Include="..\..\License.md" PackagePath="" Pack="true" Visible="false"/>
         <None Include="..\..\Readme.md" PackagePath="" Pack="true" Visible="false"/>
-        <None Include="..\Nice3point.Revit.Toolkit.SourceGenerators\bin\$(_GeneratorConfiguration)\netstandard2.0\Nice3point.Revit.Toolkit.SourceGenerators.dll"
-              PackagePath="analyzers\dotnet\roslyn5.0\cs" 
-              Pack="true" 
-              Visible="false"/>
-        <None Include="..\Nice3point.Revit.Toolkit.SourceGenerators.Roslyn414\bin\$(_GeneratorConfiguration)\netstandard2.0\Nice3point.Revit.Toolkit.SourceGenerators.dll"
-              PackagePath="analyzers\dotnet\roslyn4.14\cs" 
-              Pack="true"
-              Visible="false"/>
+        <None Include="..\..\License.md" PackagePath="" Pack="true" Visible="false"/>
+        <None Include="..\..\.nuget\PackageIcon.png" PackagePath="images\" Pack="true" Visible="false"/>
+        <None Include="..\Nice3point.Revit.Toolkit.SourceGenerators\bin\$(_GeneratorConfiguration)\netstandard2.0\Nice3point.Revit.Toolkit.SourceGenerators.dll" PackagePath="analyzers\dotnet\roslyn5.0\cs" Pack="true" Visible="false"/>
+        <None Include="..\Nice3point.Revit.Toolkit.SourceGenerators.Roslyn414\bin\$(_GeneratorConfiguration)\netstandard2.0\Nice3point.Revit.Toolkit.SourceGenerators.dll" PackagePath="analyzers\dotnet\roslyn4.14\cs" Pack="true" Visible="false"/>
+        <None Include="..\Nice3point.Revit.Toolkit.Analyzers\bin\$(_GeneratorConfiguration)\netstandard2.0\Nice3point.Revit.Toolkit.Analyzers.dll" PackagePath="analyzers\dotnet\roslyn5.0\cs" Pack="true" Visible="false"/>
+        <None Include="..\Nice3point.Revit.Toolkit.Analyzers.Roslyn414\bin\$(_GeneratorConfiguration)\netstandard2.0\Nice3point.Revit.Toolkit.Analyzers.dll" PackagePath="analyzers\dotnet\roslyn4.14\cs" Pack="true" Visible="false"/>
+        <None Include="..\Nice3point.Revit.Toolkit.Analyzers.CodeFixers\bin\$(_GeneratorConfiguration)\netstandard2.0\Nice3point.Revit.Toolkit.Analyzers.CodeFixers.dll" PackagePath="analyzers\dotnet\roslyn5.0\cs" Pack="true" Visible="false"/>
+        <None Include="..\Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Roslyn414\bin\$(_GeneratorConfiguration)\netstandard2.0\Nice3point.Revit.Toolkit.Analyzers.CodeFixers.dll" PackagePath="analyzers\dotnet\roslyn4.14\cs" Pack="true" Visible="false"/>
     </ItemGroup>
 
 </Project>

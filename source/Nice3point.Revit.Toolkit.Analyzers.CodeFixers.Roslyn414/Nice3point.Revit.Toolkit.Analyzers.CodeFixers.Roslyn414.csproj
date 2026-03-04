@@ -4,6 +4,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(RoslynVersion).*" PrivateAssets="all"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="$(RoslynVersion).*" PrivateAssets="all"/>
     </ItemGroup>
 
     <ItemGroup>

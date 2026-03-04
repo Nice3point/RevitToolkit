@@ -5,7 +5,7 @@
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <IsRoslynComponent>true</IsRoslynComponent>
     </PropertyGroup>
-    
+
     <!-- Roslyn-versioned source generator projects (e.g., *.Roslyn414 → Roslyn 4.14) -->
     <PropertyGroup Condition="$(MSBuildProjectName.Contains('.Roslyn'))">
         <_BaseProjectName>$([System.Text.RegularExpressions.Regex]::Replace($(MSBuildProjectName), '\.Roslyn\d+$', ''))</_BaseProjectName>
@@ -15,21 +15,25 @@
         <RootNamespace>$(_BaseProjectName)</RootNamespace>
     </PropertyGroup>
 
-    <ItemGroup Condition="$(MSBuildProjectName.Contains('.Roslyn'))">
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(RoslynVersion).*" PrivateAssets="all" />
-    </ItemGroup>
-
-    <!-- Link source files from the base project -->
-    <ItemGroup Condition="$(MSBuildProjectName.Contains('.Roslyn'))">
-        <Compile Include="..\$(_BaseProjectName)\**\*.cs" Exclude="..\$(_BaseProjectName)\obj\**\*.cs" />
-        <AdditionalFiles Include="..\$(_BaseProjectName)\AnalyzerReleases.Shipped.md" />
-        <AdditionalFiles Include="..\$(_BaseProjectName)\AnalyzerReleases.Unshipped.md" />
-    </ItemGroup>
-
     <PropertyGroup>
         <RoslynVersion Condition="'$(RoslynVersion)' == ''">5.0</RoslynVersion>
         <DefineConstants Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(RoslynVersion)', '4.14'))">$(DefineConstants);ROSLYN4_14_0_OR_GREATER</DefineConstants>
         <DefineConstants Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(RoslynVersion)', '5.0'))">$(DefineConstants);ROSLYN5_0_0_OR_GREATER</DefineConstants>
     </PropertyGroup>
+
+    <!-- Link source files from the base project -->
+    <ItemGroup Condition="$(MSBuildProjectName.Contains('.Roslyn'))">
+        <Compile Include="..\$(_BaseProjectName)\**\*.cs"
+                 Exclude="..\$(_BaseProjectName)\obj\**\*.cs"/>
+    </ItemGroup>
+    
+    <ItemGroup>
+        <AdditionalFiles Include="..\Nice3point.Revit.Toolkit.Analyzers\AnalyzerReleases.Shipped.md"
+                         Condition="!Exists('AnalyzerReleases.Shipped.md')"
+                         Link="AnalyzerReleases.Shipped.md"/>
+        <AdditionalFiles Include="..\Nice3point.Revit.Toolkit.Analyzers\AnalyzerReleases.Unshipped.md"
+                         Condition="!Exists('AnalyzerReleases.Unshipped.md')"
+                         Link="AnalyzerReleases.Unshipped.md"/>
+    </ItemGroup>
 
 </Project>

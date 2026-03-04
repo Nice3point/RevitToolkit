@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis;
+using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
 using Nice3point.Revit.Toolkit.SourceGenerators.Tests.Helpers;
 
 namespace Nice3point.Revit.Toolkit.SourceGenerators.Tests;
@@ -297,7 +298,7 @@ public sealed class ExternalEventGeneratorTests
 
         var (diagnostics, _) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == "RVTTK0001")).IsNotEmpty();
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.TaskReturnNotSupported.Id)).IsNotEmpty();
     }
 
     [Test]
@@ -317,7 +318,7 @@ public sealed class ExternalEventGeneratorTests
 
         var (diagnostics, _) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == "RVTTK0002")).IsNotEmpty();
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ContainingTypeNotPartial.Id)).IsNotEmpty();
     }
 
     [Test]
@@ -337,7 +338,7 @@ public sealed class ExternalEventGeneratorTests
 
         var (diagnostics, _) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == "RVTTK0003")).IsNotEmpty();
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.MethodIsGeneric.Id)).IsNotEmpty();
     }
 
 
@@ -361,7 +362,7 @@ public sealed class ExternalEventGeneratorTests
 
         var (diagnostics, _) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == "RVTTK0004")).IsNotEmpty();
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.DuplicateMethodOverload.Id)).IsNotEmpty();
     }
 
     [Test]
@@ -381,7 +382,7 @@ public sealed class ExternalEventGeneratorTests
 
         var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == "RVTTK0005")).IsNotEmpty();
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.MethodIsAsyncVoid.Id)).IsNotEmpty();
         await Assert.That(generated).IsNotEmpty();
     }
 

@@ -6,9 +6,4 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(RoslynVersion).*" PrivateAssets="all"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <Compile Include="..\Nice3point.Revit.Toolkit.Analyzers\Diagnostics\DiagnosticDescriptors.cs"
-                 Link="Diagnostics\DiagnosticDescriptors.cs"/>
-    </ItemGroup>
-
 </Project>

@@ -2,7 +2,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Nice3point.Revit.Toolkit.SourceGenerators.Diagnostics;
+using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
 using Nice3point.Revit.Toolkit.SourceGenerators.Models;
 
 namespace Nice3point.Revit.Toolkit.SourceGenerators;
@@ -44,8 +44,6 @@ partial class ExternalEventGenerator
                 return validationResult.Value;
             }
 
-            CollectWarnings(methodSymbol, diagnostics);
-
             var info = BuildExternalEventInfo(methodSymbol);
 
             return new ExternalEventMethodResult(info, diagnostics.Count > 0 ? diagnostics.ToArray() : null);
@@ -59,12 +57,6 @@ partial class ExternalEventGenerator
         {
             if (!IsContainingTypePartial(methodSymbol, out _))
             {
-                diagnostics.Add(Diagnostic.Create(
-                    DiagnosticDescriptors.ContainingTypeNotPartial,
-                    methodSymbol.Locations[0],
-                    methodSymbol.ContainingType.Name,
-                    methodSymbol.Name));
-
                 return new ExternalEventMethodResult(null, diagnostics.ToArray());
             }
 
@@ -99,20 +91,6 @@ partial class ExternalEventGenerator
             }
 
             return null;
-        }
-
-        /// <summary>
-        ///     Collects non-fatal warnings for the method (e.g., async void usage).
-        /// </summary>
-        private static void CollectWarnings(IMethodSymbol methodSymbol, List<Diagnostic> diagnostics)
-        {
-            if (methodSymbol is { IsAsync: true, ReturnsVoid: true })
-            {
-                diagnostics.Add(Diagnostic.Create(
-                    DiagnosticDescriptors.MethodIsAsyncVoid,
-                    methodSymbol.Locations[0],
-                    methodSymbol.Name));
-            }
         }
 
         /// <summary>

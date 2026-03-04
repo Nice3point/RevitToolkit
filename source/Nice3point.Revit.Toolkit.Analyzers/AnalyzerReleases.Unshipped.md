@@ -1,5 +1,4 @@
 ### New Rules
-
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 RVTTK0001 | ExternalEventGenerator | Error | Method returns Task or Task<T>

@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="Nice3point.Revit.Toolkit.SourceGenerators.props" />
-    
+    <Import Project="..\..\Directory.Roslyn.props" />
+
     <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all"/>
     </ItemGroup>
-    
+
     <ItemGroup>
-        <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
-        <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+        <Compile Include="..\Nice3point.Revit.Toolkit.Analyzers\Diagnostics\DiagnosticDescriptors.cs"
+                 Link="Diagnostics\DiagnosticDescriptors.cs" />
     </ItemGroup>
 
 </Project>

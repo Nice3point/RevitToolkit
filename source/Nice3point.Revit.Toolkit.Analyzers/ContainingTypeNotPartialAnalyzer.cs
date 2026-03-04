@@ -11,9 +11,9 @@ namespace Nice3point.Revit.Toolkit.Analyzers;
 ///     A diagnostic analyzer that reports an error when a method marked with <c>[ExternalEvent]</c> is declared inside a type that is not <see langword="partial"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public sealed class ContainingTypeNotPartialAnalyzer : DiagnosticAnalyzer
+public sealed class ExternalEventContainingTypeNotPartialAnalyzer : DiagnosticAnalyzer
 {
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [DiagnosticDescriptors.ContainingTypeNotPartial];
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [DiagnosticDescriptors.ExternalEventContainingTypeNotPartial];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -22,7 +22,8 @@ public sealed class ContainingTypeNotPartialAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(static context =>
         {
-            if (context.Compilation.GetTypeByMetadataName("Nice3point.Revit.Toolkit.External.ExternalEventAttribute") is not { } attributeSymbol)
+            var attributeSymbol = context.Compilation.GetTypeByMetadataName("Nice3point.Revit.Toolkit.External.ExternalEventAttribute");
+            if (attributeSymbol == null)
             {
                 return;
             }
@@ -34,17 +35,7 @@ public sealed class ContainingTypeNotPartialAnalyzer : DiagnosticAnalyzer
                     return;
                 }
 
-                var hasAttribute = false;
-                foreach (var attribute in methodSymbol.GetAttributes())
-                {
-                    if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeSymbol))
-                    {
-                        hasAttribute = true;
-                        break;
-                    }
-                }
-
-                if (!hasAttribute)
+                if (!HasTargetAttribute(methodSymbol, attributeSymbol))
                 {
                     return;
                 }
@@ -52,26 +43,12 @@ public sealed class ContainingTypeNotPartialAnalyzer : DiagnosticAnalyzer
                 var currentType = methodSymbol.ContainingType;
                 while (currentType is not null)
                 {
-                    var isPartial = false;
-                    foreach (var syntaxReference in currentType.DeclaringSyntaxReferences)
-                    {
-                        if (syntaxReference.GetSyntax(context.CancellationToken) is TypeDeclarationSyntax typeDeclaration)
-                        {
-                            if (typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
-                            {
-                                isPartial = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (!isPartial)
+                    if (!IsTypeDeclarationPartial(context, currentType))
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
-                            DiagnosticDescriptors.ContainingTypeNotPartial,
-                            currentType.Locations[0],
-                            currentType.Name,
-                            methodSymbol.Name));
+                            descriptor: DiagnosticDescriptors.ExternalEventContainingTypeNotPartial,
+                            location: methodSymbol.Locations[0],
+                            messageArgs: [currentType.Name, methodSymbol.Name]));
 
                         return;
                     }
@@ -80,5 +57,34 @@ public sealed class ContainingTypeNotPartialAnalyzer : DiagnosticAnalyzer
                 }
             }, SymbolKind.Method);
         });
+    }
+
+    private static bool HasTargetAttribute(IMethodSymbol methodSymbol, INamedTypeSymbol attributeSymbol)
+    {
+        foreach (var attribute in methodSymbol.GetAttributes())
+        {
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeSymbol))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsTypeDeclarationPartial(SymbolAnalysisContext context, INamedTypeSymbol currentType)
+    {
+        foreach (var syntaxReference in currentType.DeclaringSyntaxReferences)
+        {
+            if (syntaxReference.GetSyntax(context.CancellationToken) is TypeDeclarationSyntax typeDeclaration)
+            {
+                if (typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

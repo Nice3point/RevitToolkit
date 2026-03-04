@@ -19,7 +19,7 @@ public sealed class MakeTypePartialCodeFixer : CodeFixProvider
 {
     private const string Title = "Make type partial";
 
-    public override ImmutableArray<string> FixableDiagnosticIds { get; } = [DiagnosticDescriptors.ContainingTypeNotPartial.Id];
+    public override ImmutableArray<string> FixableDiagnosticIds { get; } = [DiagnosticDescriptors.ExternalEventContainingTypeNotPartial.Id];
     public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
@@ -28,15 +28,15 @@ public sealed class MakeTypePartialCodeFixer : CodeFixProvider
         var diagnosticSpan = context.Span;
 
         var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
-        if (root!.FindNode(diagnosticSpan).FirstAncestorOrSelf<TypeDeclarationSyntax>() is { } typeDeclaration)
-        {
-            context.RegisterCodeFix(
-                CodeAction.Create(
-                    title: Title,
-                    createChangedDocument: token => AddPartialModifier(context.Document, root, typeDeclaration, token),
-                    equivalenceKey: Title),
-                diagnostic);
-        }
+        var typeDeclaration = root!.FindNode(diagnosticSpan).FirstAncestorOrSelf<TypeDeclarationSyntax>();
+        if (typeDeclaration is null) return;
+
+        context.RegisterCodeFix(
+            CodeAction.Create(
+                title: Title,
+                createChangedDocument: token => AddPartialModifier(context.Document, root, typeDeclaration, token),
+                equivalenceKey: Title),
+            diagnostic);
     }
 
     /// <summary>

@@ -19,7 +19,7 @@ public sealed class RemoveAsyncModifierCodeFixer : CodeFixProvider
 {
     private const string Title = "Remove async modifier";
 
-    public override ImmutableArray<string> FixableDiagnosticIds { get; } = [DiagnosticDescriptors.MethodIsAsyncVoid.Id];
+    public override ImmutableArray<string> FixableDiagnosticIds { get; } = [DiagnosticDescriptors.ExternalEventAsyncVoidMethod.Id];
     public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
@@ -28,15 +28,15 @@ public sealed class RemoveAsyncModifierCodeFixer : CodeFixProvider
         var diagnosticSpan = context.Span;
 
         var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
-        if (root!.FindNode(diagnosticSpan).FirstAncestorOrSelf<MethodDeclarationSyntax>() is { } methodDeclaration)
-        {
-            context.RegisterCodeFix(
-                CodeAction.Create(
-                    title: Title,
-                    createChangedDocument: _ => RemoveAsyncModifier(context.Document, root, methodDeclaration),
-                    equivalenceKey: Title),
-                diagnostic);
-        }
+        var methodDeclaration = root!.FindNode(diagnosticSpan).FirstAncestorOrSelf<MethodDeclarationSyntax>();
+        if (methodDeclaration is null) return;
+
+        context.RegisterCodeFix(
+            CodeAction.Create(
+                title: Title,
+                createChangedDocument: _ => RemoveAsyncModifier(context.Document, root, methodDeclaration),
+                equivalenceKey: Title),
+            diagnostic);
     }
 
     /// <summary>

@@ -12,7 +12,7 @@ namespace Nice3point.Revit.Toolkit.Analyzers;
 public sealed class AsyncVoidMethodAnalyzer : DiagnosticAnalyzer
 {
     /// <inheritdoc/>
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [DiagnosticDescriptors.MethodIsAsyncVoid];
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [DiagnosticDescriptors.ExternalEventAsyncVoidMethod];
 
     /// <inheritdoc/>
     public override void Initialize(AnalysisContext context)
@@ -22,7 +22,8 @@ public sealed class AsyncVoidMethodAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(static context =>
         {
-            if (context.Compilation.GetTypeByMetadataName("Nice3point.Revit.Toolkit.External.ExternalEventAttribute") is not { } attributeSymbol)
+            var attributeSymbol = context.Compilation.GetTypeByMetadataName("Nice3point.Revit.Toolkit.External.ExternalEventAttribute");
+            if (attributeSymbol == null)
             {
                 return;
             }
@@ -34,26 +35,29 @@ public sealed class AsyncVoidMethodAnalyzer : DiagnosticAnalyzer
                     return;
                 }
 
-                var hasAttribute = false;
-                foreach (var attribute in methodSymbol.GetAttributes())
-                {
-                    if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeSymbol))
-                    {
-                        hasAttribute = true;
-                        break;
-                    }
-                }
-
-                if (!hasAttribute)
+                if (!HasTargetAttribute(methodSymbol, attributeSymbol))
                 {
                     return;
                 }
 
                 context.ReportDiagnostic(Diagnostic.Create(
-                    DiagnosticDescriptors.MethodIsAsyncVoid,
-                    methodSymbol.Locations[0],
-                    methodSymbol.Name));
+                    descriptor: DiagnosticDescriptors.ExternalEventAsyncVoidMethod,
+                    location: methodSymbol.Locations[0],
+                    messageArgs: methodSymbol.Name));
             }, SymbolKind.Method);
         });
+    }
+
+    private static bool HasTargetAttribute(IMethodSymbol methodSymbol, INamedTypeSymbol attributeSymbol)
+    {
+        foreach (var attribute in methodSymbol.GetAttributes())
+        {
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeSymbol))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

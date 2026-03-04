@@ -302,7 +302,7 @@ public sealed class ExternalEventGeneratorTests
     }
 
     [Test]
-    public async Task NonPartialType_ReportsError()
+    public async Task NonPartialType_GeneratesNothing()
     {
         const string source = """
                               using Nice3point.Revit.Toolkit.External;
@@ -316,9 +316,9 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (diagnostics, _) = GeneratorTestHelper.RunGenerator(source);
+        var (_, generated) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ContainingTypeNotPartial.Id)).IsNotEmpty();
+        await Assert.That(generated).IsEmpty();
     }
 
     [Test]
@@ -366,7 +366,7 @@ public sealed class ExternalEventGeneratorTests
     }
 
     [Test]
-    public async Task AsyncVoidMethod_ReportsWarning()
+    public async Task AsyncVoidMethod_GeneratesCode()
     {
         const string source = """
                               using Nice3point.Revit.Toolkit.External;
@@ -380,9 +380,8 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        var (_, generated) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.MethodIsAsyncVoid.Id)).IsNotEmpty();
         await Assert.That(generated).IsNotEmpty();
     }
 

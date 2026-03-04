@@ -72,7 +72,7 @@ public sealed class ContainingTypeNotPartialAnalyzer : DiagnosticAnalyzer
                             currentType.Locations[0],
                             currentType.Name,
                             methodSymbol.Name));
-                        
+
                         return;
                     }
 

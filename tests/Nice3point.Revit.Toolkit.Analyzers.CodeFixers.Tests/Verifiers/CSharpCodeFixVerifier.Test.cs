@@ -35,8 +35,7 @@ public static partial class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
                     return solution;
                 }
 
-                compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(
-                    compilationOptions.SpecificDiagnosticOptions.SetItems(CSharpVerifierHelper.NullableWarnings));
+                compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(compilationOptions.SpecificDiagnosticOptions.SetItems(CSharpVerifierHelper.NullableWarnings));
 
                 solution = solution.WithProjectCompilationOptions(projectId, compilationOptions)
                     .WithProjectParseOptions(projectId, parseOptions.WithLanguageVersion(LanguageVersion.Preview));

@@ -17,13 +17,12 @@ public sealed partial class ExternalEventGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var methodResults = context.SyntaxProvider
+        var combinedResults = context.SyntaxProvider
             .ForAttributeWithMetadataName(
                 WellKnownFullyQualifiedClassNames.ExternalEventAttribute.WithoutGlobalPrefix,
                 predicate: static (node, cancellationToken) => node is MethodDeclarationSyntax,
-                transform: static (syntaxContext, cancellationToken) => Execute.GetMethodResult(syntaxContext, cancellationToken));
-
-        var combinedResults = methodResults.Combine(context.ParseOptionsProvider);
+                transform: static (syntaxContext, cancellationToken) => Execute.GetMethodResult(syntaxContext, cancellationToken))
+            .Combine(context.ParseOptionsProvider);
 
         context.RegisterSourceOutput(combinedResults, static (sourceProductionContext, pair) =>
         {

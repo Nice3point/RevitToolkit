@@ -1,11 +1,11 @@
 ﻿using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
 using Verifier = Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Tests.Verifiers.CSharpCodeFixVerifier<
     Nice3point.Revit.Toolkit.Analyzers.AsyncVoidMethodAnalyzer,
-    Nice3point.Revit.Toolkit.Analyzers.CodeFixers.CodeFixes.ChangeAsyncVoidToTaskCodeFixer>;
+    Nice3point.Revit.Toolkit.Analyzers.CodeFixers.CodeFixes.RemoveAsyncModifierCodeFixer>;
 
 namespace Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Tests;
 
-public sealed class ChangeAsyncVoidToTaskCodeFixerTests
+public sealed class RemoveAsyncModifierCodeFixerTests
 {
     [Test]
     public async Task AsyncVoidMethod_ReportsDiagnosticAndFixes()
@@ -44,7 +44,7 @@ public sealed class ChangeAsyncVoidToTaskCodeFixerTests
                 public partial class MyViewModel
                 {
                     [Nice3point.Revit.Toolkit.External.ExternalEvent]
-                    private async Task DoWork() { }
+                    private void DoWork() { }
                 }
             }
             """);

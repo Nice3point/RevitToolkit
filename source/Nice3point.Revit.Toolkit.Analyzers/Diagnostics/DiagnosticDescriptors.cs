@@ -43,7 +43,7 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor MethodIsAsyncVoid = new(
         id: "RVTTK0005",
         title: "Method is async void",
-        messageFormat: "Method '{0}' marked with [ExternalEvent] should not be async void; this can cause unobserved exceptions",
+        messageFormat: "Method '{0}' marked with [ExternalEvent] should not be async void; it is called synchronously in the Revit API context",
         category: "ExternalEventGenerator",
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true);

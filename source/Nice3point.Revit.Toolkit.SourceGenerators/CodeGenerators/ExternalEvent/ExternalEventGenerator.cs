@@ -28,7 +28,8 @@ public sealed partial class ExternalEventGenerator : IIncrementalGenerator
         {
             var (result, parseOptions) = pair;
 
-            if (result.Diagnostics is { } diagnostics)
+            var diagnostics = result.Diagnostics;
+            if (diagnostics is not null)
             {
                 foreach (var diagnostic in diagnostics)
                 {
@@ -36,7 +37,8 @@ public sealed partial class ExternalEventGenerator : IIncrementalGenerator
                 }
             }
 
-            if (result.Info is not { } info)
+            var info = result.Info;
+            if (info is null)
             {
                 return;
             }

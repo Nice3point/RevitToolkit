@@ -1,6 +1,6 @@
 ﻿using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
 using Verifier = Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Tests.Verifiers.CSharpCodeFixVerifier<
-    Nice3point.Revit.Toolkit.Analyzers.ContainingTypeNotPartialAnalyzer,
+    Nice3point.Revit.Toolkit.Analyzers.ExternalEventContainingTypeNotPartialAnalyzer,
     Nice3point.Revit.Toolkit.Analyzers.CodeFixers.CodeFixes.MakeTypePartialCodeFixer>;
 
 namespace Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Tests;
@@ -26,7 +26,7 @@ public sealed class MakeTypePartialCodeFixerTests
                 }
             }
             """,
-            Verifier.Diagnostic(DiagnosticDescriptors.ContainingTypeNotPartial)
+            Verifier.Diagnostic(DiagnosticDescriptors.ExternalEventContainingTypeNotPartial)
                 .WithLocation(0)
                 .WithArguments("MyViewModel", "DoWork"),
             """
@@ -109,7 +109,7 @@ public sealed class MakeTypePartialCodeFixerTests
                 }
             }
             """,
-            Verifier.Diagnostic(DiagnosticDescriptors.ContainingTypeNotPartial)
+            Verifier.Diagnostic(DiagnosticDescriptors.ExternalEventContainingTypeNotPartial)
                 .WithLocation(0)
                 .WithArguments("Outer", "DoWork"),
             """

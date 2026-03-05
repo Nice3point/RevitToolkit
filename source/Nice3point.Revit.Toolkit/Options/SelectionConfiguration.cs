@@ -45,12 +45,12 @@ public sealed class SelectionConfiguration
 
         public bool AllowElement(Element elem)
         {
-            return _elementHandler == null || _elementHandler.Invoke(elem);
+            return _elementHandler is null || _elementHandler.Invoke(elem);
         }
 
         public bool AllowReference(Reference reference, XYZ position)
         {
-            return _referenceHandler == null || _referenceHandler.Invoke(reference, position);
+            return _referenceHandler is null || _referenceHandler.Invoke(reference, position);
         }
 
         public SelectionConfiguration Element(Func<Element, bool> elementHandler)

@@ -23,7 +23,7 @@ public sealed class ExternalEventContainingTypeNotPartialAnalyzer : DiagnosticAn
         context.RegisterCompilationStartAction(static context =>
         {
             var attributeSymbol = context.Compilation.GetTypeByMetadataName("Nice3point.Revit.Toolkit.External.ExternalEventAttribute");
-            if (attributeSymbol == null)
+            if (attributeSymbol is null)
             {
                 return;
             }

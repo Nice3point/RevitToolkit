@@ -45,9 +45,8 @@ partial class ExternalEventGenerator
         private static List<IDisposable> EmitTypeHierarchy(CodeWriter writer, ExternalEventInfo info)
         {
             var typeBlocks = new List<IDisposable>();
-            for (var typeIndex = 0; typeIndex < info.TypeHierarchy.Length; typeIndex++)
+            foreach (var typeDeclaration in info.TypeHierarchy)
             {
-                var typeDeclaration = info.TypeHierarchy[typeIndex];
                 var staticModifier = typeDeclaration.IsStatic ? "static " : "";
                 var block = writer.BeginBlock($"{staticModifier}partial {typeDeclaration.Keyword} {typeDeclaration.Name}");
                 typeBlocks.Add(block);
@@ -70,9 +69,8 @@ partial class ExternalEventGenerator
 
             var recordName = $"{info.MethodName}Args";
             var recordParameters = new List<string>();
-            for (var paramIndex = 0; paramIndex < info.ExtraParameters.Length; paramIndex++)
+            foreach (var parameter in info.ExtraParameters)
             {
-                var parameter = info.ExtraParameters[paramIndex];
                 var pascalName = ToPascalCase(parameter.Name);
                 recordParameters.Add($"{parameter.FullyQualifiedType} {pascalName}");
             }

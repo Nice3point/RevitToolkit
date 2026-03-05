@@ -298,7 +298,7 @@ public sealed class ExternalEventGeneratorTests
 
         var (diagnostics, _) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.TaskReturnNotSupported.Id)).IsNotEmpty();
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ExternalEventTaskReturnNotSupported.Id)).IsNotEmpty();
     }
 
     [Test]
@@ -338,7 +338,7 @@ public sealed class ExternalEventGeneratorTests
 
         var (diagnostics, _) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.MethodIsGeneric.Id)).IsNotEmpty();
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ExternalEventGenericMethod.Id)).IsNotEmpty();
     }
 
 
@@ -362,7 +362,7 @@ public sealed class ExternalEventGeneratorTests
 
         var (diagnostics, _) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.DuplicateMethodOverload.Id)).IsNotEmpty();
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ExternalEventDuplicateMethodOverload.Id)).IsNotEmpty();
     }
 
     [Test]

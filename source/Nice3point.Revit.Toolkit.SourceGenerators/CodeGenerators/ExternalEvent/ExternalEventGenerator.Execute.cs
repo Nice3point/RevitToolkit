@@ -39,7 +39,7 @@ partial class ExternalEventGenerator
             var diagnostics = new List<Diagnostic>();
 
             var validationResult = ValidateMethod(methodSymbol, diagnostics);
-            if (validationResult != null)
+            if (validationResult is not null)
             {
                 return validationResult.Value;
             }
@@ -63,7 +63,7 @@ partial class ExternalEventGenerator
             if (methodSymbol.IsGenericMethod)
             {
                 diagnostics.Add(Diagnostic.Create(
-                    DiagnosticDescriptors.MethodIsGeneric,
+                    DiagnosticDescriptors.ExternalEventGenericMethod,
                     methodSymbol.Locations[0],
                     methodSymbol.Name));
 
@@ -73,7 +73,7 @@ partial class ExternalEventGenerator
             if (IsTaskType(methodSymbol.ReturnType))
             {
                 diagnostics.Add(Diagnostic.Create(
-                    DiagnosticDescriptors.TaskReturnNotSupported,
+                    DiagnosticDescriptors.ExternalEventTaskReturnNotSupported,
                     methodSymbol.Locations[0],
                     methodSymbol.Name));
 
@@ -83,7 +83,7 @@ partial class ExternalEventGenerator
             if (HasDuplicateOverloads(methodSymbol))
             {
                 diagnostics.Add(Diagnostic.Create(
-                    DiagnosticDescriptors.DuplicateMethodOverload,
+                    DiagnosticDescriptors.ExternalEventDuplicateMethodOverload,
                     methodSymbol.Locations[0],
                     methodSymbol.Name));
 
@@ -189,7 +189,7 @@ partial class ExternalEventGenerator
                 extraParameters.Add(new ParameterData(parameter.Name, parameterTypeFullyQualified));
             }
 
-            return (hasUiApplicationParameter, extraParameters.ToImmutable().ToEquatableArray());
+            return (hasUiApplicationParameter, extraParameters.ToImmutable().AsEquatableArray());
         }
 
         /// <summary>
@@ -258,7 +258,7 @@ partial class ExternalEventGenerator
                 currentType = currentType.ContainingType;
             }
 
-            hierarchy = typeDeclarations.ToImmutable().ToEquatableArray();
+            hierarchy = typeDeclarations.ToImmutable().AsEquatableArray();
             return allPartial;
         }
 

@@ -28,7 +28,7 @@ public sealed class RemoveAsyncModifierCodeFixerTests
                 }
             }
             """,
-            Verifier.Diagnostic(DiagnosticDescriptors.MethodIsAsyncVoid)
+            Verifier.Diagnostic(DiagnosticDescriptors.ExternalEventAsyncVoidMethod)
                 .WithLocation(0)
                 .WithArguments("DoWork"),
             """

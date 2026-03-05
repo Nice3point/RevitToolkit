@@ -1,4 +1,4 @@
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
 using Nice3point.Revit.Toolkit.SourceGenerators.Tests.Helpers;
 
@@ -21,18 +21,20 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
-        await Assert.That(generated).Count().IsEqualTo(1);
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
 
-        var output = generated[0];
+        var output = generatedSources[0];
         using (Assert.Multiple())
         {
-            await Assert.That(output).Contains("DoWorkEvent");
-            await Assert.That(output).Contains("DoWorkAsyncEvent");
-            await Assert.That(output).Contains("ExternalEvent");
-            await Assert.That(output).Contains("AsyncExternalEvent");
+            await Assert.That(output).Contains("IExternalEvent DoWorkEvent");
+            await Assert.That(output).Contains("IAsyncExternalEvent DoWorkAsyncEvent");
+            await Assert.That(output).Contains("new global::Nice3point.Revit.Toolkit.External.ExternalEvent(DoWork)");
+            await Assert.That(output).Contains("new global::Nice3point.Revit.Toolkit.External.AsyncExternalEvent(DoWork)");
+            await Assert.That(output).Contains("[global::System.CodeDom.Compiler.GeneratedCode(");
+            await Assert.That(output).Contains("[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]");
         }
     }
 
@@ -52,16 +54,16 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
-        await Assert.That(generated).Count().IsEqualTo(1);
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
 
-        var output = generated[0];
+        var output = generatedSources[0];
         using (Assert.Multiple())
         {
-            await Assert.That(output).Contains("DoWorkEvent");
-            await Assert.That(output).Contains("DoWorkAsyncEvent");
+            await Assert.That(output).Contains("IExternalEvent DoWorkEvent");
+            await Assert.That(output).Contains("IAsyncExternalEvent DoWorkAsyncEvent");
         }
     }
 
@@ -80,17 +82,17 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
-        await Assert.That(generated).Count().IsEqualTo(1);
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
 
-        var output = generated[0];
+        var output = generatedSources[0];
         using (Assert.Multiple())
         {
-            await Assert.That(output).DoesNotContain("CalculateEvent ");
-            await Assert.That(output).Contains("CalculateAsyncEvent");
-            await Assert.That(output).Contains("AsyncRequestExternalEvent<int>");
+            await Assert.That(output).DoesNotContain("IExternalEvent CalculateEvent");
+            await Assert.That(output).Contains("IAsyncRequestExternalEvent<int> CalculateAsyncEvent");
+            await Assert.That(output).Contains("new global::Nice3point.Revit.Toolkit.External.AsyncRequestExternalEvent<int>(Calculate)");
         }
     }
 
@@ -109,20 +111,18 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
-        await Assert.That(generated).Count().IsEqualTo(1);
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
 
-        var output = generated[0];
+        var output = generatedSources[0];
         using (Assert.Multiple())
         {
-            await Assert.That(output).Contains("IExternalEvent<string>");
-            await Assert.That(output).Contains("ExternalEvent<string>");
-            await Assert.That(output).Contains("DoWorkEvent");
-            await Assert.That(output).Contains("IAsyncExternalEvent<string>");
-            await Assert.That(output).Contains("AsyncExternalEvent<string>");
-            await Assert.That(output).Contains("DoWorkAsyncEvent");
+            await Assert.That(output).Contains("IExternalEvent<string> DoWorkEvent");
+            await Assert.That(output).Contains("new global::Nice3point.Revit.Toolkit.External.ExternalEvent<string>(DoWork)");
+            await Assert.That(output).Contains("IAsyncExternalEvent<string> DoWorkAsyncEvent");
+            await Assert.That(output).Contains("new global::Nice3point.Revit.Toolkit.External.AsyncExternalEvent<string>(DoWork)");
             await Assert.That(output).Contains("[global::System.CodeDom.Compiler.GeneratedCode(");
             await Assert.That(output).Contains("[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]");
         }
@@ -143,22 +143,20 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
-        await Assert.That(generated).Count().IsEqualTo(1);
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
 
-        var output = generated[0];
+        var output = generatedSources[0];
         using (Assert.Multiple())
         {
             await Assert.That(output).Contains("sealed record DoWorkArgs(string Title, int Count)");
-            await Assert.That(output).Contains("IExternalEvent<DoWorkArgs>");
-            await Assert.That(output).Contains("ExternalEvent<DoWorkArgs>");
-            await Assert.That(output).Contains("IAsyncExternalEvent<DoWorkArgs>");
-            await Assert.That(output).Contains("AsyncExternalEvent<DoWorkArgs>");
+            await Assert.That(output).Contains("IExternalEvent<DoWorkArgs> DoWorkEvent");
+            await Assert.That(output).Contains("new global::Nice3point.Revit.Toolkit.External.ExternalEvent<DoWorkArgs>");
+            await Assert.That(output).Contains("IAsyncExternalEvent<DoWorkArgs> DoWorkAsyncEvent");
+            await Assert.That(output).Contains("new global::Nice3point.Revit.Toolkit.External.AsyncExternalEvent<DoWorkArgs>");
             await Assert.That(output).Contains("args.Title, args.Count");
-            await Assert.That(output).Contains("DoWorkEvent");
-            await Assert.That(output).Contains("DoWorkAsyncEvent");
         }
     }
 
@@ -177,12 +175,12 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
-        await Assert.That(generated).Count().IsEqualTo(1);
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
 
-        var output = generated[0];
+        var output = generatedSources[0];
         using (Assert.Multiple())
         {
             await Assert.That(output).Contains("public static partial class MyViewModelExtensions");
@@ -210,18 +208,19 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
-        await Assert.That(generated).Count().IsEqualTo(1);
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
 
-        var output = generated[0];
+        var output = generatedSources[0];
         using (Assert.Multiple())
         {
             await Assert.That(output).Contains("public static partial class MyViewModelExtensions");
             await Assert.That(output).Contains("RaiseAsync(this");
             await Assert.That(output).Contains("IAsyncRequestExternalEvent<MyViewModel.CalculateArgs, int>");
             await Assert.That(output).Contains("return externalEvent.RaiseAsync(new MyViewModel.CalculateArgs(title, count));");
+            await Assert.That(output).Contains("sealed record CalculateArgs(string Title, int Count)");
         }
     }
 
@@ -240,16 +239,15 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
-        await Assert.That(generated).Count().IsEqualTo(1);
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
 
-        var output = generated[0];
+        var output = generatedSources[0];
         using (Assert.Multiple())
         {
-            await Assert.That(output).Contains("ExternalEventOptions");
-            await Assert.That(output).Contains("AllowDirectInvocation");
+            await Assert.That(output).Contains("ExternalEventOptions.AllowDirectInvocation");
         }
     }
 
@@ -268,15 +266,16 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
-        await Assert.That(generated).Count().IsEqualTo(1);
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
 
-        var output = generated[0];
+        var output = generatedSources[0];
         using (Assert.Multiple())
         {
-            await Assert.That(output).Contains("static");
+            await Assert.That(output).Contains("public static global::Nice3point.Revit.Toolkit.External.IExternalEvent DoWorkEvent");
+            await Assert.That(output).Contains("public static global::Nice3point.Revit.Toolkit.External.IAsyncExternalEvent DoWorkAsyncEvent");
         }
     }
 
@@ -296,13 +295,42 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (diagnostics, _) = GeneratorTestHelper.RunGenerator(source);
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ExternalEventTaskReturnNotSupported.Id)).IsNotEmpty();
+        using (Assert.Multiple())
+        {
+            await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ExternalEventTaskReturnNotSupported.Id)).IsNotEmpty();
+            await Assert.That(generatedSources).IsEmpty();
+        }
     }
 
     [Test]
-    public async Task NonPartialType_GeneratesNothing()
+    public async Task TaskGenericReturn_ReportsError()
+    {
+        const string source = """
+                              using System.Threading.Tasks;
+                              using Nice3point.Revit.Toolkit.External;
+
+                              namespace TestApplication;
+
+                              public partial class MyViewModel
+                              {
+                                  [ExternalEvent]
+                                  private Task<int> CalculateAsync() => Task.FromResult(42);
+                              }
+                              """;
+
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ExternalEventTaskReturnNotSupported.Id)).IsNotEmpty();
+            await Assert.That(generatedSources).IsEmpty();
+        }
+    }
+
+    [Test]
+    public async Task NonPartialType_ReportsErrorAndGeneratesNothing()
     {
         const string source = """
                               using Nice3point.Revit.Toolkit.External;
@@ -316,9 +344,13 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (_, generated) = GeneratorTestHelper.RunGenerator(source);
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(generated).IsEmpty();
+        using (Assert.Multiple())
+        {
+            await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ExternalEventContainingTypeNotPartial.Id)).IsNotEmpty();
+            await Assert.That(generatedSources).IsEmpty();
+        }
     }
 
     [Test]
@@ -336,11 +368,14 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (diagnostics, _) = GeneratorTestHelper.RunGenerator(source);
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ExternalEventGenericMethod.Id)).IsNotEmpty();
+        using (Assert.Multiple())
+        {
+            await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ExternalEventGenericMethod.Id)).IsNotEmpty();
+            await Assert.That(generatedSources).IsEmpty();
+        }
     }
-
 
     [Test]
     public async Task DuplicateOverloads_ReportsError()
@@ -360,13 +395,17 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (diagnostics, _) = GeneratorTestHelper.RunGenerator(source);
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ExternalEventDuplicateMethodOverload.Id)).IsNotEmpty();
+        using (Assert.Multiple())
+        {
+            await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ExternalEventDuplicateMethodOverload.Id)).IsNotEmpty();
+            await Assert.That(generatedSources).IsEmpty();
+        }
     }
 
     [Test]
-    public async Task AsyncVoidMethod_GeneratesCode()
+    public async Task AsyncVoidMethod_GeneratesCodeWithoutErrors()
     {
         const string source = """
                               using Nice3point.Revit.Toolkit.External;
@@ -380,9 +419,13 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (_, generated) = GeneratorTestHelper.RunGenerator(source);
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
 
-        await Assert.That(generated).IsNotEmpty();
+        using (Assert.Multiple())
+        {
+            await Assert.That(generatedSources).IsNotEmpty();
+            await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
+        }
     }
 
     [Test]
@@ -397,9 +440,152 @@ public sealed class ExternalEventGeneratorTests
                               }
                               """;
 
-        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
 
         await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
-        await Assert.That(generated).IsEmpty();
+        await Assert.That(generatedSources).IsEmpty();
+    }
+
+    [Test]
+    public async Task NestedTypes_GeneratesNestedPartialHierarchy()
+    {
+        const string source = """
+                              using Nice3point.Revit.Toolkit.External;
+
+                              namespace TestApplication;
+
+                              public partial class Outer
+                              {
+                                  public partial class Inner
+                                  {
+                                      [ExternalEvent]
+                                      private void DoWork() { }
+                                  }
+                              }
+                              """;
+
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
+
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
+
+        var output = generatedSources[0];
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).Contains("partial class Outer");
+            await Assert.That(output).Contains("partial class Inner");
+            await Assert.That(output).Contains("IExternalEvent DoWorkEvent");
+        }
+    }
+
+    [Test]
+    public async Task NonPartialNestedOuterType_ReportsError()
+    {
+        const string source = """
+                              using Nice3point.Revit.Toolkit.External;
+
+                              namespace TestApplication;
+
+                              public class Outer
+                              {
+                                  public partial class Inner
+                                  {
+                                      [ExternalEvent]
+                                      private void DoWork() { }
+                                  }
+                              }
+                              """;
+
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ExternalEventContainingTypeNotPartial.Id)).IsNotEmpty();
+            await Assert.That(generatedSources).IsEmpty();
+        }
+    }
+
+    [Test]
+    public async Task GlobalNamespace_GeneratesCodeWithoutNamespaceBlock()
+    {
+        const string source = """
+                              using Nice3point.Revit.Toolkit.External;
+
+                              public partial class MyViewModel
+                              {
+                                  [ExternalEvent]
+                                  private void DoWork() { }
+                              }
+                              """;
+
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
+
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
+
+        var output = generatedSources[0];
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).DoesNotContain("namespace");
+            await Assert.That(output).Contains("IExternalEvent DoWorkEvent");
+            await Assert.That(output).Contains("IAsyncExternalEvent DoWorkAsyncEvent");
+        }
+    }
+
+    [Test]
+    public async Task StructContainingType_GeneratesWithStructKeyword()
+    {
+        const string source = """
+                              using Nice3point.Revit.Toolkit.External;
+
+                              namespace TestApplication;
+
+                              public partial struct MyViewModel
+                              {
+                                  [ExternalEvent]
+                                  private void DoWork() { }
+                              }
+                              """;
+
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
+
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
+
+        var output = generatedSources[0];
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).Contains("partial struct MyViewModel");
+            await Assert.That(output).Contains("IExternalEvent DoWorkEvent");
+        }
+    }
+
+    [Test]
+    public async Task SingleExtraParamWithUIApplication_GeneratesGenericProperty()
+    {
+        const string source = """
+                              using Autodesk.Revit.UI;
+                              using Nice3point.Revit.Toolkit.External;
+
+                              namespace TestApplication;
+
+                              public partial class MyViewModel
+                              {
+                                  [ExternalEvent]
+                                  private void DoWork(UIApplication app, string message) { }
+                              }
+                              """;
+
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
+
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
+
+        var output = generatedSources[0];
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).Contains("IExternalEvent<string> DoWorkEvent");
+            await Assert.That(output).Contains("IAsyncExternalEvent<string> DoWorkAsyncEvent");
+        }
     }
 }

@@ -137,7 +137,7 @@ public static class GeneratorTestHelper
         }
         """;
 
-    public static (ImmutableArray<Diagnostic> Diagnostics, string[] GeneratedSources) RunGenerator(string source)
+    public static (string[] GeneratedSources, ImmutableArray<Diagnostic> Diagnostics) RunGenerator(string source)
     {
         var syntaxTrees = new[]
         {
@@ -166,6 +166,6 @@ public static class GeneratorTestHelper
             .Select(syntaxTree => syntaxTree.GetText().ToString())
             .ToArray();
 
-        return (diagnostics, generatedSources);
+        return (generatedSources, diagnostics);
     }
 }

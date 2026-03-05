@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Nice3point.Revit.Toolkit.SourceGenerators.Extensions;
 
 namespace Nice3point.Revit.Toolkit.SourceGenerators;
 
@@ -17,31 +18,22 @@ public sealed partial class ExternalEventGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var combinedResults = context.SyntaxProvider
+        var results = context.SyntaxProvider
             .ForAttributeWithMetadataName(
                 WellKnownFullyQualifiedClassNames.ExternalEventAttribute.WithoutGlobalPrefix,
                 predicate: static (node, cancellationToken) => node is MethodDeclarationSyntax,
-                transform: static (syntaxContext, cancellationToken) => Execute.GetMethodResult(syntaxContext, cancellationToken))
+                transform: static (syntaxContext, cancellationToken) => Extractor.GetMethodResult(syntaxContext, cancellationToken));
+
+        context.ReportDiagnostics(results.Select(static (result, cancellationToken) => result.Diagnostics));
+
+        var infosWithOptions = results
+            .Where(static result => result.Info is not null)
+            .Select(static (result, cancellationToken) => result.Info!)
             .Combine(context.ParseOptionsProvider);
 
-        context.RegisterSourceOutput(combinedResults, static (sourceProductionContext, pair) =>
+        context.RegisterSourceOutput(infosWithOptions, static (sourceProductionContext, pair) =>
         {
-            var (result, parseOptions) = pair;
-
-            var diagnostics = result.Diagnostics;
-            if (diagnostics is not null)
-            {
-                foreach (var diagnostic in diagnostics)
-                {
-                    sourceProductionContext.ReportDiagnostic(diagnostic);
-                }
-            }
-
-            var info = result.Info;
-            if (info is null)
-            {
-                return;
-            }
+            var (info, parseOptions) = pair;
 
             var languageVersion = ((CSharpParseOptions)parseOptions).LanguageVersion;
 #if ROSLYN5_0_0_OR_GREATER
@@ -50,7 +42,7 @@ public sealed partial class ExternalEventGenerator : IIncrementalGenerator
             var useFieldKeyword = languageVersion == LanguageVersion.Preview;
 #endif
 
-            var source = Emitter.Generate(info, useFieldKeyword);
+            var source = Writer.GenerateSource(info, useFieldKeyword);
             sourceProductionContext.AddSource(info.HintName, SourceText.From(source, Encoding.UTF8));
         });
     }

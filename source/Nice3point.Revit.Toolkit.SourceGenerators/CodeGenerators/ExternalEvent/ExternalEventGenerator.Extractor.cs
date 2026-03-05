@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
+using Nice3point.Revit.Toolkit.SourceGenerators.Extensions;
 using Nice3point.Revit.Toolkit.SourceGenerators.Models;
 
 namespace Nice3point.Revit.Toolkit.SourceGenerators;
@@ -13,7 +14,7 @@ partial class ExternalEventGenerator
     ///     Extracts and validates method metadata from syntax contexts
     ///     for methods annotated with [ExternalEvent].
     /// </summary>
-    internal static class Execute
+    internal static class Extractor
     {
         /// <summary>
         ///     Symbol display format that omits the global namespace prefix and nullable annotations.
@@ -33,64 +34,70 @@ partial class ExternalEventGenerator
 
             if (context.TargetSymbol is not IMethodSymbol methodSymbol)
             {
-                return default;
+                return new ExternalEventMethodResult();
             }
 
-            var diagnostics = new List<Diagnostic>();
+            var diagnostics = ImmutableArray.CreateBuilder<DiagnosticInfo>();
 
-            var validationResult = ValidateMethod(methodSymbol, diagnostics);
-            if (validationResult is not null)
+            if (!ValidateMethod(methodSymbol, diagnostics))
             {
-                return validationResult.Value;
+                return new ExternalEventMethodResult(diagnostics.ToImmutable());
             }
 
             var info = BuildExternalEventInfo(methodSymbol);
 
-            return new ExternalEventMethodResult(info, diagnostics.Count > 0 ? diagnostics.ToArray() : null);
+            return new ExternalEventMethodResult(info, diagnostics.ToImmutable());
         }
 
         /// <summary>
         ///     Validates the method symbol against all generator constraints.
-        ///     Returns an error result if validation fails, or <c>null</c> if the method is valid.
+        ///     Returns <c>false</c> if a fatal validation error was found.
         /// </summary>
-        private static ExternalEventMethodResult? ValidateMethod(IMethodSymbol methodSymbol, List<Diagnostic> diagnostics)
+        private static bool ValidateMethod(IMethodSymbol methodSymbol, ImmutableArray<DiagnosticInfo>.Builder diagnostics)
         {
-            if (!IsContainingTypePartial(methodSymbol, out _))
+            if (!IsAllContainingTypesPartial(methodSymbol))
             {
-                return new ExternalEventMethodResult(null, diagnostics.ToArray());
+                var nonPartialType = FindFirstNonPartialContainingType(methodSymbol);
+                diagnostics.Add(
+                    DiagnosticDescriptors.ExternalEventContainingTypeNotPartial,
+                    nonPartialType ?? (ISymbol)methodSymbol,
+                    nonPartialType?.Name ?? methodSymbol.ContainingType.Name,
+                    methodSymbol.Name);
+
+                return false;
             }
 
             if (methodSymbol.IsGenericMethod)
             {
-                diagnostics.Add(Diagnostic.Create(
+                diagnostics.Add(
                     DiagnosticDescriptors.ExternalEventGenericMethod,
-                    methodSymbol.Locations[0],
-                    methodSymbol.Name));
+                    methodSymbol,
+                    methodSymbol.Name);
 
-                return new ExternalEventMethodResult(null, diagnostics.ToArray());
+                return false;
             }
 
             if (IsTaskType(methodSymbol.ReturnType))
             {
-                diagnostics.Add(Diagnostic.Create(
+                diagnostics.Add(
                     DiagnosticDescriptors.ExternalEventTaskReturnNotSupported,
-                    methodSymbol.Locations[0],
-                    methodSymbol.Name));
+                    methodSymbol,
+                    methodSymbol.Name);
 
-                return new ExternalEventMethodResult(null, diagnostics.ToArray());
+                return false;
             }
 
             if (HasDuplicateOverloads(methodSymbol))
             {
-                diagnostics.Add(Diagnostic.Create(
+                diagnostics.Add(
                     DiagnosticDescriptors.ExternalEventDuplicateMethodOverload,
-                    methodSymbol.Locations[0],
-                    methodSymbol.Name));
+                    methodSymbol,
+                    methodSymbol.Name);
 
-                return new ExternalEventMethodResult(null, diagnostics.ToArray());
+                return false;
             }
 
-            return null;
+            return true;
         }
 
         /// <summary>
@@ -101,22 +108,109 @@ partial class ExternalEventGenerator
         {
             var allowDirectInvocation = ExtractAllowDirectInvocation(methodSymbol);
             var (hasUiApplicationParameter, extraParameters) = ClassifyParameters(methodSymbol);
-            var (isVoidReturn, returnType) = ExtractReturnType(methodSymbol);
-
-            IsContainingTypePartial(methodSymbol, out var typeHierarchy);
+            var (returnsVoid, returnType) = ExtractReturnType(methodSymbol);
+            var typeHierarchy = GetTypeHierarchy(methodSymbol);
             var containingNamespace = GetNamespace(methodSymbol.ContainingType);
 
             return new ExternalEventInfo(
                 HintName: $"{GetHintName(methodSymbol)}.{methodSymbol.Name}",
                 Namespace: containingNamespace,
-                TypeHierarchy: typeHierarchy,
                 MethodName: methodSymbol.Name,
                 IsStatic: methodSymbol.IsStatic,
-                IsVoidReturn: isVoidReturn,
-                ReturnTypeFullyQualified: returnType,
-                HasUiApplicationParam: hasUiApplicationParameter,
-                ExtraParameters: extraParameters,
-                AllowDirectInvocation: allowDirectInvocation);
+                ReturnsVoid: returnsVoid,
+                FullyQualifiedReturnType: returnType,
+                HasUiApplicationParameter: hasUiApplicationParameter,
+                AllowDirectInvocation: allowDirectInvocation,
+                TypeHierarchy: typeHierarchy,
+                ExtraParameters: extraParameters);
+        }
+
+        /// <summary>
+        ///     Checks whether all containing types of the method are declared as partial.
+        /// </summary>
+        private static bool IsAllContainingTypesPartial(IMethodSymbol method)
+        {
+            var currentType = method.ContainingType;
+
+            while (currentType is not null)
+            {
+                var isPartial = false;
+
+                foreach (var syntaxReference in currentType.DeclaringSyntaxReferences)
+                {
+                    if (syntaxReference.GetSyntax() is TypeDeclarationSyntax typeDeclarationSyntax &&
+                        typeDeclarationSyntax.Modifiers.Any(SyntaxKind.PartialKeyword))
+                    {
+                        isPartial = true;
+                        break;
+                    }
+                }
+
+                if (!isPartial)
+                {
+                    return false;
+                }
+
+                currentType = currentType.ContainingType;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        ///     Finds the first non-partial containing type in the hierarchy for diagnostic reporting.
+        /// </summary>
+        private static INamedTypeSymbol? FindFirstNonPartialContainingType(IMethodSymbol method)
+        {
+            var currentType = method.ContainingType;
+
+            while (currentType is not null)
+            {
+                var isPartial = false;
+
+                foreach (var syntaxReference in currentType.DeclaringSyntaxReferences)
+                {
+                    if (syntaxReference.GetSyntax() is TypeDeclarationSyntax typeDeclarationSyntax &&
+                        typeDeclarationSyntax.Modifiers.Any(SyntaxKind.PartialKeyword))
+                    {
+                        isPartial = true;
+                        break;
+                    }
+                }
+
+                if (!isPartial)
+                {
+                    return currentType;
+                }
+
+                currentType = currentType.ContainingType;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        ///     Builds the type hierarchy from outermost to innermost containing type.
+        /// </summary>
+        private static EquatableArray<TypeDeclarationInfo> GetTypeHierarchy(IMethodSymbol method)
+        {
+            var typeDeclarations = ImmutableArray.CreateBuilder<TypeDeclarationInfo>();
+            var currentType = method.ContainingType;
+
+            while (currentType is not null)
+            {
+                var keyword = currentType.TypeKind switch
+                {
+                    TypeKind.Struct => currentType.IsRecord ? "record struct" : "struct",
+                    TypeKind.Class => currentType.IsRecord ? "record class" : "class",
+                    _ => "class"
+                };
+
+                typeDeclarations.Insert(0, new TypeDeclarationInfo(keyword, currentType.Name, currentType.IsStatic));
+                currentType = currentType.ContainingType;
+            }
+
+            return typeDeclarations.ToImmutable();
         }
 
         /// <summary>
@@ -189,7 +283,7 @@ partial class ExternalEventGenerator
                 extraParameters.Add(new ParameterData(parameter.Name, parameterTypeFullyQualified));
             }
 
-            return (hasUiApplicationParameter, extraParameters.ToImmutable().AsEquatableArray());
+            return (hasUiApplicationParameter, extraParameters.ToImmutable());
         }
 
         /// <summary>
@@ -197,14 +291,12 @@ partial class ExternalEventGenerator
         /// </summary>
         private static (bool IsVoidReturn, string? ReturnTypeFullyQualified) ExtractReturnType(IMethodSymbol methodSymbol)
         {
-            var isVoidReturn = methodSymbol.ReturnsVoid;
-            string? returnType = null;
-            if (!isVoidReturn)
+            if (methodSymbol.ReturnsVoid)
             {
-                returnType = methodSymbol.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                return (true, null);
             }
 
-            return (isVoidReturn, returnType);
+            return (false, methodSymbol.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
         }
 
         /// <summary>
@@ -216,50 +308,6 @@ partial class ExternalEventGenerator
             var fullyQualifiedName = type.ToDisplayString(NullableFlowFormat);
             return fullyQualifiedName == WellKnownFullyQualifiedClassNames.Task.WithoutGlobalPrefix
                    || type.OriginalDefinition.ToDisplayString(NullableFlowFormat) == WellKnownFullyQualifiedClassNames.TaskGeneric.WithoutGlobalPrefix;
-        }
-
-        /// <summary>
-        ///     Checks whether all containing types of the method are declared as partial
-        ///     and builds the type hierarchy from outermost to innermost.
-        /// </summary>
-        private static bool IsContainingTypePartial(IMethodSymbol method, out EquatableArray<TypeDeclarationInfo> hierarchy)
-        {
-            var typeDeclarations = ImmutableArray.CreateBuilder<TypeDeclarationInfo>();
-            var currentType = method.ContainingType;
-            var allPartial = true;
-
-            while (currentType is not null)
-            {
-                var isPartial = false;
-                var isStatic = currentType.IsStatic;
-                var keyword = currentType.TypeKind switch
-                {
-                    TypeKind.Struct => currentType.IsRecord ? "record struct" : "struct",
-                    TypeKind.Class => currentType.IsRecord ? "record class" : "class",
-                    _ => "class"
-                };
-
-                foreach (var syntaxReference in currentType.DeclaringSyntaxReferences)
-                {
-                    if (syntaxReference.GetSyntax() is TypeDeclarationSyntax typeDeclarationSyntax &&
-                        typeDeclarationSyntax.Modifiers.Any(SyntaxKind.PartialKeyword))
-                    {
-                        isPartial = true;
-                        break;
-                    }
-                }
-
-                if (!isPartial)
-                {
-                    allPartial = false;
-                }
-
-                typeDeclarations.Insert(0, new TypeDeclarationInfo(keyword, currentType.Name, isStatic));
-                currentType = currentType.ContainingType;
-            }
-
-            hierarchy = typeDeclarations.ToImmutable().AsEquatableArray();
-            return allPartial;
         }
 
         /// <summary>

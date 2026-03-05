@@ -1,27 +1,19 @@
-using Microsoft.CodeAnalysis;
+﻿using System.Collections.Immutable;
 
 namespace Nice3point.Revit.Toolkit.SourceGenerators.Models;
 
 /// <summary>
 ///     Represents the result of analyzing a method marked with [ExternalEvent],
 ///     containing either the extracted metadata or diagnostics to report.
-///     Implements <see cref="IEquatable{T}"/> based on <see cref="Info"/> for incremental caching.
+///     Uses <see cref="EquatableArray{T}"/> of <see cref="DiagnosticInfo"/> for proper incremental caching.
 /// </summary>
-internal readonly struct ExternalEventMethodResult(ExternalEventInfo? info, Diagnostic[]? diagnostics) : IEquatable<ExternalEventMethodResult>
+internal readonly record struct ExternalEventMethodResult(ExternalEventInfo? Info, EquatableArray<DiagnosticInfo> Diagnostics)
 {
-    /// <summary>
-    ///     The extracted method metadata, or <c>null</c> if validation failed.
-    /// </summary>
-    public ExternalEventInfo? Info { get; } = info;
+    public ExternalEventMethodResult(ImmutableArray<DiagnosticInfo> diagnostics) : this(null, diagnostics)
+    {
+    }
 
-    /// <summary>
-    ///     Diagnostics to report, or <c>null</c> if there are none.
-    /// </summary>
-    public Diagnostic[]? Diagnostics { get; } = diagnostics;
-
-    public bool Equals(ExternalEventMethodResult other) => Equals(Info, other.Info);
-
-    public override bool Equals(object? obj) => obj is ExternalEventMethodResult other && Equals(other);
-    
-    public override int GetHashCode() => Info?.GetHashCode() ?? 0;
+    public ExternalEventMethodResult(ExternalEventInfo info) : this(info, [])
+    {
+    }
 }

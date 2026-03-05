@@ -7,14 +7,14 @@ namespace Nice3point.Revit.Toolkit.SourceGenerators.Models;
 internal sealed record ExternalEventInfo(
     string HintName,
     string Namespace,
-    EquatableArray<TypeDeclarationInfo> TypeHierarchy,
     string MethodName,
     bool IsStatic,
-    bool IsVoidReturn,
-    string? ReturnTypeFullyQualified,
-    bool HasUiApplicationParam,
-    EquatableArray<ParameterData> ExtraParameters,
-    bool AllowDirectInvocation);
+    bool ReturnsVoid,
+    string? FullyQualifiedReturnType,
+    bool HasUiApplicationParameter,
+    bool AllowDirectInvocation,
+    EquatableArray<TypeDeclarationInfo> TypeHierarchy,
+    EquatableArray<ParameterData> ExtraParameters);
 
 /// <summary>
 ///     Describes a type in the containing type hierarchy (name, keyword, and whether it is static).

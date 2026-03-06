@@ -272,7 +272,7 @@ partial class ExternalEventGenerator
             for (var parameterIndex = 0; parameterIndex < parameters.Length; parameterIndex++)
             {
                 var parameter = parameters[parameterIndex];
-                var parameterTypeFullyQualified = parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var parameterTypeFullyQualified = parameter.Type.GetFullyQualifiedNameWithNullabilityAnnotations();
 
                 if (parameterIndex == 0 && parameter.Type.ToDisplayString(NullableFlowFormat) == WellKnownFullyQualifiedClassNames.UiApplication.WithoutGlobalPrefix)
                 {
@@ -296,7 +296,7 @@ partial class ExternalEventGenerator
                 return (true, null);
             }
 
-            return (false, methodSymbol.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+            return (false, methodSymbol.ReturnType.GetFullyQualifiedNameWithNullabilityAnnotations());
         }
 
         /// <summary>

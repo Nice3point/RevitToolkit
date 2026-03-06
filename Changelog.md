@@ -1,37 +1,103 @@
-# Release 2027.0.0-preview.2.20260123
+# Release 2027.0.0-preview.3.20260306
 
-## New Features
+### External Events
 
-- New **RevitContext** class for UI-level application context access
-- New **RevitApiContext** class for database-level application context access
-- New **AsyncExternalCommand** class for async/await support in external commands
-- New **BeginDialogSuppressionScope()** method with disposable pattern for dialog suppression
-- New **BeginFailureSuppressionScope()** method with disposable pattern for failure handling
-- New **BeginAssemblyResolveScope()** method with disposable pattern for dependency resolution
-- New **BeginAssemblyResolveScope(string directory)** overload for explicit path specification
-- New **SetExceptionHandler()** method for `ActionEventHandler` and `IdlingEventHandler`
-- New **CancellationToken** support for `AsyncEventHandler` and `AsyncEventHandler<T>`
-- New overloads for `BeginDialogSuppressionScope()`: `MessageBoxResult`, `TaskDialogResult`, custom handler
+New family of external event types replacing legacy `ActionEventHandler`, `AsyncEventHandler`:
+
+- **ExternalEvent** — synchronous external event that queues the handler via the Revit external event mechanism.
+- **ExternalEvent\<T>** — generic synchronous external event that accepts an argument of type `T`.
+- **AsyncExternalEvent** — asynchronous external event with `RaiseAsync()` that returns a `Task`.
+- **AsyncExternalEvent\<T>** — generic asynchronous external event with argument support.
+- **AsyncRequestExternalEvent\<TResult>** — asynchronous external event that returns a result via `RaiseAsync()`.
+- **AsyncRequestExternalEvent\<T, TResult>** — generic asynchronous external event with argument and result support.
+- **ExternalEventOptions** — configuration flags for event behavior, including `AllowDirectInvocation` for direct execution in API context.
+
+Events do not need to be created inside the Revit API context — the Toolkit handles initialization automatically, so you can create them anywhere in your code and on any thread.
+
+### ExternalEvent Source Generator
+
+New `[ExternalEvent]` attribute with incremental source generator that eliminates boilerplate for defining external events.
+Annotate a method in a partial type and the generator produces typed event properties automatically:
+
+```c#
+public partial class MyViewModel : ObservableObject
+{
+    [ExternalEvent]
+    private void DeleteWindows(UIApplication application)
+    {
+        var document = application.ActiveUIDocument.Document;
+        using var transaction = new Transaction(document, "Delete windows");
+        transaction.Start();
+        document.Delete(document.GetInstanceIds(BuiltInCategory.OST_Windows));
+        transaction.Commit();
+    }
+    
+    [RelayCommand]
+    private void DeleteWindows()
+    {
+        DeleteWindowsEvent.Raise();
+    }
+}
+
+// Generates:
+// public IExternalEvent DeleteWindowsEvent => field ??= new ExternalEvent(DeleteWindows);
+// public IAsyncExternalEvent DeleteWindowsAsyncEvent => field ??= new AsyncExternalEvent(DeleteWindows);
+```
+
+Source generator supports multiple parameters, methods with extra parameters like `private void DeleteWindows(string arg1, int arg2, bool arg3)` also work.
+
+**Generator capabilities:**
+
+- `void` methods → generates both `IExternalEvent` and `IAsyncExternalEvent` properties.
+- Methods returning a value → generates `IAsyncRequestExternalEvent<TResult>` property.
+- Methods with extra parameters → generates typed `IExternalEvent<T>` / `IAsyncExternalEvent<T>` properties.
+- Methods with 2+ extra parameters → generates a `sealed record` for argument bundling with convenience extension methods.
+- `AllowDirectInvocation` attribute property support.
+- Static method support.
+- Nested type hierarchy support.
+- `field` keyword usage for C# 14+, backing field fallback for older versions.
+- Multi-version Roslyn support (4.14 and 5.0).
+
+### Roslyn Analyzers and Code Fixers
+
+New analyzer package with diagnostics for `[ExternalEvent]` annotated methods:
+.
+- **RVTTK0001** — Method returns `Task` or `Task<T>` (Error).
+- **RVTTK0002** — Method is `async void` (Warning) + code fixer to remove `async` modifier.
+- **RVTTK0003** — Method is generic (Error).
+- **RVTTK0004** — Duplicate method overloads with `[ExternalEvent]` (Error).
+- **RVTTK0005** — Containing type is not `partial` (Error) + code fixer to add `partial` modifier.
+
+### Context
+
+- New **RevitContext** class for UI-level application context access.
+- New **RevitApiContext** class for database-level application context access.
+- New **AsyncExternalCommand** class for async/await support in external commands.
+- New **BeginDialogSuppressionScope()** method with disposable pattern for dialog suppression.
+- New **BeginFailureSuppressionScope()** method with disposable pattern for failure handling.
+- New **BeginAssemblyResolveScope()** method with disposable pattern for dependency resolution.
+- New **BeginAssemblyResolveScope(string directory)** overload for explicit path specification.`
+- New overloads for `BeginDialogSuppressionScope()`: `MessageBoxResult`, `TaskDialogResult`, custom handler.
 
 ## Improvements
 
-- Event handlers now use `ConcurrentQueue` for thread-safe action queuing
-- Disposable scopes support nesting with reference counting
-- Thread safety improvements with `Lock` class and `Interlocked` operations
-- `UnsafeAccessor` usage for .NET 8+ to improve performance
-- Removed `SemaphoreSlim` from `AsyncEventHandler<T>` for better performance
-- `BeginAssemblyResolveScope` now uses Stack to support nested scopes with different directories
+- Improve reflexion performance with `UnsafeAccessor` methods for .NET 8+.
+- Disposable scopes support nesting with reference counting.
+- Thread safety improvements with `Lock` class and `Interlocked` operations.
+- `BeginAssemblyResolveScope` now uses Stack to support nested scopes with different directories.
 
 ## Breaking Changes
 
-- **Context** class is now obsolete, use `RevitContext` or `RevitApiContext` instead
-- **SuppressDialogs()** / **RestoreDialogs()** are obsolete, use `BeginDialogSuppressionScope()` instead
-- **SuppressFailures()** / **RestoreFailures()** are obsolete, use `BeginFailureSuppressionScope()` instead
-- **BeginAssemblyResolve()** / **EndAssemblyResolve()** are obsolete, use `BeginAssemblyResolveScope()` instead
-- **ExternalCommand.Document** is obsolete, use `ActiveDocument` instead
-- **ExternalCommand.UiDocument** is obsolete, use `ActiveUiDocument` instead
-- **ActionEventHandler.Cancel()** method removed
-- **IdlingEventHandler.Cancel()** method removed
+- **Context** class is now obsolete, use `RevitContext` or `RevitApiContext` instead.
+- **SuppressDialogs()** / **RestoreDialogs()** are obsolete, use `BeginDialogSuppressionScope()` instead.
+- **SuppressFailures()** / **RestoreFailures()** are obsolete, use `BeginFailureSuppressionScope()` instead.
+- **BeginAssemblyResolve()** / **EndAssemblyResolve()** are obsolete, use `BeginAssemblyResolveScope()` instead.
+- **ExternalCommand.Document** is obsolete, use `ActiveDocument` instead.
+- **ExternalCommand.UiDocument** is obsolete, use `ActiveUiDocument` instead.
+- **ActionEventHandler** is now obsolete — use `ExternalEvent` or `[ExternalEvent]` source generator.
+- **AsyncEventHandler** is now obsolete — use `AsyncExternalEvent` or `[ExternalEvent]` source generator.
+- **AsyncEventHandler\<T>** is now obsolete — use `AsyncRequestExternalEvent<T>` or `[ExternalEvent]` source generator.
+- **IdlingEventHandler** is now obsolete — use `ExternalEvent` or `[ExternalEvent]` source generator.
 
 ## Automatic Migration with ReSharper/Rider
 
@@ -40,6 +106,7 @@ All obsolete methods are marked with `[CodeTemplate]` attributes, enabling autom
 ## Migration Guide
 
 Replace `Context` with `RevitContext` or `RevitApiContext`:
+
 ```csharp
 // Before
 Context.ActiveDocument.Delete(elementId);
@@ -51,6 +118,7 @@ RevitApiContext.Application.Username;
 ```
 
 Replace manual suppress/restore with disposable scopes:
+
 ```csharp
 // Before
 try
@@ -74,6 +142,7 @@ using (RevitApiContext.BeginFailureSuppressionScope())
 ```
 
 Replace `BeginAssemblyResolve`/`EndAssemblyResolve` with scope:
+
 ```csharp
 // Before
 try
@@ -94,6 +163,7 @@ using (ResolveHelper.BeginAssemblyResolveScope<MyType>())
 ```
 
 New: Specify directory path directly for assembly resolution:
+
 ```csharp
 // Path-based (new)
 using (ResolveHelper.BeginAssemblyResolveScope(@"C:\Libraries"))
@@ -109,6 +179,77 @@ using (ResolveHelper.BeginAssemblyResolveScope<MyType>())
     // Searches: MyType directory -> Plugin -> Common
     window.Show();
 }
+```
+
+Replace legacy event handlers with new External Events:
+
+```csharp
+// Before
+private readonly ActionEventHandler _handler = new();
+
+private void Execute()
+{
+    _handler.Raise(app =>
+    {
+        app.ActiveUIDocument.Document.Delete(elementId);
+    });
+}
+
+// After
+private readonly ExternalEvent _handler = new(app =>
+{
+    app.ActiveUIDocument.Document.Delete(elementId);
+});
+
+private void Execute()
+{
+    _handler.Raise();
+}
+```
+
+Replace legacy async event handlers:
+
+```csharp
+// Before
+private readonly AsyncEventHandler _handler = new();
+
+private async Task ExecuteAsync()
+{
+    await _handler.RaiseAsync(app =>
+    {
+        app.ActiveUIDocument.Document.Delete(elementId);
+    });
+}
+
+// After
+private readonly AsyncExternalEvent _handler = new(app =>
+{
+    app.ActiveUIDocument.Document.Delete(elementId);
+});
+
+private async Task ExecuteAsync()
+{
+    await _handler.RaiseAsync();
+}
+```
+
+Or use the source generator to avoid boilerplate entirely:
+
+```csharp
+// After (source generator)
+partial class MyViewModel
+{
+    [ExternalEvent]
+    private void DeleteElement(UIApplication application)
+    {
+        application.ActiveUIDocument.Document.Delete(elementId);
+    }
+}
+
+// Usage:
+DeleteElementEvent.Raise();
+// or
+await DeleteElementAsyncEvent.RaiseAsync();
 ```
 
 # Release 2026.0.0

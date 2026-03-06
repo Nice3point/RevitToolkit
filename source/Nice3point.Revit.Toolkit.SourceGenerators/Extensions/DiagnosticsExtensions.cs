@@ -12,7 +12,7 @@ internal static class DiagnosticsExtensions
     /// <summary>
     ///     Adds a new diagnostic to the target builder.
     /// </summary>
-    /// <param name="diagnostics">The collection of produced <see cref="DiagnosticInfo"/> instances.</param>
+    /// <param name="diagnostics">The collection of produced <see cref="Nice3point.Revit.Toolkit.SourceGenerators.Models.DiagnosticInfo"/> instances.</param>
     /// <param name="descriptor">The input <see cref="DiagnosticDescriptor"/> for the diagnostic to create.</param>
     /// <param name="symbol">The source <see cref="ISymbol"/> to attach the diagnostic to.</param>
     /// <param name="args">The optional arguments for the formatted message to include.</param>

@@ -7,6 +7,24 @@ namespace Nice3point.Revit.Toolkit.SourceGenerators.Tests;
 public sealed class ExternalEventGeneratorTests
 {
     [Test]
+    public async Task NoAttribute_GeneratesNothing()
+    {
+        const string source = """
+                              namespace TestApplication;
+
+                              public partial class MyViewModel
+                              {
+                                  private void DoWork() { }
+                              }
+                              """;
+
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
+
+        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
+        await Assert.That(generatedSources).IsEmpty();
+    }
+    
+    [Test]
     public async Task SimpleVoidMethod_GeneratesSyncAndAsyncProperties()
     {
         const string source = """
@@ -280,6 +298,150 @@ public sealed class ExternalEventGeneratorTests
     }
 
     [Test]
+    public async Task NestedTypes_GeneratesNestedPartialHierarchy()
+    {
+        const string source = """
+                              using Nice3point.Revit.Toolkit.External;
+
+                              namespace TestApplication;
+
+                              public partial class Outer
+                              {
+                                  public partial class Inner
+                                  {
+                                      [ExternalEvent]
+                                      private void DoWork() { }
+                                  }
+                              }
+                              """;
+
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
+
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
+
+        var output = generatedSources[0];
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).Contains("partial class Outer");
+            await Assert.That(output).Contains("partial class Inner");
+            await Assert.That(output).Contains("IExternalEvent DoWorkEvent");
+        }
+    }
+
+    [Test]
+    public async Task NonPartialNestedOuterType_ReportsError()
+    {
+        const string source = """
+                              using Nice3point.Revit.Toolkit.External;
+
+                              namespace TestApplication;
+
+                              public class Outer
+                              {
+                                  public partial class Inner
+                                  {
+                                      [ExternalEvent]
+                                      private void DoWork() { }
+                                  }
+                              }
+                              """;
+
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
+
+        using (Assert.Multiple())
+        {
+            await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ExternalEventContainingTypeNotPartial.Id)).IsNotEmpty();
+            await Assert.That(generatedSources).IsEmpty();
+        }
+    }
+
+    [Test]
+    public async Task GlobalNamespace_GeneratesCodeWithoutNamespaceBlock()
+    {
+        const string source = """
+                              using Nice3point.Revit.Toolkit.External;
+
+                              public partial class MyViewModel
+                              {
+                                  [ExternalEvent]
+                                  private void DoWork() { }
+                              }
+                              """;
+
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
+
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
+
+        var output = generatedSources[0];
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).DoesNotContain("namespace");
+            await Assert.That(output).Contains("IExternalEvent DoWorkEvent");
+            await Assert.That(output).Contains("IAsyncExternalEvent DoWorkAsyncEvent");
+        }
+    }
+
+    [Test]
+    public async Task StructContainingType_GeneratesWithStructKeyword()
+    {
+        const string source = """
+                              using Nice3point.Revit.Toolkit.External;
+
+                              namespace TestApplication;
+
+                              public partial struct MyViewModel
+                              {
+                                  [ExternalEvent]
+                                  private void DoWork() { }
+                              }
+                              """;
+
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
+
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
+
+        var output = generatedSources[0];
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).Contains("partial struct MyViewModel");
+            await Assert.That(output).Contains("IExternalEvent DoWorkEvent");
+        }
+    }
+
+    [Test]
+    public async Task SingleExtraParamWithUIApplication_GeneratesGenericProperty()
+    {
+        const string source = """
+                              using Autodesk.Revit.UI;
+                              using Nice3point.Revit.Toolkit.External;
+
+                              namespace TestApplication;
+
+                              public partial class MyViewModel
+                              {
+                                  [ExternalEvent]
+                                  private void DoWork(UIApplication app, string message) { }
+                              }
+                              """;
+
+        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
+
+        await Assert.That(diagnostics).IsEmpty();
+        await Assert.That(generatedSources).Count().IsEqualTo(1);
+
+        var output = generatedSources[0];
+        using (Assert.Multiple())
+        {
+            await Assert.That(output).Contains("IExternalEvent<string> DoWorkEvent");
+            await Assert.That(output).Contains("IAsyncExternalEvent<string> DoWorkAsyncEvent");
+        }
+    }
+
+
+    [Test]
     public async Task TaskReturn_ReportsError()
     {
         const string source = """
@@ -425,167 +587,6 @@ public sealed class ExternalEventGeneratorTests
         {
             await Assert.That(generatedSources).IsNotEmpty();
             await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
-        }
-    }
-
-    [Test]
-    public async Task NoAttribute_GeneratesNothing()
-    {
-        const string source = """
-                              namespace TestApplication;
-
-                              public partial class MyViewModel
-                              {
-                                  private void DoWork() { }
-                              }
-                              """;
-
-        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
-
-        await Assert.That(diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
-        await Assert.That(generatedSources).IsEmpty();
-    }
-
-    [Test]
-    public async Task NestedTypes_GeneratesNestedPartialHierarchy()
-    {
-        const string source = """
-                              using Nice3point.Revit.Toolkit.External;
-
-                              namespace TestApplication;
-
-                              public partial class Outer
-                              {
-                                  public partial class Inner
-                                  {
-                                      [ExternalEvent]
-                                      private void DoWork() { }
-                                  }
-                              }
-                              """;
-
-        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
-
-        await Assert.That(diagnostics).IsEmpty();
-        await Assert.That(generatedSources).Count().IsEqualTo(1);
-
-        var output = generatedSources[0];
-        using (Assert.Multiple())
-        {
-            await Assert.That(output).Contains("partial class Outer");
-            await Assert.That(output).Contains("partial class Inner");
-            await Assert.That(output).Contains("IExternalEvent DoWorkEvent");
-        }
-    }
-
-    [Test]
-    public async Task NonPartialNestedOuterType_ReportsError()
-    {
-        const string source = """
-                              using Nice3point.Revit.Toolkit.External;
-
-                              namespace TestApplication;
-
-                              public class Outer
-                              {
-                                  public partial class Inner
-                                  {
-                                      [ExternalEvent]
-                                      private void DoWork() { }
-                                  }
-                              }
-                              """;
-
-        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
-
-        using (Assert.Multiple())
-        {
-            await Assert.That(diagnostics.Where(diagnostic => diagnostic.Id == DiagnosticDescriptors.ExternalEventContainingTypeNotPartial.Id)).IsNotEmpty();
-            await Assert.That(generatedSources).IsEmpty();
-        }
-    }
-
-    [Test]
-    public async Task GlobalNamespace_GeneratesCodeWithoutNamespaceBlock()
-    {
-        const string source = """
-                              using Nice3point.Revit.Toolkit.External;
-
-                              public partial class MyViewModel
-                              {
-                                  [ExternalEvent]
-                                  private void DoWork() { }
-                              }
-                              """;
-
-        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
-
-        await Assert.That(diagnostics).IsEmpty();
-        await Assert.That(generatedSources).Count().IsEqualTo(1);
-
-        var output = generatedSources[0];
-        using (Assert.Multiple())
-        {
-            await Assert.That(output).DoesNotContain("namespace");
-            await Assert.That(output).Contains("IExternalEvent DoWorkEvent");
-            await Assert.That(output).Contains("IAsyncExternalEvent DoWorkAsyncEvent");
-        }
-    }
-
-    [Test]
-    public async Task StructContainingType_GeneratesWithStructKeyword()
-    {
-        const string source = """
-                              using Nice3point.Revit.Toolkit.External;
-
-                              namespace TestApplication;
-
-                              public partial struct MyViewModel
-                              {
-                                  [ExternalEvent]
-                                  private void DoWork() { }
-                              }
-                              """;
-
-        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
-
-        await Assert.That(diagnostics).IsEmpty();
-        await Assert.That(generatedSources).Count().IsEqualTo(1);
-
-        var output = generatedSources[0];
-        using (Assert.Multiple())
-        {
-            await Assert.That(output).Contains("partial struct MyViewModel");
-            await Assert.That(output).Contains("IExternalEvent DoWorkEvent");
-        }
-    }
-
-    [Test]
-    public async Task SingleExtraParamWithUIApplication_GeneratesGenericProperty()
-    {
-        const string source = """
-                              using Autodesk.Revit.UI;
-                              using Nice3point.Revit.Toolkit.External;
-
-                              namespace TestApplication;
-
-                              public partial class MyViewModel
-                              {
-                                  [ExternalEvent]
-                                  private void DoWork(UIApplication app, string message) { }
-                              }
-                              """;
-
-        var (generatedSources, diagnostics) = GeneratorTestHelper.RunGenerator(source);
-
-        await Assert.That(diagnostics).IsEmpty();
-        await Assert.That(generatedSources).Count().IsEqualTo(1);
-
-        var output = generatedSources[0];
-        using (Assert.Multiple())
-        {
-            await Assert.That(output).Contains("IExternalEvent<string> DoWorkEvent");
-            await Assert.That(output).Contains("IAsyncExternalEvent<string> DoWorkAsyncEvent");
         }
     }
 }

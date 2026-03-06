@@ -24,6 +24,15 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit\Nice3point.Revit.Toolkit.csproj"/>
+        <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit.SourceGenerators\Nice3point.Revit.Toolkit.SourceGenerators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit.Analyzers\Nice3point.Revit.Toolkit.Analyzers.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit.Analyzers.CodeFixers\Nice3point.Revit.Toolkit.Analyzers.CodeFixers.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false"/>
     </ItemGroup>
 
     <ItemGroup>

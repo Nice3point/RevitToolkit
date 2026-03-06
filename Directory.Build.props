@@ -8,4 +8,9 @@
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
     </PropertyGroup>
 
+    <!-- Polyfill configuration -->
+    <PropertyGroup>
+        <PolyArgumentExceptions>true</PolyArgumentExceptions>
+    </PropertyGroup>
+
 </Project>

@@ -3,6 +3,7 @@ using Autodesk.Revit.Attributes;
 using Nice3point.Revit.Toolkit.External;
 using Nice3point.Revit.Toolkit.Ui.Tests.Engine.Commands;
 using Shouldly;
+using ExternalEvent = Nice3point.Revit.Toolkit.External.ExternalEvent;
 
 namespace Nice3point.Revit.Toolkit.Ui.Tests.Tests;
 
@@ -47,7 +48,7 @@ public class AsyncEventHandlerTest : AsyncTestExternalCommand
             executed = true;
             documentTitle = app.ActiveUIDocument?.Document.Title;
         });
-        
+
         await externalEvent.RaiseAsync();
 
         executed.ShouldBeTrue();
@@ -64,7 +65,7 @@ public class AsyncEventHandlerGenericTest : AsyncTestExternalCommand
 {
     public override async Task TestAsync()
     {
-        var externalEvent = new AsyncExternalEvent<DocumentInfo>(app =>
+        var externalEvent = new AsyncRequestExternalEvent<DocumentInfo>(app =>
         {
             var doc = app.ActiveUIDocument?.Document;
             if (doc is null) return new DocumentInfo("null", 0);
@@ -75,7 +76,7 @@ public class AsyncEventHandlerGenericTest : AsyncTestExternalCommand
 
             return new DocumentInfo(doc.Title, count);
         });
-        
+
         var result = await externalEvent.RaiseAsync();
 
         result.ShouldNotBeNull();

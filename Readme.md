@@ -37,13 +37,17 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
   * [ExternalApplication](#externalapplication)
   * [ExternalDBApplication](#externaldbapplication)
 * [External events](#external-events)
-  * [ActionEventHandler](#actioneventhandler)
-  * [IdlingEventHandler](#idlingeventhandler)
-  * [AsyncEventHandler](#asynceventhandler)
-  * [AsyncEventHandler\<T>](#asynceventhandlert)
+  * [ExternalEvent](#externalevent)
+  * [ExternalEvent\<T>](#externaleventt)
+  * [AsyncExternalEvent](#asyncexternalevent)
+  * [AsyncExternalEvent\<T>](#asyncexternaleventt)
+  * [AsyncRequestExternalEvent\<TResult>](#asyncrequestexternaleventtresult)
+  * [AsyncRequestExternalEvent\<T, TResult>](#asyncrequestexternaleventt-tresult)
+  * [ExternalEventOptions](#externaleventoptions)
+  * [ExternalEvent attribute](#externalevent-attribute)
 * [Context](#context)
-  * [RevitContext](#revitcontext)
   * [RevitApiContext](#revitapicontext)
+  * [RevitContext](#revitcontext)
 * [Options](#options)
   * [FamilyLoadOptions](#familyloadoptions)
   * [DuplicateTypeNamesHandler](#duplicatetypenameshandler)
@@ -168,189 +172,365 @@ public class Application : ExternalDBApplication
 
 ### External events
 
-The Toolkit provides implementations of **IExternalEventHandler** for various scenarios. These handlers are used to modify the Revit document from another thread, which is particularly useful when working with modeless windows.
+The Toolkit provides `ExternalEvent` implementations for working with the Revit API from outside the execution context,
+which is particularly useful when working with modeless windows.
 
-#### ActionEventHandler
+Events do not need to be created inside the Revit API context before use — the Toolkit handles all the initialization for you,
+so you can create them anywhere in your code and on any thread.
 
-A handler that provides access to modify a Revit document outside the execution context with queue support for Raise method calls.
+#### ExternalEvent
 
-Calling a handler in a Revit context will call it immediately, without adding it to the queue.
+A synchronous external event that queues the handler via the Revit external event mechanism.
+When `Raise()` is called, the delegate is placed into the Revit event queue and will be executed
+in the next event-processing cycle, once Revit is ready and no other commands or edit modes are active.
 
 ```c#
-private readonly ElementId _elementId = new(12869);
-private readonly ActionEventHandler _actionEventHandler = new();
-
-private void DeteleElement()
+private readonly ExternalEvent _deleteWindowsEvent = new(application =>
 {
-    _actionEventHandler.Raise(application =>
+    var document = application.ActiveUIDocument.Document;
+    using var transaction = new Transaction(document, "Delete windows");
+    transaction.Start();
+    document.Delete(document.GetInstanceIds(BuiltInCategory.OST_Windows));
+    transaction.Commit();
+
+    //2. The delegate body executes when Revit processes the event
+});
+
+private void DeleteWindows()
+{
+    _deleteWindowsEvent.Raise();
+
+    //1. Raise returns immediately, the delegate is queued
+}
+```
+
+#### ExternalEvent\<T>
+
+A generic synchronous external event that accepts an argument of type `T`.
+Works like `ExternalEvent`, but allows passing data to the handler at the time of raising.
+
+```c#
+private readonly ExternalEvent<ElementId> _deleteWindowEvent = new((application, elementId) =>
+{
+    var document = application.ActiveUIDocument.Document;
+    using var transaction = new Transaction(document, "Delete window");
+    transaction.Start();
+    document.Delete(elementId);
+    transaction.Commit();
+
+    //2. The delegate body executes with the provided argument
+});
+
+private void DeleteWindow(ElementId elementId)
+{
+    _deleteWindowEvent.Raise(elementId);
+
+    //1. Raise returns immediately, the delegate is queued
+}
+```
+
+#### AsyncExternalEvent
+
+An asynchronous external event that queues the handler and asynchronously awaits its completion.
+The `RaiseAsync()` method returns a `Task` that completes when Revit has finished executing the delegate.
+
+Exceptions thrown inside the delegate are rethrown in the original synchronization context.
+
+> [!WARNING]
+> Synchronously blocking the result of `RaiseAsync()` on the Revit main thread
+> (e.g. `.Wait()`, `.Result`, `.GetAwaiter().GetResult()`) will cause a deadlock,
+> because Revit cannot process the external event while its main thread is blocked by the waiting call.
+> Use `await` instead, which releases the thread and allows Revit to process the event.
+
+```c#
+private readonly AsyncExternalEvent _deleteWindowsAsyncEvent = new(application =>
+{
+    var document = application.ActiveUIDocument.Document;
+    using var transaction = new Transaction(document, "Delete windows");
+    transaction.Start();
+    document.Delete(document.GetInstanceIds(BuiltInCategory.OST_Windows));
+    transaction.Commit();
+
+    //1. The delegate body executes when Revit processes the event
+});
+
+private async Task DeleteWindowsAsync()
+{
+    await _deleteWindowsAsyncEvent.RaiseAsync();
+
+    //2. Continues after the delegate has completed
+}
+```
+
+#### AsyncExternalEvent\<T>
+
+A generic asynchronous external event that accepts an argument of type `T` and asynchronously awaits completion.
+
+```c#
+private readonly AsyncExternalEvent<ElementId> _deleteWindowAsyncEvent = new((application, elementId) =>
+{
+    var document = application.ActiveUIDocument.Document;
+    using var transaction = new Transaction(document, "Delete window");
+    transaction.Start();
+    document.Delete(elementId);
+    transaction.Commit();
+
+    //1. The delegate body executes with the provided argument
+});
+
+private async Task DeleteWindowAsync(ElementId elementId)
+{
+    await _deleteWindowAsyncEvent.RaiseAsync(elementId);
+
+    //2. Continues after the delegate has completed
+}
+```
+
+#### AsyncRequestExternalEvent\<TResult>
+
+An asynchronous external event that returns a result of type `TResult` via `RaiseAsync()`.
+The handler is queued to Revit and the returned `Task<TResult>` completes with the result once Revit has finished executing the delegate.
+
+```c#
+private readonly AsyncRequestExternalEvent<int> _countWindowsAsyncEvent = new(application =>
+{
+    var document = application.ActiveUIDocument.Document;
+    var elementIds = document.GetInstanceIds(BuiltInCategory.OST_Windows);
+
+    //1. The delegate body executes and returns a value
+    return elementIds.Count;
+});
+
+private async Task CountWindowsAsync()
+{
+    var count = await _countWindowsAsyncEvent.RaiseAsync();
+
+    //2. Continues after the delegate has completed, with the result
+}
+```
+
+#### AsyncRequestExternalEvent\<T, TResult>
+
+A generic asynchronous external event that accepts an argument of type `T`
+and returns a result of type `TResult`.
+
+```c#
+private readonly AsyncRequestExternalEvent<ElementId, bool> _deleteWindowRequestEvent = new((application, elementId) =>
+{
+    var document = application.ActiveUIDocument.Document;
+    using var transaction = new Transaction(document, "Delete window");
+    transaction.Start();
+    document.Delete(elementId);
+    transaction.Commit();
+
+    //1. The delegate body executes with the provided argument and returns a value
+    return true;
+});
+
+private async Task DeleteWindowAsync(ElementId elementId)
+{
+    var result = await _deleteWindowRequestEvent.RaiseAsync(elementId);
+
+    //2. Continues after the delegate has completed, with the result
+}
+```
+
+#### ExternalEventOptions
+
+You can configure the behavior of external events using `ExternalEventOptions`. 
+The `AllowDirectInvocation` option enables the handler to be invoked directly on the calling thread when Revit is in API mode, instead of being queued:
+
+```c#
+private readonly ExternalEvent _deleteWindowsEvent = new(application =>
+{
+    var document = application.ActiveUIDocument.Document;
+    using var transaction = new Transaction(document, "Delete windows");
+    transaction.Start();
+    document.Delete(document.GetInstanceIds(BuiltInCategory.OST_Windows));
+    transaction.Commit();
+}, ExternalEventOptions.AllowDirectInvocation);
+```
+
+This option useful if you want support Modal and Modeless windows from a single codebase without wasting time on queue management and Revit event-processing cycle.
+
+#### ExternalEvent attribute
+
+The `ExternalEventAttribute` is an attribute that allows generating external event properties for annotated methods.
+Its purpose is to completely eliminate the boilerplate that is needed to define external events wrapping private methods in a class.
+
+**How it works**
+
+The `ExternalEvent` attribute can be used to annotate a method in a partial type, like so:
+
+```c#
+partial class MyViewModel
+{
+    [ExternalEvent]
+    private void DeleteWindows(UIApplication application)
     {
         var document = application.ActiveUIDocument.Document;
-        using var transaction = new Transaction(document, "Delete element");
+        using var transaction = new Transaction(document, "Delete windows");
         transaction.Start();
-        document.Delete(_elementId);
+        document.Delete(document.GetInstanceIds(BuiltInCategory.OST_Windows));
         transaction.Commit();
-        
-        Debug.WriteLine("Deleted");
-    });
-
-    Debug.WriteLine("Command completed");
+    }
 }
 ```
 
-Debug output in a Revit context:
-
-```text
-Command completed
-Deleted
-```
-
-Debug output outside the Revit context:
-
-```text
-Deleted
-Command completed
-```
-
-You can set an optional exception handler to be called when an action throws an exception:
+And it will generate properties like this:
 
 ```c#
-_actionEventHandler.SetExceptionHandler(exception =>
+partial class MyViewModel
 {
-    Debug.WriteLine($"Error: {exception.Message}");
-});
+    public IExternalEvent DeleteWindowsEvent => field ??= new ExternalEvent(DeleteWindows);
+    public IAsyncExternalEvent DeleteWindowsAsyncEvent => field ??= new AsyncExternalEvent(DeleteWindows);
+}
 ```
 
-#### IdlingEventHandler
+> [!NOTE]
+> The name of the generated properties is created based on the method name.
+> The generator appends `Event` for the synchronous property and `AsyncEvent` for the asynchronous property.
 
-With this handler, you can queue delegates for method calls when Revit becomes available again.
-Unsubscribing from the Idling event occurs immediately.
-Suitable for cases where you need to call code when Revit receives focus.
-For example, to display a window after loading a family into a project.
+**Methods without parameters**
+
+For `void` methods, the generator creates both sync and async properties:
 
 ```c#
-private readonly IdlingEventHandler _idlingEventHandler = new();
-
-private void NotifyOnIdling()
+[ExternalEvent]
+private void DeleteWindows() 
 {
-    _idlingEventHandler.Raise(application =>
+    _document.Delete(_windowIds);
+}
+
+// Generates:
+// IExternalEvent DeleteWindowsEvent
+// IAsyncExternalEvent DeleteWindowsAsyncEvent
+```
+
+For methods that return a value, only an async request property is generated:
+
+```c#
+[ExternalEvent]
+private int CountWindows() 
+{
+    return _document.GetInstanceIds(BuiltInCategory.OST_Windows).Count;
+}
+
+// Generates:
+// IAsyncRequestExternalEvent<int> CountWindowsAsyncEvent
+```
+
+**Methods with UIApplication parameter**
+
+When a method accepts a `UIApplication` parameter, the generated events pass the application instance to the handler:
+
+```c#
+[ExternalEvent]
+private void DeleteWindows(UIApplication application)
+{
+    var document = application.ActiveUIDocument.Document;
+    using var transaction = new Transaction(document, "Delete windows");
+    transaction.Start();
+    document.Delete(document.GetInstanceIds(BuiltInCategory.OST_Windows));
+    transaction.Commit();
+}
+
+// Generates:
+// IExternalEvent DeleteWindowsEvent
+// IAsyncExternalEvent DeleteWindowsAsyncEvent
+```
+
+**Methods with one extra parameter**
+
+When a method has one additional parameter beyond the optional `UIApplication`,
+the generator creates typed event properties:
+
+```c#
+[ExternalEvent]
+private void DeleteWindow(UIApplication application, ElementId elementId)
+{
+    var document = application.ActiveUIDocument.Document;
+    using var transaction = new Transaction(document, "Delete window");
+    transaction.Start();
+    document.Delete(elementId);
+    transaction.Commit();
+}
+
+// Generates:
+// IExternalEvent<ElementId> DeleteWindowEvent
+// IAsyncExternalEvent<ElementId> DeleteWindowAsyncEvent
+```
+
+For methods with a return value:
+
+```c#
+[ExternalEvent]
+private int CountWindows(UIApplication application, BuiltInCategory category)
+{
+    return application.ActiveUIDocument.Document.GetInstanceIds(category).Count;
+}
+
+// Generates:
+// IAsyncRequestExternalEvent<BuiltInCategory, int> CountWindowsAsyncEvent
+```
+
+**Methods with multiple extra parameters**
+
+When a method has two or more extra parameters, the generator creates a `sealed record` to bundle them into a single argument type, along with convenience extension methods:
+
+```c#
+partial class MyViewModel
+{
+    [ExternalEvent]
+    private void DeleteWindows(UIApplication application, BuiltInCategory category, int count)
     {
-        var view = new FamilyBrowser();
-        view.Show();
-        
-        Debug.WriteLine("Idling");
-    });
-
-    Debug.WriteLine("Command completed");
+        var document = application.ActiveUIDocument.Document;
+        using var transaction = new Transaction(document, "Delete windows");
+        transaction.Start();
+        document.Delete(document.GetInstanceIds(category).Take(count).ToList());
+        transaction.Commit();
+    }
 }
 ```
 
-Debug output:
-
-```text
-Command completed
-Idling
-```
-
-You can set an optional exception handler to be called when an action throws an exception:
+Will generate:
 
 ```c#
-_idlingEventHandler.SetExceptionHandler(exception =>
+partial class MyViewModel
 {
-    Debug.WriteLine($"Error: {exception.Message}");
-});
-```
+    public IExternalEvent<DeleteWindowsArgs> DeleteWindowsEvent => field ??= new ExternalEvent<DeleteWindowsArgs>(...);
+    public IAsyncExternalEvent<DeleteWindowsArgs> DeleteWindowsAsyncEvent => field ??= new AsyncExternalEvent<DeleteWindowsArgs>(...);
 
-#### AsyncEventHandler
-
-With this handler, you can wait for the external event to complete.
-The **RaiseAsync** method will return to its previous context after executing the method encapsulated in the delegate.
-Suitable for cases where you need to maintain the sequence of code execution.
-
-Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context.
-
-Calling the handler in a Revit context will call it immediately without adding it to the queue and awaiting with `await` keyword will not cause a context switch,
-and you can still call API requests in the main Revit thread.
-
-```c#
-private readonly AsyncEventHandler _asyncEventHandler = new();
-
-private async Task DeleteDoorsAsync()
-{
-    await _asyncEventHandler.RaiseAsync(application =>
-    {
-        var doorIds = document.GetInstanceIds(BuiltInCategory.OST_Doors);
-        document.Delete(doorIds);
-
-        Debug.WriteLine("Doors deleted");
-    });
-
-    Debug.WriteLine("Command completed");
+    public sealed record DeleteWindowsArgs(BuiltInCategory Category, int MaxCount);
 }
+
+// Extension methods:
+public static ExternalEventRequest Raise(this IExternalEvent<DeleteWindowsArgs> externalEvent, BuiltInCategory category, int maxCount);
+public static Task RaiseAsync(this IAsyncExternalEvent<DeleteWindowsArgs> externalEvent, BuiltInCategory category, int maxCount);
 ```
 
-Debug output:
-
-```text
-Doors deleted
-Command completed
-```
-
-You can pass a cancellation token to cancel the operation before it executes:
+This allows you to call the event with individual arguments:
 
 ```c#
-await _asyncEventHandler.RaiseAsync(application =>
-{
-    // Action
-}, cancellationToken);
+_viewModel.DeleteWindowsEvent.Raise(BuiltInCategory.OST_Windows, 5);
+//or
+await _viewModel.DeleteWindowsAsyncEvent.RaiseAsync(BuiltInCategory.OST_Windows, 5);
 ```
 
-#### AsyncEventHandler\<T>
+**Enabling direct invocation**
 
-With this handler, you can wait for the external event to complete with the return value from the method encapsulated in the delegate.
-The **RaiseAsync** method will return to its previous context after executing.
-Suitable for cases where you need to maintain the sequence of code execution.
-
-Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context
-
-Calling the handler in a Revit context will call it immediately without adding it to the queue and awaiting with `await` keyword will not cause a context switch,
-and you can still call API requests in the main Revit thread.
+Use the `AllowDirectInvocation` property on the attribute to configure the generated events to execute directly when Revit is in API mode:
 
 ```c#
-private readonly AsyncEventHandler<int> _asyncEventHandler = new();
-
-private async Task GetWindowsCountAsync()
+[ExternalEvent(AllowDirectInvocation = true)]
+private void DeleteWindows(UIApplication application)
 {
-    var windowsCount = await _asyncEventHandler.RaiseAsync(application =>
-    {
-        var uiDocument = application.ActiveUIDocument;
-        var elementIds = uiDocument.Document.GetInstanceIds(BuiltInCategory.OST_Windows);
-        uiDocument.Selection.SetElementIds(elementIds);
-
-        Debug.WriteLine("Windows selected");
-        return elementIds.Count;
-    });
-
-    Debug.WriteLine($"Windows count {windowsCount}");
-    Debug.WriteLine("Command completed");
+    var document = application.ActiveUIDocument.Document;
+    using var transaction = new Transaction(document, "Delete windows");
+    transaction.Start();
+    document.Delete(document.GetInstanceIds(BuiltInCategory.OST_Windows));
+    transaction.Commit();
 }
-```
-
-Debug output:
-
-```text
-Windows selected
-Windows count 17
-Command completed
-```
-
-You can pass a cancellation token to cancel the operation before it executes:
-
-```c#
-var count = await _asyncEventHandler.RaiseAsync(application =>
-{
-    // Action
-    return 42;
-}, cancellationToken);
 ```
 
 ### Context
@@ -358,6 +538,41 @@ var count = await _asyncEventHandler.RaiseAsync(application =>
 Interfaces to global information about an application environment.
 
 It allows access to application-specific data, as well as up-calls for application-level operations such as dialog and failure handling.
+
+#### RevitApiContext
+
+Provides members for accessing the Revit application context at the database level.
+
+List of available environment properties:
+
+- RevitApiContext.Application
+
+**RevitApiContext** provides access to failure suppression using disposable scopes.
+
+By default, Revit uses manual error resolution control with user interaction.
+RevitApiContext provides automatic resolution of all failures without notifying the user or interrupting the program:
+
+```C#
+using (RevitApiContext.BeginFailureSuppressionScope())
+{
+    using var transaction = new Transaction(document, "Operation");
+    transaction.Start();
+    // Operations that may cause failures
+    transaction.Commit();
+}
+// Failure handling is restored automatically
+```
+
+By default, all errors are handled for successful completion of the transaction.
+However, if you want to cancel the transaction and undo all failed changes, pass false as the parameter:
+
+```C#
+using (RevitApiContext.BeginFailureSuppressionScope(resolveErrors: false))
+{
+    //User transactions
+    ModifyDocument();
+}
+```
 
 #### RevitContext
 
@@ -441,41 +656,6 @@ using (RevitContext.BeginDialogSuppressionScope(args =>
 }))
 {
     LoadFamilies();
-}
-```
-
-#### RevitApiContext
-
-Provides members for accessing the Revit application context at the database level.
-
-List of available environment properties:
-
-- RevitApiContext.Application
-
-**RevitApiContext** provides access to failure suppression using disposable scopes.
-
-By default, Revit uses manual error resolution control with user interaction.
-RevitApiContext provides automatic resolution of all failures without notifying the user or interrupting the program:
-
-```C#
-using (RevitApiContext.BeginFailureSuppressionScope())
-{
-    using var transaction = new Transaction(document, "Operation");
-    transaction.Start();
-    // Operations that may cause failures
-    transaction.Commit();
-}
-// Failure handling is restored automatically
-```
-
-By default, all errors are handled for successful completion of the transaction.
-However, if you want to cancel the transaction and undo all failed changes, pass false as the parameter:
-
-```C#
-using (RevitApiContext.BeginFailureSuppressionScope(resolveErrors: false))
-{
-    //User transactions
-    ModifyDocument();
 }
 ```
 

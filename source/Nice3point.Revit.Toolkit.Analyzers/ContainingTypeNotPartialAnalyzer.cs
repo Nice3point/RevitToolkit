@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -43,11 +44,12 @@ public sealed class ExternalEventContainingTypeNotPartialAnalyzer : DiagnosticAn
                 var currentType = methodSymbol.ContainingType;
                 while (currentType is not null)
                 {
-                    if (!IsTypeDeclarationPartial(context, currentType))
+                    var nonPartialSyntax = FindNonPartialIdentifier(context, currentType);
+                    if (nonPartialSyntax.HasValue)
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
                             descriptor: DiagnosticDescriptors.ExternalEventContainingTypeNotPartial,
-                            location: methodSymbol.Locations[0],
+                            location: nonPartialSyntax.Value.GetLocation(),
                             messageArgs: [currentType.Name, methodSymbol.Name]));
 
                         return;
@@ -72,19 +74,24 @@ public sealed class ExternalEventContainingTypeNotPartialAnalyzer : DiagnosticAn
         return false;
     }
 
-    private static bool IsTypeDeclarationPartial(SymbolAnalysisContext context, INamedTypeSymbol currentType)
+    private static SyntaxToken? FindNonPartialIdentifier(SymbolAnalysisContext context, INamedTypeSymbol type)
     {
-        foreach (var syntaxReference in currentType.DeclaringSyntaxReferences)
+        foreach (var syntaxReference in type.DeclaringSyntaxReferences)
         {
             if (syntaxReference.GetSyntax(context.CancellationToken) is TypeDeclarationSyntax typeDeclaration)
             {
                 if (typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
                 {
-                    return true;
+                    return null;
                 }
             }
         }
 
-        return false;
+        if (type.DeclaringSyntaxReferences[0].GetSyntax(context.CancellationToken) is TypeDeclarationSyntax firstDeclaration)
+        {
+            return firstDeclaration.Identifier;
+        }
+
+        return null;
     }
 }

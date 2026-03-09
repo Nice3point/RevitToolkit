@@ -1,4 +1,4 @@
-# Release 2027.0.0-preview.3.20260306
+# Release 2027.0.0-preview.3.20260309
 
 ### External Events
 
@@ -12,7 +12,8 @@ New family of external event types replacing legacy `ActionEventHandler`, `Async
 - **AsyncRequestExternalEvent\<T, TResult>** — generic asynchronous external event with argument and result support.
 - **ExternalEventOptions** — configuration flags for event behavior, including `AllowDirectInvocation` for direct execution in API context.
 
-Events do not need to be created inside the Revit API context — the Toolkit handles initialization automatically, so you can create them anywhere in your code and on any thread.
+[!IMPORTANT]
+> Events do not need to be created inside the Revit API context — the Toolkit handles initialization automatically, so you can create them anywhere in your code and on any thread.
 
 ### ExternalEvent Source Generator
 
@@ -45,28 +46,17 @@ public partial class MyViewModel : ObservableObject
 ```
 
 Source generator supports multiple parameters, methods with extra parameters like `private void DeleteWindows(string arg1, int arg2, bool arg3)` also work.
-
-**Generator capabilities:**
-
-- `void` methods → generates both `IExternalEvent` and `IAsyncExternalEvent` properties.
-- Methods returning a value → generates `IAsyncRequestExternalEvent<TResult>` property.
-- Methods with extra parameters → generates typed `IExternalEvent<T>` / `IAsyncExternalEvent<T>` properties.
-- Methods with 2+ extra parameters → generates a `sealed record` for argument bundling with convenience extension methods.
-- `AllowDirectInvocation` attribute property support.
-- Static method support.
-- Nested type hierarchy support.
-- `field` keyword usage for C# 14+, backing field fallback for older versions.
-- Multi-version Roslyn support (4.14 and 5.0).
+Roslyn versions 4.14 and 5.0+ supported.
 
 ### Roslyn Analyzers and Code Fixers
 
 New analyzer package with diagnostics for `[ExternalEvent]` annotated methods:
-.
-- **RVTTK0001** — Method returns `Task` or `Task<T>` (Error).
-- **RVTTK0002** — Method is `async void` (Warning) + code fixer to remove `async` modifier.
-- **RVTTK0003** — Method is generic (Error).
-- **RVTTK0004** — Duplicate method overloads with `[ExternalEvent]` (Error).
-- **RVTTK0005** — Containing type is not `partial` (Error) + code fixer to add `partial` modifier.
+
+- **RVTTK0001** — Method returns `Task` or `Task<T>`.
+- **RVTTK0002** — Method is `async void`.
+- **RVTTK0003** — Method is generic.
+- **RVTTK0004** — Duplicate method overloads with `[ExternalEvent]`.
+- **RVTTK0005** — Containing type is not `partial`.
 
 ### Context
 

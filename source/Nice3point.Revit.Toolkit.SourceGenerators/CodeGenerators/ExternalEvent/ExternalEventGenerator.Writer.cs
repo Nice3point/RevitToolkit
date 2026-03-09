@@ -144,7 +144,7 @@ partial class ExternalEventGenerator
 
             var eventType = FormatGenericType(eventTypeName.WithGlobalPrefix, typeArguments);
             var interfaceType = FormatGenericType(interfaceTypeName.WithGlobalPrefix, typeArguments);
-            var initializer = BuildPropertyInitializer(info, eventType, typeArguments, optionsArgument);
+            var initializer = BuildPropertyInitializer(info, eventType, optionsArgument);
 
             WritePropertyWithBackingField(writer, info, useFieldKeyword, staticModifier, interfaceType, propertySuffix, initializer);
         }
@@ -289,11 +289,11 @@ partial class ExternalEventGenerator
         /// <summary>
         ///     Builds the property initializer expression, choosing between direct method reference and lambda for record types.
         /// </summary>
-        private static string BuildPropertyInitializer(ExternalEventInfo info, string eventType, string? typeArguments, string optionsArgument)
+        private static string BuildPropertyInitializer(ExternalEventInfo info, string eventType, string optionsArgument)
         {
             if (info.ExtraParameters.Length < 2)
             {
-                return $"new {eventType}({info.MethodName}{optionsArgument})";
+                return $"new {eventType}(new {info.FullyQualifiedDelegateType}({info.MethodName}){optionsArgument})";
             }
 
             var lambda = BuildRecordLambda(info, "args");

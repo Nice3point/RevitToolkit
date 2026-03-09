@@ -10,7 +10,7 @@ namespace Nice3point.Revit.Toolkit.SourceGenerators.Extensions;
 internal static class DiagnosticsExtensions
 {
     /// <summary>
-    ///     Adds a new diagnostic to the target builder.
+    ///     Adds a new diagnostic to the target builder from a symbol location.
     /// </summary>
     /// <param name="diagnostics">The collection of produced <see cref="Nice3point.Revit.Toolkit.SourceGenerators.Models.DiagnosticInfo"/> instances.</param>
     /// <param name="descriptor">The input <see cref="DiagnosticDescriptor"/> for the diagnostic to create.</param>
@@ -23,6 +23,22 @@ internal static class DiagnosticsExtensions
         params string[] args)
     {
         diagnostics.Add(DiagnosticInfo.Create(descriptor, symbol, args));
+    }
+
+    /// <summary>
+    ///     Adds a new diagnostic to the target builder from a syntax node location.
+    /// </summary>
+    /// <param name="diagnostics">The input <see cref="IncrementalValuesProvider{TValues}"/> sequence of diagnostics.</param>
+    /// <param name="descriptor">The input <see cref="DiagnosticDescriptor"/> for the diagnostic to create.</param>
+    /// <param name="node">The input <see cref="SyntaxNode"/> for the diagnostic to create.</param>
+    /// <param name="args">The optional arguments for the formatted message to include.</param>
+    public static void Add(
+        this ImmutableArray<DiagnosticInfo>.Builder diagnostics,
+        DiagnosticDescriptor descriptor,
+        SyntaxNode node,
+        params string[] args)
+    {
+        diagnostics.Add(DiagnosticInfo.Create(descriptor, node, args));
     }
 
     /// <summary>

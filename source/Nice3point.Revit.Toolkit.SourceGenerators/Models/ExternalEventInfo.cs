@@ -11,6 +11,7 @@ internal sealed record ExternalEventInfo(
     bool IsStatic,
     bool ReturnsVoid,
     string? FullyQualifiedReturnType,
+    string FullyQualifiedDelegateType,
     bool HasUiApplicationParameter,
     bool AllowDirectInvocation,
     EquatableArray<TypeDeclarationInfo> TypeHierarchy,

@@ -111,6 +111,7 @@ partial class ExternalEventGenerator
             var (returnsVoid, returnType) = ExtractReturnType(methodSymbol);
             var typeHierarchy = GetTypeHierarchy(methodSymbol);
             var containingNamespace = GetNamespace(methodSymbol.ContainingType);
+            var delegateType = BuildDelegateType(methodSymbol, hasUiApplicationParameter, returnsVoid, returnType, extraParameters);
 
             return new ExternalEventInfo(
                 HintName: $"{GetHintName(methodSymbol)}.{methodSymbol.Name}",
@@ -119,6 +120,7 @@ partial class ExternalEventGenerator
                 IsStatic: methodSymbol.IsStatic,
                 ReturnsVoid: returnsVoid,
                 FullyQualifiedReturnType: returnType,
+                FullyQualifiedDelegateType: delegateType,
                 HasUiApplicationParameter: hasUiApplicationParameter,
                 AllowDirectInvocation: allowDirectInvocation,
                 TypeHierarchy: typeHierarchy,
@@ -242,17 +244,9 @@ partial class ExternalEventGenerator
         {
             foreach (var attribute in methodSymbol.GetAttributes())
             {
-                if (attribute.AttributeClass?.ToDisplayString() != WellKnownFullyQualifiedClassNames.ExternalEventAttribute.WithoutGlobalPrefix)
+                if (attribute.AttributeClass?.ToDisplayString() == WellKnownFullyQualifiedClassNames.ExternalEventAttribute.WithoutGlobalPrefix)
                 {
-                    continue;
-                }
-
-                foreach (var namedArgument in attribute.NamedArguments)
-                {
-                    if (namedArgument is { Key: "AllowDirectInvocation", Value.Value: bool value })
-                    {
-                        return value;
-                    }
+                    return attribute.GetNamedArgument("AllowDirectInvocation", false);
                 }
             }
 
@@ -297,6 +291,40 @@ partial class ExternalEventGenerator
             }
 
             return (false, methodSymbol.ReturnType.GetFullyQualifiedNameWithNullabilityAnnotations());
+        }
+        
+        /// <summary>
+        ///     Builds the fully qualified delegate type for wrapping the method reference.
+        ///     Used to generate explicit delegate casts like <c>new global::System.Action(Method)</c>
+        ///     to avoid overload resolution conflicts with method groups.
+        /// </summary>
+        private static string BuildDelegateType(
+            IMethodSymbol methodSymbol,
+            bool hasUiApplicationParameter,
+            bool returnsVoid,
+            string? fullyQualifiedReturnType,
+            EquatableArray<ParameterData> extraParameters)
+        {
+            var parameterTypes = new List<string>();
+            if (hasUiApplicationParameter)
+            {
+                parameterTypes.Add(methodSymbol.Parameters[0].Type.GetFullyQualifiedNameWithNullabilityAnnotations());
+            }
+
+            foreach (var parameter in extraParameters)
+            {
+                parameterTypes.Add(parameter.FullyQualifiedType);
+            }
+
+            if (returnsVoid)
+            {
+                return parameterTypes.Count == 0
+                    ? "global::System.Action"
+                    : $"global::System.Action<{string.Join(", ", parameterTypes)}>";
+            }
+
+            parameterTypes.Add(fullyQualifiedReturnType!);
+            return $"global::System.Func<{string.Join(", ", parameterTypes)}>";
         }
 
         /// <summary>

@@ -46,4 +46,18 @@ internal sealed record DiagnosticInfo(
             location.SourceSpan,
             arguments.ToImmutableArray().AsEquatableArray());
     }
+
+    /// <summary>
+    ///     Creates a new <see cref="DiagnosticInfo"/> from a <see cref="DiagnosticDescriptor"/> and a <see cref="SyntaxNode"/>.
+    /// </summary>
+    public static DiagnosticInfo Create(DiagnosticDescriptor descriptor, SyntaxNode node, params string[] arguments)
+    {
+        var location = node.GetLocation();
+
+        return new DiagnosticInfo(
+            descriptor,
+            location.SourceTree,
+            location.SourceSpan,
+            arguments.ToImmutableArray().AsEquatableArray());
+    }
 }

@@ -363,7 +363,7 @@ Its purpose is to completely eliminate the boilerplate that is needed to define 
 The `ExternalEvent` attribute can be used to annotate a method in a partial type, like so:
 
 ```c#
-partial class MyViewModel
+public partial class MyViewModel
 {
     [ExternalEvent]
     private void DeleteWindows(UIApplication application)
@@ -380,10 +380,22 @@ partial class MyViewModel
 And it will generate properties like this:
 
 ```c#
-partial class MyViewModel
+public partial class MyViewModel
 {
     public IExternalEvent DeleteWindowsEvent => field ??= new ExternalEvent(DeleteWindows);
     public IAsyncExternalEvent DeleteWindowsAsyncEvent => field ??= new AsyncExternalEvent(DeleteWindows);
+}
+```
+
+After you can call a `Raise` method:
+
+```c#
+public partial class MyViewModel
+{
+    private void DeleteCommand()
+    {
+        DeleteWindowsEvent.Raise();
+    }
 }
 ```
 
@@ -407,7 +419,7 @@ private void DeleteWindows()
 // IAsyncExternalEvent DeleteWindowsAsyncEvent
 ```
 
-For methods that return a value, only an async request property is generated:
+For methods that return a value, only an async property is generated:
 
 ```c#
 [ExternalEvent]
@@ -476,10 +488,10 @@ private int CountWindows(UIApplication application, BuiltInCategory category)
 
 **Methods with multiple extra parameters**
 
-When a method has two or more extra parameters, the generator creates a `sealed record` to bundle them into a single argument type, along with convenience extension methods:
+When a method has two or more extra parameters, the generator creates a `sealed record` to bundle them into a single argument type, along with extension methods to call Raise with individual parameters:
 
 ```c#
-partial class MyViewModel
+public partial class MyViewModel
 {
     [ExternalEvent]
     private void DeleteWindows(UIApplication application, BuiltInCategory category, int count)
@@ -496,7 +508,7 @@ partial class MyViewModel
 Will generate:
 
 ```c#
-partial class MyViewModel
+public partial class MyViewModel
 {
     public IExternalEvent<DeleteWindowsArgs> DeleteWindowsEvent => field ??= new ExternalEvent<DeleteWindowsArgs>(...);
     public IAsyncExternalEvent<DeleteWindowsArgs> DeleteWindowsAsyncEvent => field ??= new AsyncExternalEvent<DeleteWindowsArgs>(...);
@@ -509,12 +521,10 @@ public static ExternalEventRequest Raise(this IExternalEvent<DeleteWindowsArgs> 
 public static Task RaiseAsync(this IAsyncExternalEvent<DeleteWindowsArgs> externalEvent, BuiltInCategory category, int maxCount);
 ```
 
-This allows you to call the event with individual arguments:
+These extensions allow you to call the event with individual arguments instead of creating a new Args:
 
 ```c#
-_viewModel.DeleteWindowsEvent.Raise(BuiltInCategory.OST_Windows, 5);
-//or
-await _viewModel.DeleteWindowsAsyncEvent.RaiseAsync(BuiltInCategory.OST_Windows, 5);
+DeleteWindowsEvent.Raise(BuiltInCategory.OST_Windows, 5);
 ```
 
 **Enabling direct invocation**

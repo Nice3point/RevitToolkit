@@ -34,7 +34,7 @@ public sealed class MakeTypePartialCodeFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: Title,
-                createChangedDocument: token => AddPartialModifier(context.Document, root, typeDeclaration, token),
+                createChangedDocument: cancellationToken => AddPartialModifier(context.Document, root, typeDeclaration, cancellationToken),
                 equivalenceKey: Title),
             diagnostic);
     }

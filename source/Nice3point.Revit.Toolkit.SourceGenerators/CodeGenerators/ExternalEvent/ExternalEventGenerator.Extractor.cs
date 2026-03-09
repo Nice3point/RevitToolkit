@@ -57,13 +57,6 @@ partial class ExternalEventGenerator
         {
             if (!IsAllContainingTypesPartial(methodSymbol))
             {
-                var nonPartialType = FindFirstNonPartialContainingType(methodSymbol);
-                diagnostics.Add(
-                    DiagnosticDescriptors.ExternalEventContainingTypeNotPartial,
-                    nonPartialType ?? (ISymbol)methodSymbol,
-                    nonPartialType?.Name ?? methodSymbol.ContainingType.Name,
-                    methodSymbol.Name);
-
                 return false;
             }
 
@@ -157,38 +150,6 @@ partial class ExternalEventGenerator
             }
 
             return true;
-        }
-
-        /// <summary>
-        ///     Finds the first non-partial containing type in the hierarchy for diagnostic reporting.
-        /// </summary>
-        private static INamedTypeSymbol? FindFirstNonPartialContainingType(IMethodSymbol method)
-        {
-            var currentType = method.ContainingType;
-
-            while (currentType is not null)
-            {
-                var isPartial = false;
-
-                foreach (var syntaxReference in currentType.DeclaringSyntaxReferences)
-                {
-                    if (syntaxReference.GetSyntax() is TypeDeclarationSyntax typeDeclarationSyntax &&
-                        typeDeclarationSyntax.Modifiers.Any(SyntaxKind.PartialKeyword))
-                    {
-                        isPartial = true;
-                        break;
-                    }
-                }
-
-                if (!isPartial)
-                {
-                    return currentType;
-                }
-
-                currentType = currentType.ContainingType;
-            }
-
-            return null;
         }
 
         /// <summary>

@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -31,34 +30,56 @@ public sealed class ExternalEventContainingTypeNotPartialAnalyzer : DiagnosticAn
 
             context.RegisterSymbolAction(context =>
             {
-                if (context.Symbol is not IMethodSymbol methodSymbol)
+                if (context.Symbol is not INamedTypeSymbol typeSymbol)
                 {
                     return;
                 }
 
-                if (!HasTargetAttribute(methodSymbol, attributeSymbol))
+                var methodName = FindFirstAttributedMethodName(typeSymbol, attributeSymbol);
+                if (methodName is null)
                 {
                     return;
                 }
 
-                var currentType = methodSymbol.ContainingType;
-                while (currentType is not null)
+                var nonPartialIdentifier = FindNonPartialIdentifier(context, typeSymbol);
+                if (nonPartialIdentifier.HasValue)
                 {
-                    var nonPartialSyntax = FindNonPartialIdentifier(context, currentType);
-                    if (nonPartialSyntax.HasValue)
-                    {
-                        context.ReportDiagnostic(Diagnostic.Create(
-                            descriptor: DiagnosticDescriptors.ExternalEventContainingTypeNotPartial,
-                            location: nonPartialSyntax.Value.GetLocation(),
-                            messageArgs: [currentType.Name, methodSymbol.Name]));
-
-                        return;
-                    }
-
-                    currentType = currentType.ContainingType;
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        DiagnosticDescriptors.ExternalEventContainingTypeNotPartial,
+                        nonPartialIdentifier.Value.GetLocation(),
+                        typeSymbol.Name,
+                        methodName));
                 }
-            }, SymbolKind.Method);
+            }, SymbolKind.NamedType);
         });
+    }
+
+    private static string? FindFirstAttributedMethodName(INamedTypeSymbol typeSymbol, INamedTypeSymbol attributeSymbol)
+    {
+        foreach (var member in typeSymbol.GetMembers())
+        {
+            if (member is IMethodSymbol methodSymbol)
+            {
+                if (HasTargetAttribute(methodSymbol, attributeSymbol))
+                {
+                    return methodSymbol.Name;
+                }
+            }
+        }
+
+        foreach (var member in typeSymbol.GetMembers())
+        {
+            if (member is INamedTypeSymbol nestedType)
+            {
+                var name = FindFirstAttributedMethodName(nestedType, attributeSymbol);
+                if (name is not null)
+                {
+                    return name;
+                }
+            }
+        }
+
+        return null;
     }
 
     private static bool HasTargetAttribute(IMethodSymbol methodSymbol, INamedTypeSymbol attributeSymbol)
@@ -87,9 +108,12 @@ public sealed class ExternalEventContainingTypeNotPartialAnalyzer : DiagnosticAn
             }
         }
 
-        if (type.DeclaringSyntaxReferences[0].GetSyntax(context.CancellationToken) is TypeDeclarationSyntax firstDeclaration)
+        if (type.DeclaringSyntaxReferences.Length > 0)
         {
-            return firstDeclaration.Identifier;
+            if (type.DeclaringSyntaxReferences[0].GetSyntax(context.CancellationToken) is TypeDeclarationSyntax firstDeclaration)
+            {
+                return firstDeclaration.Identifier;
+            }
         }
 
         return null;

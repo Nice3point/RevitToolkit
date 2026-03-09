@@ -208,7 +208,18 @@ partial class ExternalEventGenerator
                     _ => "class"
                 };
 
-                typeDeclarations.Insert(0, new TypeDeclarationInfo(keyword, currentType.Name, currentType.IsStatic));
+                var accessibility = currentType.DeclaredAccessibility switch
+                {
+                    Accessibility.Public => "public",
+                    Accessibility.Internal => "internal",
+                    Accessibility.Protected => "protected",
+                    Accessibility.ProtectedOrInternal => "protected internal",
+                    Accessibility.ProtectedAndInternal => "private protected",
+                    Accessibility.Private => "private",
+                    _ => "internal"
+                };
+
+                typeDeclarations.Insert(0, new TypeDeclarationInfo(keyword, currentType.Name, currentType.IsStatic, accessibility));
                 currentType = currentType.ContainingType;
             }
 

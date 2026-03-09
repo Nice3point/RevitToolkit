@@ -48,7 +48,7 @@ partial class ExternalEventGenerator
             foreach (var typeDeclaration in info.TypeHierarchy)
             {
                 var staticModifier = typeDeclaration.IsStatic ? "static " : "";
-                var block = writer.BeginBlock($"{staticModifier}partial {typeDeclaration.Keyword} {typeDeclaration.Name}");
+                var block = writer.BeginBlock($"{typeDeclaration.Accessibility} {staticModifier}partial {typeDeclaration.Keyword} {typeDeclaration.Name}");
                 typeBlocks.Add(block);
             }
 
@@ -114,7 +114,8 @@ partial class ExternalEventGenerator
 
             writer.AppendLine();
 
-            using (writer.BeginBlock($"public static partial class {outermostTypeName}Extensions"))
+            var extensionAccessibility = GetMostRestrictiveAccessibility(info.TypeHierarchy);
+            using (writer.BeginBlock($"{extensionAccessibility} static partial class {outermostTypeName}Extensions"))
             {
                 if (info.ReturnsVoid)
                 {
@@ -379,6 +380,23 @@ partial class ExternalEventGenerator
                     "AsyncEvent"),
                 _ => throw new ArgumentOutOfRangeException(nameof(kind))
             };
+        }
+
+        /// <summary>
+        ///     Returns the most restrictive accessibility from the type hierarchy,
+        ///     clamped to "public" or "internal" (extension classes can only be top-level static).
+        /// </summary>
+        private static string GetMostRestrictiveAccessibility(EquatableArray<TypeDeclarationInfo> typeHierarchy)
+        {
+            foreach (var type in typeHierarchy)
+            {
+                if (type.Accessibility != "public")
+                {
+                    return "internal";
+                }
+            }
+
+            return "public";
         }
 
         /// <summary>

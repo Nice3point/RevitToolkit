@@ -23,7 +23,8 @@ internal sealed record ExternalEventInfo(
 internal sealed record TypeDeclarationInfo(
     string Keyword,
     string Name,
-    bool IsStatic);
+    bool IsStatic,
+    string Accessibility);
 
 /// <summary>
 ///     Describes an extra parameter of the annotated method beyond the UIApplication parameter.

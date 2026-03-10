@@ -1,4 +1,4 @@
-# Release 2027.0.0-preview.3.20260309
+# Release 2027.0.0-preview.4.20260310
 
 ### External Events
 
@@ -63,6 +63,7 @@ New analyzer package with diagnostics for `[ExternalEvent]` annotated methods:
 - New **RevitContext** class for UI-level application context access.
 - New **RevitApiContext** class for database-level application context access.
 - New **AsyncExternalCommand** class for async/await support in external commands.
+- New **AsyncExternalApplication** class for async/await support in external applications.
 - New **BeginDialogSuppressionScope()** method with disposable pattern for dialog suppression.
 - New **BeginFailureSuppressionScope()** method with disposable pattern for failure handling.
 - New **BeginAssemblyResolveScope()** method with disposable pattern for dependency resolution.

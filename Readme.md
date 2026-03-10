@@ -35,6 +35,7 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
   * [AsyncExternalCommand](#asyncexternalcommand)
 * [External Applications](#external-applications)
   * [ExternalApplication](#externalapplication)
+  * [AsyncExternalApplication](#asyncexternalapplication)
   * [ExternalDBApplication](#externaldbapplication)
 * [External events](#external-events)
   * [ExternalEvent](#externalevent)
@@ -70,7 +71,6 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 The Toolkit provides base classes for Revit external commands that simplify development:
 
 - Automatic dependency resolution to avoid `FileNotFoundException` exceptions (dependencies are searched in the plugin folder)
-- Access to commonly used properties like `ActiveDocument`, `ActiveView`, `UiApplication`
 - Simplified method signatures — override `Execute()` instead of implementing full interface
 
 #### ExternalCommand
@@ -149,6 +149,33 @@ public class Application : ExternalApplication
 
     public override void OnShutdown()
     {
+    }
+}
+```
+
+#### AsyncExternalApplication
+
+Implementation for asynchronous **IExternalApplication**. Override `OnStartupAsync()` and optionally `OnShutdownAsync()` for async/await support.
+
+Enables async/await patterns while maintaining execution on the Revit main thread.
+The Revit UI remains responsive during async operations through dispatcher message pumping.
+Ideal for I/O-bound operations such as HTTP requests, file operations, or database queries during application startup and shutdown.
+
+```c#
+public class Application : AsyncExternalApplication
+{
+    public override async Task OnStartupAsync()
+    {
+        using var httpClient = new HttpClient();
+        var configuration = await httpClient.GetStringAsync("https://api.example.com/config");
+
+        var panel = Application.CreatePanel(configuration.PanelTitle);
+        panel.AddPushButton<Command>(configuration.ButtonTitle);
+    }
+
+    public override async Task OnShutdownAsync()
+    {
+        await SaveStateAsync();
     }
 }
 ```

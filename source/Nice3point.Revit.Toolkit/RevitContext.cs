@@ -58,21 +58,6 @@ public class RevitContext : RevitApiContext
     /// </summary>
     public static UIApplication UiApplication { get; }
 
-    /// <summary>
-    ///     Represents the Autodesk Revit user interface, providing access to UI customization methods and events.
-    /// </summary>
-    public static UIControlledApplication UiControlledApplication =>
-#if NET8_0_OR_GREATER
-        UnsafeAccessors.CreateUiControlledApplication(UiApplication);
-#else
-        (UIControlledApplication)Activator.CreateInstance(
-            typeof(UIControlledApplication),
-            BindingFlags.Instance | BindingFlags.NonPublic,
-            null,
-            [UiApplication],
-            null)!;
-#endif
-
     /// <summary>Represents a currently active Autodesk Revit project at the UI level.</summary>
     /// <remarks>
     ///     External API commands can access this property in read-only mode only.

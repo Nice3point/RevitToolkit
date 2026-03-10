@@ -591,7 +591,6 @@ Provides members for accessing the Revit application context at the UI level.
 List of available environment properties:
 
 - RevitContext.UiApplication
-- RevitContext.UiControlledApplication
 - RevitContext.ActiveDocument
 - RevitContext.ActiveUiDocument
 - RevitContext.ActiveView

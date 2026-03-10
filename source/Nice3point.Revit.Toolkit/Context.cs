@@ -90,12 +90,12 @@ public static class Context
     /// <summary>
     ///     Represents the Autodesk Revit user interface, providing access to UI customization methods and events.
     /// </summary>
-    [Obsolete("Use RevitContext.UiControlledApplication instead")]
+    [Obsolete("Use AsControlledApplication instead from Nice3point.Revit.Extensions package")]
     [CodeTemplate(
         searchTemplate: "Context.UiControlledApplication",
-        Message = "Context.UiControlledApplication is obsolete, use RevitContext.UiControlledApplication instead",
-        ReplaceTemplate = "RevitContext.UiControlledApplication",
-        ReplaceMessage = "Replace with RevitContext.UiControlledApplication")]
+        Message = "Context.UiControlledApplication is obsolete, use Nice3point.Revit.Extensions.AsControlledApplication instead",
+        ReplaceTemplate = "RevitContext.UiApplication.AsControlledApplication()",
+        ReplaceMessage = "Replace with RevitContext.UiApplication.AsControlledApplication()")]
     public static UIControlledApplication UiControlledApplication =>
 #if NET8_0_OR_GREATER
         UnsafeAccessors.CreateUiControlledApplication(UiApplication);

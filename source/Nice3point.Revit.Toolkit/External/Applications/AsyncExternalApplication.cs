@@ -25,8 +25,9 @@ namespace Nice3point.Revit.Toolkit.External;
 ///     {
 ///         using var httpClient = new HttpClient();
 ///         var configuration = await httpClient.GetStringAsync("https://api.example.com/config");
-///     
-///         var panel = Application.CreateRibbonPanel(configuration.PanelName);
+///         
+///         var panel = Application.CreatePanel(configuration.PanelTitle);
+///         panel.AddPushButton&lt;Command&gt;(configuration.ButtonTitle);
 ///     }
 ///     </code>
 /// </example>

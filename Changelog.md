@@ -12,7 +12,7 @@ New family of external event types replacing legacy `ActionEventHandler`, `Async
 - **AsyncRequestExternalEvent\<T, TResult>** — generic asynchronous external event with argument and result support.
 - **ExternalEventOptions** — configuration flags for event behavior, including `AllowDirectInvocation` for direct execution in API context.
 
-[!IMPORTANT]
+> [!IMPORTANT]
 > Events do not need to be created inside the Revit API context — the Toolkit handles initialization automatically, so you can create them anywhere in your code and on any thread.
 
 ### ExternalEvent Source Generator

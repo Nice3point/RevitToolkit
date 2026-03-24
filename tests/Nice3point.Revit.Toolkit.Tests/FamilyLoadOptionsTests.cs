@@ -1,311 +1,202 @@
 ﻿using Nice3point.Revit.Toolkit.Options;
-using Nice3point.TUnit.Revit;
+using Nice3point.Revit.Toolkit.Tests.Abstractions;
 using Nice3point.TUnit.Revit.Executors;
 using TUnit.Core.Executors;
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
-public sealed class FamilyLoadOptionsTests : RevitApiTest
+public sealed class FamilyLoadOptionsTests : RevitFamilySampleTest
 {
-    private static readonly string SamplesPath = $@"C:\Program Files\Autodesk\Revit {Application.VersionNumber}\Samples";
+    private Document _document = null!;
 
-    [Before(Class)]
-    public static void ValidateSamples()
+    [Before(Test)]
+    [HookExecutor<RevitThreadExecutor>]
+    public void CreateDocument()
     {
-        if (!Directory.Exists(SamplesPath))
-        {
-            Skip.Test($"Samples folder not found at {SamplesPath}");
-            return;
-        }
-
-        if (!Directory.EnumerateFiles(SamplesPath, "*.rfa").Any())
-        {
-            Skip.Test($"No .rfa files found in {SamplesPath}");
-        }
+        _document = Application.NewProjectDocument(UnitSystem.Metric);
     }
 
-    public static IEnumerable<string> GetSampleRfaFiles()
+    [After(Test)]
+    [HookExecutor<RevitThreadExecutor>]
+    public void CloseDocument()
     {
-        if (!Directory.Exists(SamplesPath))
-        {
-            yield return string.Empty;
-            yield break;
-        }
+        _document.Close(false);
+    }
 
-        foreach (var file in Directory.EnumerateFiles(SamplesPath, "*.rfa"))
+    [Test]
+    [MethodDataSource(nameof(RevitFamilies))]
+    public async Task FamilyLoadOptions_DefaultConstructor_LoadsFamily(string path)
+    {
+        // Arrange
+        var options = new FamilyLoadOptions();
+
+        // Act
+        using var transaction = new Transaction(_document, "Load Family");
+        transaction.Start();
+        var result = _document.LoadFamily(path, options, out var family);
+        transaction.Commit();
+
+        // Assert
+        using (Assert.Multiple())
         {
-            yield return file;
+            await Assert.That(result).IsTrue();
+            await Assert.That(family).IsNotNull();
+            await Assert.That(family.IsValidObject).IsTrue();
         }
     }
 
     [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetSampleRfaFiles))]
-    public async Task FamilyLoadOptions_DefaultConstructor_LoadsFamily(string familyPath)
+    [MethodDataSource(nameof(RevitFamilies))]
+    public async Task FamilyLoadOptions_WithOverwriteTrue_ReloadsFamily(string path)
     {
         // Arrange
-        var document = Application.NewProjectDocument(UnitSystem.Metric);
+        var options = new FamilyLoadOptions(overwrite: true);
 
-        try
+        // Act
+        using (var transaction = new Transaction(_document, "First Load"))
         {
-            var options = new FamilyLoadOptions();
-
-            // Act
-            using var transaction = new Transaction(document, "Load Family");
             transaction.Start();
-
-            var result = document.LoadFamily(familyPath, options, out var family);
-
+            _document.LoadFamily(path, options, out _);
             transaction.Commit();
-
-            // Assert
-            using (Assert.Multiple())
-            {
-                await Assert.That(result).IsTrue();
-                await Assert.That(family).IsNotNull();
-                await Assert.That(family.IsValidObject).IsTrue();
-            }
         }
-        finally
+
+        bool reloadResult;
+
+        using (var transaction = new Transaction(_document, "Reload Family"))
         {
-            document.Close(false);
-        }
-    }
-
-    [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetSampleRfaFiles))]
-    public async Task FamilyLoadOptions_WithOverwriteTrue_ReloadsFamily(string familyPath)
-    {
-        // Arrange
-        var document = Application.NewProjectDocument(UnitSystem.Metric);
-
-        try
-        {
-            var options = new FamilyLoadOptions(overwrite: true);
-
-            // Act - first load
-            using (var transaction = new Transaction(document, "First Load"))
-            {
-                transaction.Start();
-                var loadResult = document.LoadFamily(familyPath, options, out _);
-                transaction.Commit();
-
-                await Assert.That(loadResult).IsTrue();
-            }
-
-            // Act - reload
-            using (var transaction = new Transaction(document, "Reload Family"))
-            {
-                transaction.Start();
-                var reloadResult = document.LoadFamily(familyPath, options, out _);
-                transaction.Commit();
-
-                // Assert
-                await Assert.That(reloadResult).IsFalse();
-            }
-        }
-        finally
-        {
-            document.Close(false);
-        }
-    }
-
-    [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetSampleRfaFiles))]
-    public async Task FamilyLoadOptions_WithOverwriteFalse_LoadsFamily(string familyPath)
-    {
-        // Arrange
-        var document = Application.NewProjectDocument(UnitSystem.Metric);
-
-        try
-        {
-            var options = new FamilyLoadOptions(overwrite: false);
-
-            // Act
-            using var transaction = new Transaction(document, "Load Family");
             transaction.Start();
-
-            var result = document.LoadFamily(familyPath, options, out var family);
-
+            reloadResult = _document.LoadFamily(path, options, out _);
             transaction.Commit();
+        }
 
-            // Assert
-            using (Assert.Multiple())
-            {
-                await Assert.That(result).IsTrue();
-                await Assert.That(family).IsNotNull();
-            }
-        }
-        finally
-        {
-            document.Close(false);
-        }
+        // Assert
+        await Assert.That(reloadResult).IsFalse();
     }
 
     [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetSampleRfaFiles))]
-    public async Task FamilyLoadOptions_WithFamilySourceProject_LoadsFamily(string familyPath)
+    [MethodDataSource(nameof(RevitFamilies))]
+    public async Task FamilyLoadOptions_WithOverwriteFalse_LoadsFamily(string path)
     {
         // Arrange
-        var document = Application.NewProjectDocument(UnitSystem.Metric);
+        var options = new FamilyLoadOptions(overwrite: false);
 
-        try
+        // Act
+        using var transaction = new Transaction(_document, "Load Family");
+        transaction.Start();
+        var result = _document.LoadFamily(path, options, out var family);
+        transaction.Commit();
+
+        // Assert
+        using (Assert.Multiple())
         {
-            var options = new FamilyLoadOptions(overwrite: true, familySource: FamilySource.Project);
-
-            // Act
-            using var transaction = new Transaction(document, "Load Family");
-            transaction.Start();
-
-            var result = document.LoadFamily(familyPath, options, out var family);
-
-            transaction.Commit();
-
-            // Assert
-            using (Assert.Multiple())
-            {
-                await Assert.That(result).IsTrue();
-                await Assert.That(family).IsNotNull();
-            }
-        }
-        finally
-        {
-            document.Close(false);
+            await Assert.That(result).IsTrue();
+            await Assert.That(family).IsNotNull();
         }
     }
 
     [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetSampleRfaFiles))]
-    public async Task FamilyLoadOptions_WithFamilySourceFamily_LoadsFamily(string familyPath)
+    [MethodDataSource(nameof(RevitFamilies))]
+    public async Task FamilyLoadOptions_WithFamilySourceProject_LoadsFamily(string path)
     {
         // Arrange
-        var document = Application.NewProjectDocument(UnitSystem.Metric);
+        var options = new FamilyLoadOptions(overwrite: true, familySource: FamilySource.Project);
 
-        try
+        // Act
+        using var transaction = new Transaction(_document, "Load Family");
+        transaction.Start();
+        var result = _document.LoadFamily(path, options, out var family);
+        transaction.Commit();
+
+        // Assert
+        using (Assert.Multiple())
         {
-            var options = new FamilyLoadOptions(overwrite: true, familySource: FamilySource.Family);
-
-            // Act
-            using var transaction = new Transaction(document, "Load Family");
-            transaction.Start();
-
-            var result = document.LoadFamily(familyPath, options, out var family);
-
-            transaction.Commit();
-
-            // Assert
-            using (Assert.Multiple())
-            {
-                await Assert.That(result).IsTrue();
-                await Assert.That(family).IsNotNull();
-            }
-        }
-        finally
-        {
-            document.Close(false);
+            await Assert.That(result).IsTrue();
+            await Assert.That(family).IsNotNull();
         }
     }
 
     [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetSampleRfaFiles))]
-    public async Task FamilyLoadOptions_LoadedFamilyHasSymbols(string familyPath)
+    [MethodDataSource(nameof(RevitFamilies))]
+    public async Task FamilyLoadOptions_WithFamilySourceFamily_LoadsFamily(string path)
     {
         // Arrange
-        var document = Application.NewProjectDocument(UnitSystem.Metric);
+        var options = new FamilyLoadOptions(overwrite: true, familySource: FamilySource.Family);
 
-        try
+        // Act
+        using var transaction = new Transaction(_document, "Load Family");
+        transaction.Start();
+        var result = _document.LoadFamily(path, options, out var family);
+        transaction.Commit();
+
+        // Assert
+        using (Assert.Multiple())
         {
-            var options = new FamilyLoadOptions();
-
-            // Act
-            using var transaction = new Transaction(document, "Load Family");
-            transaction.Start();
-
-            document.LoadFamily(familyPath, options, out var family);
-
-            transaction.Commit();
-
-            var symbolIds = family.GetFamilySymbolIds();
-
-            // Assert
-            await Assert.That(symbolIds.Count).IsGreaterThanOrEqualTo(1);
-        }
-        finally
-        {
-            document.Close(false);
+            await Assert.That(result).IsTrue();
+            await Assert.That(family).IsNotNull();
         }
     }
 
     [Test]
-    [TestExecutor<RevitThreadExecutor>]
+    [MethodDataSource(nameof(RevitFamilies))]
+    public async Task FamilyLoadOptions_LoadedFamilyHasSymbols(string path)
+    {
+        // Arrange
+        var options = new FamilyLoadOptions();
+
+        // Act
+        using var transaction = new Transaction(_document, "Load Family");
+        transaction.Start();
+        _document.LoadFamily(path, options, out var family);
+        transaction.Commit();
+
+        var symbolIds = family.GetFamilySymbolIds();
+
+        // Assert
+        await Assert.That(symbolIds.Count).IsGreaterThanOrEqualTo(1);
+    }
+
+    [Test]
+    [MethodDataSource(nameof(RevitFamilies))]
+    public async Task FamilyLoadOptions_TransactionCommits_Successfully(string path)
+    {
+        // Arrange
+        var options = new FamilyLoadOptions();
+
+        // Act
+        using var transaction = new Transaction(_document, "Load Family");
+        transaction.Start();
+        _document.LoadFamily(path, options, out _);
+        var status = transaction.Commit();
+
+        // Assert
+        await Assert.That(status).IsEqualTo(TransactionStatus.Committed);
+    }
+
+    [Test]
     public async Task FamilyLoadOptions_MultipleFamilies_AllLoad()
     {
         // Arrange
-        var document = Application.NewProjectDocument(UnitSystem.Metric);
-        var familyPaths = GetSampleRfaFiles().Take(3).ToList();
-
-        if (familyPaths.Count == 0)
+        if (RevitFamilies.Length == 0)
         {
             Skip.Test("No sample files available");
             return;
         }
 
-        try
+        var options = new FamilyLoadOptions();
+        var loadedCount = 0;
+
+        // Act
+        using var transaction = new Transaction(_document, "Load Multiple Families");
+        transaction.Start();
+
+        foreach (var familyPath in RevitFamilies)
         {
-            var options = new FamilyLoadOptions();
-            var loadedCount = 0;
-
-            // Act
-            using var transaction = new Transaction(document, "Load Multiple Families");
-            transaction.Start();
-
-            foreach (var path in familyPaths)
-            {
-                if (document.LoadFamily(path, options, out _)) loadedCount++;
-            }
-
-            transaction.Commit();
-
-            // Assert
-            await Assert.That(loadedCount).IsEqualTo(familyPaths.Count);
+            if (_document.LoadFamily(familyPath, options, out _)) loadedCount++;
         }
-        finally
-        {
-            document.Close(false);
-        }
-    }
 
-    [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetSampleRfaFiles))]
-    public async Task FamilyLoadOptions_TransactionCommits_Successfully(string familyPath)
-    {
-        // Arrange
-        var document = Application.NewProjectDocument(UnitSystem.Metric);
+        transaction.Commit();
 
-        try
-        {
-            var options = new FamilyLoadOptions();
-
-            // Act
-            using var transaction = new Transaction(document, "Load Family");
-            transaction.Start();
-
-            document.LoadFamily(familyPath, options, out _);
-
-            var status = transaction.Commit();
-
-            // Assert
-            await Assert.That(status).IsEqualTo(TransactionStatus.Committed);
-        }
-        finally
-        {
-            document.Close(false);
-        }
+        // Assert
+        await Assert.That(loadedCount).IsEqualTo(RevitFamilies.Length);
     }
 }

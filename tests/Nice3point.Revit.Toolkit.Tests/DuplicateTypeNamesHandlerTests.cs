@@ -1,325 +1,151 @@
 ﻿using Nice3point.Revit.Toolkit.Options;
-using Nice3point.TUnit.Revit;
-using Nice3point.TUnit.Revit.Executors;
-using TUnit.Core.Executors;
+using Nice3point.Revit.Toolkit.Tests.Abstractions;
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
-public sealed class DuplicateTypeNamesHandlerTests : RevitApiTest
+public sealed class DuplicateTypeNamesHandlerTests : RevitModelSampleTest
 {
-    private static readonly string SamplesPath = $@"C:\Program Files\Autodesk\Revit {Application.VersionNumber}\Samples";
-
-    [Before(Class)]
-    public static void ValidateSamples()
+    [Test]
+    [MethodDataSource(nameof(RevitModels))]
+    public async Task DuplicateTypeNamesHandler_DefaultConstructor_CopiesElements(string path)
     {
-        if (!Directory.Exists(SamplesPath))
-        {
-            Skip.Test($"Samples folder not found at {SamplesPath}");
-            return;
-        }
+        // Arrange
+        var sourceDocument = ModelDocuments[path];
+        var targetDocument = Application.NewProjectDocument(UnitSystem.Metric);
 
-        if (!Directory.EnumerateFiles(SamplesPath, "*.rvt").Any())
-        {
-            Skip.Test($"No .rvt files found in {SamplesPath}");
-        }
-    }
+        var elementsToCopy = sourceDocument.CollectElements()
+            .OfClass<FamilySymbol>()
+            .Take(5)
+            .Select(element => element.Id)
+            .ToList();
 
-    public static IEnumerable<string> GetSampleRvtFiles()
-    {
-        if (!Directory.Exists(SamplesPath))
-        {
-            yield return string.Empty;
-            yield break;
-        }
+        var handler = new DuplicateTypeNamesHandler();
+        var copyOptions = new CopyPasteOptions();
+        copyOptions.SetDuplicateTypeNamesHandler(handler);
 
-        var files = Directory.EnumerateFiles(SamplesPath, "*.rvt")
-            .OrderBy(path => new FileInfo(path).Length)
-            .Take(1);
+        // Act
+        using var transaction = new Transaction(targetDocument, "Copy elements");
+        transaction.Start();
+        var copiedIds = ElementTransformUtils.CopyElements(sourceDocument, elementsToCopy, targetDocument, Transform.Identity, copyOptions);
+        transaction.Commit();
 
-        foreach (var file in files) yield return file;
+        targetDocument.Close(false);
+
+        // Assert
+        await Assert.That(copiedIds.Count).IsGreaterThan(0);
     }
 
     [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetSampleRvtFiles))]
-    public async Task DuplicateTypeNamesHandler_DefaultConstructor_CopiesElements(string sourceProjectPath)
+    [MethodDataSource(nameof(RevitModels))]
+    public async Task DuplicateTypeNamesHandler_UseDestinationTypes_CopiesElements(string path)
     {
         // Arrange
+        var sourceDocument = ModelDocuments[path];
         var targetDocument = Application.NewProjectDocument(UnitSystem.Metric);
-        Document? sourceDocument = null;
 
-        try
+        var elementsToCopy = sourceDocument.CollectElements()
+            .OfClass<FamilySymbol>()
+            .Take(5)
+            .Select(element => element.Id)
+            .ToList();
+
+        var handler = new DuplicateTypeNamesHandler(DuplicateTypeAction.UseDestinationTypes);
+        var copyOptions = new CopyPasteOptions();
+        copyOptions.SetDuplicateTypeNamesHandler(handler);
+
+        // Act
+        using var transaction = new Transaction(targetDocument, "Copy elements");
+        transaction.Start();
+        var copiedIds = ElementTransformUtils.CopyElements(sourceDocument, elementsToCopy, targetDocument, Transform.Identity, copyOptions);
+        transaction.Commit();
+
+        targetDocument.Close(false);
+
+        // Assert
+        await Assert.That(copiedIds.Count).IsGreaterThan(0);
+    }
+
+    [Test]
+    [MethodDataSource(nameof(RevitModels))]
+    public async Task DuplicateTypeNamesHandler_CopyTwice_SecondCopySucceeds(string path)
+    {
+        // Arrange
+        var sourceDocument = ModelDocuments[path];
+        var targetDocument = Application.NewProjectDocument(UnitSystem.Metric);
+
+        var elementsToCopy = sourceDocument.CollectElements()
+            .OfClass<FamilySymbol>()
+            .Take(3)
+            .Select(element => element.Id)
+            .ToList();
+
+        var handler = new DuplicateTypeNamesHandler(DuplicateTypeAction.UseDestinationTypes);
+        var copyOptions = new CopyPasteOptions();
+        copyOptions.SetDuplicateTypeNamesHandler(handler);
+
+        // Act
+        using (var transaction = new Transaction(targetDocument, "First copy"))
         {
-            sourceDocument = Application.OpenDocumentFile(sourceProjectPath);
-
-            var elementsToCopy = new FilteredElementCollector(sourceDocument)
-                .OfClass(typeof(FamilySymbol))
-                .ToElementIds()
-                .Take(5)
-                .ToList();
-
-            if (elementsToCopy.Count == 0)
-            {
-                Skip.Test("No FamilySymbols found in source document");
-                return;
-            }
-
-            var handler = new DuplicateTypeNamesHandler();
-            var copyOptions = new CopyPasteOptions();
-            copyOptions.SetDuplicateTypeNamesHandler(handler);
-
-            // Act
-            using var transaction = new Transaction(targetDocument, "Copy elements");
             transaction.Start();
-
-            var copiedIds = ElementTransformUtils.CopyElements(
-                sourceDocument,
-                elementsToCopy,
-                targetDocument,
-                Transform.Identity,
-                copyOptions);
-
+            ElementTransformUtils.CopyElements(sourceDocument, elementsToCopy, targetDocument, Transform.Identity, copyOptions);
             transaction.Commit();
-
-            // Assert
-            await Assert.That(copiedIds.Count).IsGreaterThan(0);
         }
-        finally
+
+        ICollection<ElementId> secondCopyIds;
+
+        using (var transaction = new Transaction(targetDocument, "Second copy"))
         {
-            sourceDocument?.Close(false);
-            targetDocument.Close(false);
-        }
-    }
-
-    [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetSampleRvtFiles))]
-    public async Task DuplicateTypeNamesHandler_UseDestinationTypes_CopiesElements(string sourceProjectPath)
-    {
-        // Arrange
-        var targetDocument = Application.NewProjectDocument(UnitSystem.Metric);
-        Document? sourceDocument = null;
-
-        try
-        {
-            sourceDocument = Application.OpenDocumentFile(sourceProjectPath);
-
-            var elementsToCopy = new FilteredElementCollector(sourceDocument)
-                .OfClass(typeof(FamilySymbol))
-                .ToElementIds()
-                .Take(5)
-                .ToList();
-
-            if (elementsToCopy.Count == 0)
-            {
-                Skip.Test("No FamilySymbols found in source document");
-                return;
-            }
-
-            var handler = new DuplicateTypeNamesHandler(DuplicateTypeAction.UseDestinationTypes);
-            var copyOptions = new CopyPasteOptions();
-            copyOptions.SetDuplicateTypeNamesHandler(handler);
-
-            // Act
-            using var transaction = new Transaction(targetDocument, "Copy elements");
             transaction.Start();
-
-            var copiedIds = ElementTransformUtils.CopyElements(
-                sourceDocument,
-                elementsToCopy,
-                targetDocument,
-                Transform.Identity,
-                copyOptions);
-
+            secondCopyIds = ElementTransformUtils.CopyElements(sourceDocument, elementsToCopy, targetDocument, Transform.Identity, copyOptions);
             transaction.Commit();
+        }
 
-            // Assert
-            await Assert.That(copiedIds.Count).IsGreaterThan(0);
-        }
-        finally
-        {
-            sourceDocument?.Close(false);
-            targetDocument.Close(false);
-        }
+        targetDocument.Close(false);
+
+        // Assert
+        await Assert.That(secondCopyIds.Count).IsGreaterThanOrEqualTo(0);
     }
 
     [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetSampleRvtFiles))]
-    public async Task DuplicateTypeNamesHandler_CopyTwice_SecondCopySucceeds(string sourceProjectPath)
+    [MethodDataSource(nameof(RevitModels))]
+    public async Task DuplicateTypeNamesHandler_Abort_RollsBackOnDuplicate(string path)
     {
         // Arrange
+        var sourceDocument = ModelDocuments[path];
         var targetDocument = Application.NewProjectDocument(UnitSystem.Metric);
-        Document? sourceDocument = null;
 
-        try
+        var elementsToCopy = sourceDocument.CollectElements()
+            .OfClass<FamilySymbol>()
+            .Take(3)
+            .Select(element => element.Id)
+            .ToList();
+
+        var firstOptions = new CopyPasteOptions();
+        firstOptions.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler());
+
+        using (var transaction = new Transaction(targetDocument, "First copy"))
         {
-            sourceDocument = Application.OpenDocumentFile(sourceProjectPath);
-
-            var elementsToCopy = new FilteredElementCollector(sourceDocument)
-                .OfClass(typeof(FamilySymbol))
-                .ToElementIds()
-                .Take(3)
-                .ToList();
-
-            if (elementsToCopy.Count == 0)
-            {
-                Skip.Test("No FamilySymbols found in source document");
-                return;
-            }
-
-            var handler = new DuplicateTypeNamesHandler(DuplicateTypeAction.UseDestinationTypes);
-            var copyOptions = new CopyPasteOptions();
-            copyOptions.SetDuplicateTypeNamesHandler(handler);
-
-            // Act - first copy
-            using (var transaction = new Transaction(targetDocument, "First copy"))
-            {
-                transaction.Start();
-                ElementTransformUtils.CopyElements(sourceDocument, elementsToCopy, targetDocument, Transform.Identity, copyOptions);
-                transaction.Commit();
-            }
-
-            // Act - second copy (duplicates will be handled)
-            using (var transaction = new Transaction(targetDocument, "Second copy"))
-            {
-                transaction.Start();
-
-                var secondCopyIds = ElementTransformUtils.CopyElements(
-                    sourceDocument,
-                    elementsToCopy,
-                    targetDocument,
-                    Transform.Identity,
-                    copyOptions);
-
-                transaction.Commit();
-
-                // Assert
-                await Assert.That(secondCopyIds.Count).IsGreaterThanOrEqualTo(0);
-            }
-        }
-        finally
-        {
-            sourceDocument?.Close(false);
-            targetDocument.Close(false);
-        }
-    }
-
-    [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetSampleRvtFiles))]
-    public async Task DuplicateTypeNamesHandler_Abort_RollsBackOnDuplicate(string sourceProjectPath)
-    {
-        // Arrange
-        var targetDocument = Application.NewProjectDocument(UnitSystem.Metric);
-        Document? sourceDocument = null;
-
-        try
-        {
-            sourceDocument = Application.OpenDocumentFile(sourceProjectPath);
-
-            var elementsToCopy = new FilteredElementCollector(sourceDocument)
-                .OfClass(typeof(FamilySymbol))
-                .ToElementIds()
-                .Take(3)
-                .ToList();
-
-            if (elementsToCopy.Count == 0)
-            {
-                Skip.Test("No FamilySymbols found in source document");
-                return;
-            }
-
-            // First copy with default handler
-            var firstHandler = new DuplicateTypeNamesHandler();
-            var firstOptions = new CopyPasteOptions();
-            firstOptions.SetDuplicateTypeNamesHandler(firstHandler);
-
-            using (var transaction = new Transaction(targetDocument, "First copy"))
-            {
-                transaction.Start();
-                ElementTransformUtils.CopyElements(sourceDocument, elementsToCopy, targetDocument, Transform.Identity, firstOptions);
-                transaction.Commit();
-            }
-
-            // Act - second copy with Abort handler
-            var abortHandler = new DuplicateTypeNamesHandler(DuplicateTypeAction.Abort);
-            var abortOptions = new CopyPasteOptions();
-            abortOptions.SetDuplicateTypeNamesHandler(abortHandler);
-
-            using (var transaction = new Transaction(targetDocument, "Second copy with abort"))
-            {
-                transaction.Start();
-
-                ElementTransformUtils.CopyElements(
-                    sourceDocument,
-                    elementsToCopy,
-                    targetDocument,
-                    Transform.Identity,
-                    abortOptions);
-
-                var status = transaction.Commit();
-
-                // Assert
-                await Assert.That(status).IsEqualTo(TransactionStatus.RolledBack);
-            }
-        }
-        finally
-        {
-            sourceDocument?.Close(false);
-            targetDocument.Close(false);
-        }
-    }
-
-    [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetSampleRvtFiles))]
-    public async Task DuplicateTypeNamesHandler_CopyWalls_CopiesElements(string sourceProjectPath)
-    {
-        // Arrange
-        var targetDocument = Application.NewProjectDocument(UnitSystem.Metric);
-        Document? sourceDocument = null;
-
-        try
-        {
-            sourceDocument = Application.OpenDocumentFile(sourceProjectPath);
-
-            var elementsToCopy = new FilteredElementCollector(sourceDocument)
-                .OfClass(typeof(FamilySymbol))
-                .ToElementIds()
-                .Take(5)
-                .ToList();
-
-            if (elementsToCopy.Count == 0)
-            {
-                Skip.Test("No Walls found in source document");
-                return;
-            }
-
-            var handler = new DuplicateTypeNamesHandler();
-            var copyOptions = new CopyPasteOptions();
-            copyOptions.SetDuplicateTypeNamesHandler(handler);
-
-            // Act
-            using var transaction = new Transaction(targetDocument, "Copy walls");
             transaction.Start();
-
-            var copiedIds = ElementTransformUtils.CopyElements(
-                sourceDocument,
-                elementsToCopy,
-                targetDocument,
-                Transform.Identity,
-                copyOptions);
-
+            ElementTransformUtils.CopyElements(sourceDocument, elementsToCopy, targetDocument, Transform.Identity, firstOptions);
             transaction.Commit();
+        }
 
-            // Assert
-            await Assert.That(copiedIds.Count).IsGreaterThan(0);
-        }
-        finally
+        var abortOptions = new CopyPasteOptions();
+        abortOptions.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler(DuplicateTypeAction.Abort));
+
+        // Act
+        TransactionStatus status;
+
+        using (var transaction = new Transaction(targetDocument, "Second copy with abort"))
         {
-            sourceDocument?.Close(false);
-            targetDocument.Close(false);
+            transaction.Start();
+            ElementTransformUtils.CopyElements(sourceDocument, elementsToCopy, targetDocument, Transform.Identity, abortOptions);
+            status = transaction.Commit();
         }
+
+        targetDocument.Close(false);
+
+        // Assert
+        await Assert.That(status).IsEqualTo(TransactionStatus.RolledBack);
     }
 }

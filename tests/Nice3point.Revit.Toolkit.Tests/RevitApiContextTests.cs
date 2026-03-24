@@ -6,30 +6,28 @@ namespace Nice3point.Revit.Toolkit.Tests;
 
 public sealed class RevitApiContextTests : RevitApiTest
 {
-    private static readonly string TemplatesPath = $@"C:\ProgramData\Autodesk\RVT {Application.VersionNumber}\Family Templates\English\Metric Generic Model.rft";
+    private Document _document = null!;
+    private Level _level = null!;
 
-    [Before(Class)]
-    public static void ValidateTemplates()
+    [Before(Test)]
+    [HookExecutor<RevitThreadExecutor>]
+    public void CreateDocument()
     {
-        if (!File.Exists(TemplatesPath))
-        {
-            Skip.Test($"Family template not found at {TemplatesPath}");
-        }
+        _document = Application.NewProjectDocument(UnitSystem.Metric);
+        _level = (Level) _document.CollectElements()
+            .Instances()
+            .OfCategory(BuiltInCategory.OST_Levels)
+            .First();
     }
 
-    public static IEnumerable<string> GetFamilyTemplate()
+    [After(Test)]
+    [HookExecutor<RevitThreadExecutor>]
+    public void CloseDocument()
     {
-        if (!File.Exists(TemplatesPath))
-        {
-            yield return string.Empty;
-            yield break;
-        }
-
-        yield return TemplatesPath;
+        _document.Close(false);
     }
 
     [Test]
-    [TestExecutor<RevitThreadExecutor>]
     public async Task Application_WhenAccessed_ReturnsValidApplication()
     {
         // Act
@@ -43,73 +41,62 @@ public sealed class RevitApiContextTests : RevitApiTest
             await Assert.That(application.VersionNumber).IsNotEmpty();
         }
     }
+    
+    [Test]
+    public async Task BeginFailureSuppressionScope_WithoutScope_RollsBackOnError()
+    {
+        // Act
+        using var transaction = new Transaction(_document, "Create overlapping walls");
+        transaction.Start();
+
+        CreateOverlappingWalls(_document, _level);
+
+        var status = transaction.Commit();
+
+        // Assert
+        await Assert.That(status).IsEqualTo(TransactionStatus.RolledBack);
+    }
 
     [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetFamilyTemplate))]
-    public async Task BeginFailureSuppressionScope_WithResolveErrors_CommitsTransaction(string templatePath)
+    public async Task BeginFailureSuppressionScope_WithResolveErrors_CommitsTransaction()
     {
         // Arrange
-        var document = Application.NewFamilyDocument(templatePath);
-
-        try
+        using (RevitApiContext.BeginFailureSuppressionScope(resolveErrors: true))
         {
             // Act
-            using (RevitApiContext.BeginFailureSuppressionScope(resolveErrors: true))
-            {
-                using var transaction = new Transaction(document, "Create Reference Planes");
-                transaction.Start();
+            using var transaction = new Transaction(_document, "Create overlapping walls");
+            transaction.Start();
 
-                CreateModelLine(document, 10);
-                CreateModelLine(document, 10);
+            CreateOverlappingWalls(_document, _level);
 
-                var status = transaction.Commit();
+            var status = transaction.Commit();
 
-                // Assert
-                await Assert.That(status).IsEqualTo(TransactionStatus.Committed);
-            }
-        }
-        finally
-        {
-            document.Close(false);
+            // Assert
+            await Assert.That(status).IsEqualTo(TransactionStatus.Committed);
         }
     }
 
     [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetFamilyTemplate))]
-    public async Task BeginFailureSuppressionScope_NestedScopes_CommitsTransaction(string templatePath)
+    public async Task BeginFailureSuppressionScope_NestedScopes_CommitsTransaction()
     {
         // Arrange
-        var document = Application.NewFamilyDocument(templatePath);
-
-        try
+        using (RevitApiContext.BeginFailureSuppressionScope())
+        using (RevitApiContext.BeginFailureSuppressionScope())
         {
             // Act
-            using (RevitApiContext.BeginFailureSuppressionScope())
-            {
-                using (RevitApiContext.BeginFailureSuppressionScope())
-                {
-                    using var transaction = new Transaction(document, "Nested Scope Test");
-                    transaction.Start();
+            using var transaction = new Transaction(_document, "Create overlapping walls");
+            transaction.Start();
 
-                    CreateModelLine(document, 10);
+            CreateOverlappingWalls(_document, _level);
 
-                    var status = transaction.Commit();
+            var status = transaction.Commit();
 
-                    // Assert
-                    await Assert.That(status).IsEqualTo(TransactionStatus.Committed);
-                }
-            }
-        }
-        finally
-        {
-            document.Close(false);
+            // Assert
+            await Assert.That(status).IsEqualTo(TransactionStatus.Committed);
         }
     }
 
     [Test]
-    [TestExecutor<RevitThreadExecutor>]
     public async Task BeginFailureSuppressionScope_DisposedTwice_DoesNotThrow()
     {
         // Arrange
@@ -124,82 +111,51 @@ public sealed class RevitApiContextTests : RevitApiTest
     }
 
     [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetFamilyTemplate))]
-    public async Task BeginFailureSuppressionScope_WithResolveErrorsFalse_CompletesTransaction(string templatePath)
+    public async Task BeginFailureSuppressionScope_WithResolveErrorsFalse_RollsBackOnError()
     {
         // Arrange
-        var document = Application.NewFamilyDocument(templatePath);
-
-        try
+        using (RevitApiContext.BeginFailureSuppressionScope(resolveErrors: false))
         {
             // Act
-            using (RevitApiContext.BeginFailureSuppressionScope(resolveErrors: false))
-            {
-                using var transaction = new Transaction(document, "Test with dismiss");
-                transaction.Start();
+            using var transaction = new Transaction(_document, "Create overlapping walls");
+            transaction.Start();
 
-                CreateModelLine(document, 10);
+            CreateOverlappingWalls(_document, _level);
 
-                var status = transaction.Commit();
+            var status = transaction.Commit();
 
-                // Assert
-                await Assert.That(status).IsEqualTo(TransactionStatus.Committed);
-            }
-        }
-        finally
-        {
-            document.Close(false);
+            // Assert
+            await Assert.That(status).IsEqualTo(TransactionStatus.RolledBack);
         }
     }
 
     [Test]
-    [TestExecutor<RevitThreadExecutor>]
-    [MethodDataSource(nameof(GetFamilyTemplate))]
-    public async Task BeginFailureSuppressionScope_MultipleTransactions_AllCommit(string templatePath)
+    public async Task BeginFailureSuppressionScope_MultipleTransactions_AllCommit()
     {
         // Arrange
-        var document = Application.NewFamilyDocument(templatePath);
         var committedCount = 0;
 
-        try
+        // Act
+        using (RevitApiContext.BeginFailureSuppressionScope())
         {
-            // Act
-            using (RevitApiContext.BeginFailureSuppressionScope())
+            for (var i = 0; i < 3; i++)
             {
-                for (var i = 0; i < 3; i++)
-                {
-                    using var transaction = new Transaction(document, $"Transaction {i}");
-                    transaction.Start();
+                using var transaction = new Transaction(_document, $"Transaction {i}");
+                transaction.Start();
 
-                    document.FamilyCreate.NewReferencePlane(
-                        new XYZ(-5, i * 2, 0),
-                        new XYZ(5, i * 2, 0),
-                        XYZ.BasisZ,
-                        document.ActiveView);
+                Wall.Create(_document, Line.CreateBound(new XYZ(0, i * 5, 0), new XYZ(10, i * 5, 0)), _level.Id, false);
 
-                    if (transaction.Commit() == TransactionStatus.Committed) committedCount++;
-                }
+                if (transaction.Commit() == TransactionStatus.Committed) committedCount++;
             }
+        }
 
-            // Assert
-            await Assert.That(committedCount).IsEqualTo(3);
-        }
-        finally
-        {
-            document.Close(false);
-        }
+        // Assert
+        await Assert.That(committedCount).IsEqualTo(3);
     }
 
-    [PublicAPI]
-    private static ModelCurve CreateModelLine(Document document, double length)
+    private static void CreateOverlappingWalls(Document document, Level level)
     {
-        var start = new XYZ(-length / 2, 0, 0);
-        var end = new XYZ(length / 2, 0, 0);
-        var line = Line.CreateBound(start, end);
-
-        var sketchPlane = SketchPlane.Create(document, Plane.CreateByNormalAndOrigin(XYZ.BasisZ, XYZ.Zero));
-
-        return document.FamilyCreate.NewModelCurve(line, sketchPlane);
+        Wall.Create(document, Line.CreateBound(new XYZ(0, 0, 0), new XYZ(10, 0, 0)), level.Id, false);
+        Wall.Create(document, Line.CreateBound(new XYZ(0, 0, 0), new XYZ(10, 0, 0)), level.Id, false);
     }
 }

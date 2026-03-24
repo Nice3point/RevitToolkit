@@ -20,17 +20,17 @@ namespace Nice3point.Revit.Toolkit.External;
 public abstract class ExternalDBApplication : IExternalDBApplication
 {
     /// <summary>
+    ///     Represents the Autodesk Revit Application with no access to documents.
+    /// </summary>
+    public ControlledApplication Application { get; private set; } = null!;
+
+    /// <summary>
     ///     Indicates if the external application completes its work successfully.
     /// </summary>
     /// <remarks>
     ///     Method <see cref="OnShutdown()" /> will not be executed if the value of this property is different from <see cref="Autodesk.Revit.DB.ExternalDBApplicationResult.Succeeded" />.
     /// </remarks>
     public ExternalDBApplicationResult Result { get; set; } = ExternalDBApplicationResult.Succeeded;
-
-    /// <summary>
-    ///     Represents the Autodesk Revit Application with no access to documents.
-    /// </summary>
-    public ControlledApplication Application { get; private set; } = null!;
 
     /// <summary>Callback invoked by Revit. Not used to be called in user code.</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]

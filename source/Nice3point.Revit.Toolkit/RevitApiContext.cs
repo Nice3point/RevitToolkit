@@ -4,6 +4,9 @@ using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB.Events;
 using JetBrains.Annotations;
 using Nice3point.Revit.Toolkit.Utils;
+#if NET8_0_OR_GREATER
+using Nice3point.Revit.Toolkit.Internal;
+#endif
 
 namespace Nice3point.Revit.Toolkit;
 

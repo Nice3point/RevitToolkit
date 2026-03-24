@@ -1,6 +1,9 @@
 ﻿using System.IO;
 using System.Reflection;
 using JetBrains.Annotations;
+#if NET8_0_OR_GREATER
+using Nice3point.Revit.Toolkit.Internal;
+#endif
 #if !NET8_0_OR_GREATER && NET
 using System.Runtime.Loader;
 #endif
@@ -118,7 +121,7 @@ public static class ResolveHelper
     private static void OverrideDomainResolvers()
     {
 #if NET8_0_OR_GREATER
-        ref var resolversRef = ref UnsafeAccessors.GetAssemblyResolveField(null!);
+        ref var resolversRef = ref UnsafeDomainAccessors.GetAssemblyResolveField(null!);
         var resolvers = resolversRef;
         resolversRef = null;
 #elif NET
@@ -228,7 +231,7 @@ public static class ResolveHelper
         AppDomain.CurrentDomain.AssemblyResolve -= OnAssemblyResolve;
 
 #if NET8_0_OR_GREATER
-        UnsafeAccessors.GetAssemblyResolveField(null!) = (ResolveEventHandler?)_domainResolvers;
+        UnsafeDomainAccessors.GetAssemblyResolveField(null!) = (ResolveEventHandler?)_domainResolvers;
 #elif NET
         var loadContextType = typeof(AssemblyLoadContext);
         var resolversField = loadContextType.GetField("AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;

@@ -6,6 +6,9 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using JetBrains.Annotations;
 using Nice3point.Revit.Toolkit.Utils;
+#if NET8_0_OR_GREATER
+using Nice3point.Revit.Toolkit.Internal;
+#endif
 
 namespace Nice3point.Revit.Toolkit;
 
@@ -98,7 +101,7 @@ public static class Context
         ReplaceMessage = "Replace with RevitContext.UiApplication.AsControlledApplication()")]
     public static UIControlledApplication UiControlledApplication =>
 #if NET8_0_OR_GREATER
-        UnsafeAccessors.CreateUiControlledApplication(UiApplication);
+        UnsafeUiAccessors.CreateUiControlledApplication(UiApplication);
 #else
         (UIControlledApplication)Activator.CreateInstance(
             typeof(UIControlledApplication),

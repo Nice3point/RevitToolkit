@@ -19,6 +19,11 @@ namespace Nice3point.Revit.Toolkit.External;
 public abstract class ExternalApplication : IExternalApplication
 {
     /// <summary>
+    ///     Reference to the <see cref="Autodesk.Revit.UI.UIControlledApplication" /> that is needed by an external application.
+    /// </summary>
+    public UIControlledApplication Application { get; private set; } = null!;
+    
+    /// <summary>
     ///     Indicates if the external application completes its work successfully.
     /// </summary>
     /// <remarks>
@@ -26,14 +31,13 @@ public abstract class ExternalApplication : IExternalApplication
     /// </remarks>
     public Result Result { get; set; } = Result.Succeeded;
 
-    /// <summary>
-    ///     Reference to the <see cref="Autodesk.Revit.UI.UIControlledApplication" /> that is needed by an external application.
-    /// </summary>
-    public UIControlledApplication Application { get; private set; } = null!;
-
-    /// <summary>
-    ///     Reference to the <see cref="Autodesk.Revit.UI.UIApplication" /> that is needed by an external application.
-    /// </summary>
+    /// <summary></summary>
+    [Obsolete("Use RevitContext.UiApplication instead")]
+    [CodeTemplate(
+        searchTemplate: "$application$.UiApplication",
+        Message = "UiApplication is obsolete, use RevitContext.UiApplication instead",
+        ReplaceTemplate = "RevitContext.UiApplication",
+        ReplaceMessage = "Replace with RevitContext.UiApplication")]
     public UIApplication UiApplication => RevitContext.UiApplication;
 
     /// <summary>Callback invoked by Revit. Not used to be called in user code.</summary>

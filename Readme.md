@@ -80,9 +80,7 @@ public class Command : ExternalCommand
 {
     public override void Execute()
     {
-        var title = ActiveDocument.Title;
-        var viewName = ActiveView.Name;
-        var username = Application.Username;
+        var document = Application.ActiveUIDocument.Document;
     }
 }
 ```
@@ -103,10 +101,10 @@ public class Command : AsyncExternalCommand
         using var httpClient = new HttpClient();
         var response = await httpClient.GetStringAsync("https://example.com");
 
-        using var transaction = new Transaction(ActiveDocument, "Update Parameter");
+        using var transaction = new Transaction(Application.ActiveUIDocument.Document, "Update Parameter");
         transaction.Start();
 
-        var element = ActiveDocument.GetElement(id);
+        var element = Application.ActiveUIDocument.Document.GetElement(id);
         element?.FindParameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.Set(response);
 
         transaction.Commit();

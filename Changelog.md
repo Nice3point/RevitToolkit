@@ -83,8 +83,10 @@ New analyzer package with diagnostics for `[ExternalEvent]` annotated methods:
 - **SuppressDialogs()** / **RestoreDialogs()** are obsolete, use `BeginDialogSuppressionScope()` instead.
 - **SuppressFailures()** / **RestoreFailures()** are obsolete, use `BeginFailureSuppressionScope()` instead.
 - **BeginAssemblyResolve()** / **EndAssemblyResolve()** are obsolete, use `BeginAssemblyResolveScope()` instead.
-- **ExternalCommand.Document** is obsolete, use `ActiveDocument` instead.
-- **ExternalCommand.UiDocument** is obsolete, use `ActiveUiDocument` instead.
+- **ExternalCommand.UiApplication** is obsolete, use `Application` instead.
+- **ExternalCommand.UiDocument** is obsolete, use `Application.ActiveUIDocument` instead.
+- **ExternalCommand.Document** is obsolete, use `Application.ActiveUIDocument.Document` instead.
+- **ExternalApplication.UiApplication** is obsolete, use `RevitContext.UiApplication` instead.
 - **ActionEventHandler** is now obsolete — use `ExternalEvent` or `[ExternalEvent]` source generator.
 - **AsyncEventHandler** is now obsolete — use `AsyncExternalEvent` or `[ExternalEvent]` source generator.
 - **AsyncEventHandler\<T>** is now obsolete — use `AsyncRequestExternalEvent<T>` or `[ExternalEvent]` source generator.

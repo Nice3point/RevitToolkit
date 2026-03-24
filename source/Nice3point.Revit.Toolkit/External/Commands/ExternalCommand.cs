@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.UI;
 using JetBrains.Annotations;
 using Nice3point.Revit.Toolkit.Helpers;
@@ -17,9 +16,27 @@ namespace Nice3point.Revit.Toolkit.External;
 public abstract class ExternalCommand : IExternalCommand
 {
     /// <summary>
-    ///     Reference to the <see cref="Autodesk.Revit.UI.ExternalCommandData" /> that is needed by an external command
+    ///     An object that represents the current Application for external command.
     /// </summary>
-    public ExternalCommandData ExternalCommandData { get; private set; } = null!;
+    public UIApplication Application { get; private set; } = null!;
+    
+    /// <summary>
+    ///     An object that represents the View external command work on.
+    /// </summary>
+    public View View { get; private set; } = null!;
+
+    /// <summary>
+    ///     A data map that can be used to read and write data to the Autodesk Revit journal file.
+    /// </summary>
+    /// <remarks>
+    ///     The data map is a string to string map that can be used to store data in the Revit journal
+    ///     file at the end of execution of the external command. If the command is then executed from the journal
+    ///     file during playback this data is then passed to the external command in this Data property so the
+    ///     external command can execute with this passed data in a UI-less mode, hence providing non interactive
+    ///     journal playback for automated testing purposes. For more information on Revit's journaling features
+    ///     contact the Autodesk Developer Network.
+    /// </remarks>
+    public IDictionary<string, string> JournalData { get; private set; } = null!;
 
     /// <summary>
     ///     Error message can be returned by external command. This will be displayed only if the command status was "Failed" <br />
@@ -41,51 +58,63 @@ public abstract class ExternalCommand : IExternalCommand
     /// </remarks>
     public Result Result { get; set; } = Result.Succeeded;
 
-    /// <summary>
-    ///     Represents an active session of the Autodesk Revit user interface, providing access to
-    ///     UI customization methods, events, the main window, and the active document.
-    /// </summary>
-    public UIApplication UiApplication => RevitContext.UiApplication;
-
-    /// <summary>
-    ///     Represents the database level Autodesk Revit Application, providing access to documents, options and other application wide data and settings.
-    /// </summary>
-    public Application Application => RevitApiContext.Application;
-
-    /// <summary>Represents a currently active Autodesk Revit project at the UI level</summary>
-    /// <remarks>
-    ///     External API commands can access this property in read-only mode only.
-    /// </remarks>
-    /// <exception cref="T:Autodesk.Revit.Exceptions.InvalidOperationException">Thrown when attempting to modify the property.</exception>
-    public UIDocument ActiveUiDocument => RevitContext.ActiveUiDocument!;
+    /// <summary></summary>
+    [Obsolete("Use Application instead")]
+    [CodeTemplate(
+        searchTemplate: "$command$.UiApplication",
+        Message = "UiApplication is obsolete, use Application instead",
+        ReplaceTemplate = "$command$.Application",
+        ReplaceMessage = "Replace with Application")]
+    public UIApplication UiApplication => Application;
 
     /// <summary></summary>
-    [Obsolete("Use ActiveUiDocument instead")]
+    [Obsolete("Use Application.ActiveUIDocument instead")]
     [CodeTemplate(
-        searchTemplate: "UIDocument",
-        Message = "UIDocument is obsolete, use ActiveUiDocument instead",
-        ReplaceTemplate = "ActiveUiDocument",
-        ReplaceMessage = "Replace with ActiveUiDocument")]
-    public UIDocument UiDocument => RevitContext.ActiveUiDocument!;
-
-    /// <summary>Represents a currently active Autodesk Revit project at the database level</summary>
-    /// <remarks>
-    ///     Revit can have multiple projects open and multiple views to those projects.
-    ///     The active or top most view will be the active project and hence the active document which is available from the Application object.<br/><br/>
-    /// </remarks>
-    public Document ActiveDocument => RevitContext.ActiveDocument!;
+        searchTemplate: "$command$.ActiveUiDocument",
+        Message = "ActiveUiDocument is obsolete, use Application.ActiveUIDocument instead",
+        ReplaceTemplate = "$command$.Application.ActiveUIDocument",
+        ReplaceMessage = "Replace with Application.ActiveUIDocument")]
+    public UIDocument ActiveUiDocument => Application.ActiveUIDocument;
 
     /// <summary></summary>
-    [Obsolete("Use ActiveDocument instead")]
+    [Obsolete("Use Application.ActiveUIDocument instead")]
     [CodeTemplate(
-        searchTemplate: "Document",
-        Message = "Document is obsolete, use ActiveDocument instead",
-        ReplaceTemplate = "ActiveDocument",
-        ReplaceMessage = "Replace with ActiveDocument")]
-    public Document Document => RevitContext.ActiveDocument!;
+        searchTemplate: "$command$.UiDocument",
+        Message = "UiDocument is obsolete, use Application.ActiveUIDocument instead",
+        ReplaceTemplate = "$command$.Application.ActiveUIDocument",
+        ReplaceMessage = "Replace with Application.ActiveUIDocument")]
+    public UIDocument UiDocument => Application.ActiveUIDocument;
 
-    /// <summary>Represents the currently active view.</summary>
-    public View ActiveView => RevitContext.ActiveView!;
+    /// <summary></summary>
+    [Obsolete("Use Application.ActiveUIDocument.Document instead")]
+    [CodeTemplate(
+        searchTemplate: "$command$.ActiveDocument",
+        Message = "ActiveDocument is obsolete, use Application.ActiveUIDocument.Document instead",
+        ReplaceTemplate = "$command$.Application.ActiveUIDocument.Document",
+        ReplaceMessage = "Replace with Application.ActiveUIDocument.Document")]
+    public Document ActiveDocument => Application.ActiveUIDocument.Document;
+
+    /// <summary></summary>
+    [Obsolete("Use Application.ActiveUIDocument.Document instead")]
+    [CodeTemplate(
+        searchTemplate: "$command$.Document",
+        Message = "Document is obsolete, use Application.ActiveUIDocument.Document instead",
+        ReplaceTemplate = "$command$.Application.ActiveUIDocument.Document",
+        ReplaceMessage = "Replace with Application.ActiveUIDocument.Document")]
+    public Document Document => Application.ActiveUIDocument.Document;
+
+    /// <summary></summary>
+    [Obsolete("Use Application.ActiveUIDocument.ActiveView instead")]
+    [CodeTemplate(
+        searchTemplate: "$command$.ActiveView",
+        Message = "ActiveView is obsolete, use Application.ActiveUIDocument.ActiveView instead",
+        ReplaceTemplate = "$command$.Application.ActiveUIDocument.ActiveView",
+        ReplaceMessage = "Replace with Application.ActiveUIDocument.ActiveView")]
+    public View ActiveView => Application.ActiveUIDocument.ActiveView;
+
+    /// <summary></summary>
+    [Obsolete("Use Application, View, or JournalData instead")]
+    public ExternalCommandData ExternalCommandData { get; private set; } = null!;
 
     /// <summary>Callback invoked by Revit. Not used to be called in user code</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -93,7 +122,12 @@ public abstract class ExternalCommand : IExternalCommand
     {
         ElementSet = elements;
         ErrorMessage = message;
+#pragma warning disable CS0618 // Type or member is obsolete
         ExternalCommandData = commandData;
+#pragma warning restore CS0618 // Type or member is obsolete
+        Application = commandData.Application;
+        View = commandData.View;
+        JournalData = commandData.JournalData;
 
         var currentType = GetType();
 #if NET

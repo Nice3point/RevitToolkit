@@ -22,19 +22,19 @@ namespace Nice3point.Revit.Toolkit.External;
 ///     <code>
 ///     public override async Task ExecuteAsync()
 ///     {
-///         var selectedIds = ActiveUiDocument.Selection.GetElementIds();
+///         var selectedIds = Application.ActiveUIDocument.Selection.GetElementIds();
 ///     
 ///         await Task.Delay(1000);
 ///     
 ///         using var httpClient = new HttpClient();
 ///         var response = await httpClient.GetStringAsync("https://api.example.com/data");
 ///     
-///         using var transaction = new Transaction(ActiveDocument, "Update Parameters");
+///         using var transaction = new Transaction(Application.ActiveUIDocument.Document, "Update Parameters");
 ///         transaction.Start();
 ///     
 ///         foreach (var id in selectedIds)
 ///         {
-///             var element = ActiveDocument.GetElement(id);
+///             var element = Application.ActiveUIDocument.Document.GetElement(id);
 ///             element?.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.Set(response);
 ///         }
 ///     

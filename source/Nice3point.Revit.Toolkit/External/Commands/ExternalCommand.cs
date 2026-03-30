@@ -61,54 +61,54 @@ public abstract class ExternalCommand : IExternalCommand
     /// <summary></summary>
     [Obsolete("Use Application instead")]
     [CodeTemplate(
-        searchTemplate: "$command$.UiApplication",
+        searchTemplate: "UiApplication",
         Message = "UiApplication is obsolete, use Application instead",
-        ReplaceTemplate = "$command$.Application",
+        ReplaceTemplate = "Application",
         ReplaceMessage = "Replace with Application")]
     public UIApplication UiApplication => Application;
 
     /// <summary></summary>
     [Obsolete("Use Application.ActiveUIDocument instead")]
     [CodeTemplate(
-        searchTemplate: "$command$.ActiveUiDocument",
+        searchTemplate: "ActiveUiDocument",
         Message = "ActiveUiDocument is obsolete, use Application.ActiveUIDocument instead",
-        ReplaceTemplate = "$command$.Application.ActiveUIDocument",
+        ReplaceTemplate = "Application.ActiveUIDocument",
         ReplaceMessage = "Replace with Application.ActiveUIDocument")]
     public UIDocument ActiveUiDocument => Application.ActiveUIDocument;
 
     /// <summary></summary>
     [Obsolete("Use Application.ActiveUIDocument instead")]
     [CodeTemplate(
-        searchTemplate: "$command$.UiDocument",
+        searchTemplate: "UiDocument",
         Message = "UiDocument is obsolete, use Application.ActiveUIDocument instead",
-        ReplaceTemplate = "$command$.Application.ActiveUIDocument",
+        ReplaceTemplate = "Application.ActiveUIDocument",
         ReplaceMessage = "Replace with Application.ActiveUIDocument")]
     public UIDocument UiDocument => Application.ActiveUIDocument;
 
     /// <summary></summary>
     [Obsolete("Use Application.ActiveUIDocument.Document instead")]
     [CodeTemplate(
-        searchTemplate: "$command$.ActiveDocument",
+        searchTemplate: "ActiveDocument",
         Message = "ActiveDocument is obsolete, use Application.ActiveUIDocument.Document instead",
-        ReplaceTemplate = "$command$.Application.ActiveUIDocument.Document",
+        ReplaceTemplate = "Application.ActiveUIDocument.Document",
         ReplaceMessage = "Replace with Application.ActiveUIDocument.Document")]
     public Document ActiveDocument => Application.ActiveUIDocument.Document;
 
     /// <summary></summary>
     [Obsolete("Use Application.ActiveUIDocument.Document instead")]
     [CodeTemplate(
-        searchTemplate: "$command$.Document",
+        searchTemplate: "Document",
         Message = "Document is obsolete, use Application.ActiveUIDocument.Document instead",
-        ReplaceTemplate = "$command$.Application.ActiveUIDocument.Document",
+        ReplaceTemplate = "Application.ActiveUIDocument.Document",
         ReplaceMessage = "Replace with Application.ActiveUIDocument.Document")]
     public Document Document => Application.ActiveUIDocument.Document;
 
     /// <summary></summary>
     [Obsolete("Use Application.ActiveUIDocument.ActiveView instead")]
     [CodeTemplate(
-        searchTemplate: "$command$.ActiveView",
+        searchTemplate: "ActiveView",
         Message = "ActiveView is obsolete, use Application.ActiveUIDocument.ActiveView instead",
-        ReplaceTemplate = "$command$.Application.ActiveUIDocument.ActiveView",
+        ReplaceTemplate = "Application.ActiveUIDocument.ActiveView",
         ReplaceMessage = "Replace with Application.ActiveUIDocument.ActiveView")]
     public View ActiveView => Application.ActiveUIDocument.ActiveView;
 

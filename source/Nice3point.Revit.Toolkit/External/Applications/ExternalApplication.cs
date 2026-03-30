@@ -34,7 +34,7 @@ public abstract class ExternalApplication : IExternalApplication
     /// <summary></summary>
     [Obsolete("Use RevitContext.UiApplication instead")]
     [CodeTemplate(
-        searchTemplate: "$application$.UiApplication",
+        searchTemplate: "UiApplication",
         Message = "UiApplication is obsolete, use RevitContext.UiApplication instead",
         ReplaceTemplate = "RevitContext.UiApplication",
         ReplaceMessage = "Replace with RevitContext.UiApplication")]

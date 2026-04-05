@@ -537,7 +537,7 @@ public static partial class MyViewModelExtensions
 These extensions allow you to call the event with individual arguments instead of creating a new Args:
 
 ```c#
-var room = CreateRoomAsyncEvent.RaiseAsync(level, coordinate);
+var room = await CreateRoomAsyncEvent.RaiseAsync(level, coordinate);
 ```
 
 **Enabling direct invocation**

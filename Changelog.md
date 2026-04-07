@@ -1,4 +1,4 @@
-# Release 2027.0.0-preview.5.20260329
+# 2027.0.0
 
 ### External Events
 
@@ -245,7 +245,7 @@ DeleteElementEvent.Raise();
 await DeleteElementAsyncEvent.RaiseAsync();
 ```
 
-# Release 2026.0.0
+# 2026.0.0
 
 - New `Context.UiControlledApplication` property. Helps to manipulate with the Revit ribbon, context menus outside ExternalApplication. 
 - Now `AsyncEventHandler{T}` works in a multithreaded application and returns the result to each recipient.
@@ -253,12 +253,12 @@ await DeleteElementAsyncEvent.RaiseAsync();
 - Removed deprecated features.
 - Fixed dependency resolver to avoid conflict with the Revit runtime.
 
-# Release 2025.0.3
+# 2025.0.3
 
 - Removed JetBrains.Annotations dependency
 - Fixed typo in summary
 
-# Release 2025.0.2
+# 2025.0.2
 
 - **Context** global handlers:
     - **SuppressFailures**: suppresses the display of the Revit error and warning messages during transaction.
@@ -278,7 +278,7 @@ await DeleteElementAsyncEvent.RaiseAsync();
 - Assembly load context internal optimizations
 - Readme updates, include extra samples
 
-# Release 2025.0.1
+# 2025.0.1
 
 ## Add-in dependencies isolation
 
@@ -324,14 +324,14 @@ Plugins using interfaces such as **IExternalCommand** will not benefit from this
         .SetAvailabilityController<AvailableCommandController>()
     ```
 
-# Release 2025.0.0
+# 2025.0.0
 
 - Revit 2025 support
 - Add new DuplicateTypeNamesHandler overload
 - Optimize assembly resolve by @dosymep
 - Fix resolve raw assembly by @dosymep
 
-# Release 2024.0.1
+# 2024.0.1
 
 - New **Context** class.
 
@@ -381,7 +381,7 @@ Plugins using interfaces such as **IExternalCommand** will not benefit from this
   }
   ```
 
-# Release 2024.0.0
+# 2024.0.0
 
 - Revit 2024 support
 - New SaveSharedCoordinatesCallback
@@ -391,11 +391,11 @@ ExternalCommand:
 
 - New SuppressFailures method
 
-# Release 2023.0.12
+# 2023.0.12
 
 New runtime attributes: init, required keywords support
 
-# Release 2023.0.11
+# 2023.0.11
 
 - New AsyncEventHandler
 - New AsyncEventHandler<T>
@@ -410,32 +410,32 @@ New runtime attributes: init, required keywords support
 - Removed ActionEventHandler params versions. Use parameterless version
 - Removed IdlingEventHandler params versions. Use parameterless version
 
-# Release 2023.0.10
+# 2023.0.10
 
 Dependency resolver for ExternalApplication
 
 Nuget symbol server support: https://symbols.nuget.org/download/symbols
 
-# Release 2023.0.9
+# 2023.0.9
 
 TransactionUtils:
 
 - Updated transaction mechanism
 - New Modify document method
 
-# Release 2023.0.8
+# 2023.0.8
 
 Fixed security issues
 
-# Release 2023.0.7
+# 2023.0.7
 
 Fixed dependency search issue for several plugins loaded in Revit
 
-# Release 2023.0.6
+# 2023.0.6
 
 - External command minor backend optimization
 
-# Release 2023.0.5
+# 2023.0.5
 
 External command:
 
@@ -446,23 +446,23 @@ External command:
 - Updated Assembly resolver
 - Removed ExceptionHandler
 
-# Release 2023.0.4
+# 2023.0.4
 
 - Change namespace for DockablePaneProvider
 
-# Release 2023.0.3
+# 2023.0.3
 
 - New ExternalApplication
 
-# Release 2023.0.2
+# 2023.0.2
 
 - New ExternalCommand
 
-# Release 2023.0.1
+# 2023.0.1
 
 - New DockablePaneProvider
 - New SelectionConfiguration
 
-# Release 2023.0.0
+# 2023.0.0
 
 - Initial release

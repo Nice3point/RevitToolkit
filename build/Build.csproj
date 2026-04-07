@@ -13,7 +13,6 @@
         <PackageReference Include="ModularPipelines.Git"/>
         <PackageReference Include="ModularPipelines.GitHub"/>
         <PackageReference Include="ModularPipelines.DotNet"/>
-        <PackageReference Include="JetBrains.Annotations"/>
         <PackageReference Include="Microsoft.VisualStudio.SolutionPersistence"/>
     </ItemGroup>
 

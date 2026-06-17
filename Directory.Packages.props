@@ -57,7 +57,7 @@
     <!-- Development Dependencies -->
     <ItemGroup>
         <GlobalPackageReference Include="Polyfill" Version="10.8.1"/>
-        <GlobalPackageReference Include="JetBrains.Annotations.Sources" Version="2025.2.4"/>
+        <GlobalPackageReference Include="JetBrains.Annotations.Sources" Version="2026.2.0"/>
     </ItemGroup>
 
 </Project>

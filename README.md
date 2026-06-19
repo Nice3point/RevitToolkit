@@ -7,9 +7,9 @@
 
 ## Make Revit API more flexible
 
-[![Nuget](https://img.shields.io/nuget/vpre/Nice3point.Revit.Toolkit?style=for-the-badge)](https://www.nuget.org/packages/Nice3point.Revit.Toolkit)
-[![Downloads](https://img.shields.io/nuget/dt/Nice3point.Revit.Toolkit?style=for-the-badge)](https://www.nuget.org/packages/Nice3point.Revit.Toolkit)
-[![Last Commit](https://img.shields.io/github/last-commit/Nice3point/RevitToolkit/develop?style=for-the-badge)](https://github.com/Nice3point/RevitToolkit/commits/develop)
+[![Nuget](https://img.shields.io/nuget/vpre/Nice3point.Revit.Toolkit?style=for-the-badge&color=black&labelColor=crimson)](https://www.nuget.org/packages/Nice3point.Revit.Toolkit)
+[![Downloads](https://img.shields.io/nuget/dt/Nice3point.Revit.Toolkit?style=for-the-badge&color=black&labelColor=crimson)](https://www.nuget.org/packages/Nice3point.Revit.Toolkit)
+[![Last Commit](https://img.shields.io/github/last-commit/Nice3point/RevitToolkit/develop?style=for-the-badge&color=black&labelColor=crimson)](https://github.com/Nice3point/RevitToolkit/commits/develop)
 
 This library provides a modern interface for working with the Revit API.
 Package contains interfaces implementation frequently encountered in revit, aiming to provide as much flexibility as possible, so developers are free to choose which components to

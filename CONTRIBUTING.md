@@ -17,7 +17,7 @@ The naming should be descriptive and direct, giving a clear idea of the function
 
 ## Prerequisites for Compiling RevitExtensions
 
-- .Net 7 SDK or newer
+- .Net 10 SDK or newer
 - Visual Studio 2022 / JetBrains Rider 2023.3 or newer
 
 ## Life cycle

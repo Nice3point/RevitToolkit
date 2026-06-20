@@ -1,33 +1,56 @@
-# Strict C# Production Style
+# Code Style
 
-All code must meet production-quality standards. "It works" is not enough; code must be clean, readable, and self-explanatory. This is a public library — its style is part of its API.
+Production C# only. This is a public library, so its style is part of its contract.
 
 ## General Principles
 
-* **Modern C#:** target the latest language version (`LangVersion=latest`). Nullable reference types and implicit usings are enabled solution-wide.
-* **Instance vs. static:** instance classes with inheritance for external commands/applications; static classes for global contexts.
-* **Disposable scopes:** model temporary state changes as `IDisposable` returned from a `Begin...Scope()` factory.
-* **Pure functions:** mark read-only operations with `[Pure]`.
-* **Explicit over implicit:** code should be self-explanatory; avoid hidden behavior and unclear defaults.
-* **JetBrains Annotations:** use `[PublicAPI]`, `[Pure]`, and `CodeTemplate` where they improve analysis and intent.
+* **SOLID and DRY.** One responsibility per type. Extract shared logic rather than duplicate it.
+* **Explicit over implicit.** Code is self-explanatory. Avoid hidden behavior and unclear defaults.
+* **Instance vs. static.** Instance classes with inheritance for external commands and applications. Static classes for global contexts.
+* **Disposable scopes.** Model a temporary state change as an `IDisposable` returned from a `Begin...Scope()` factory.
+* **Nullable safety.** Nullable reference types are enabled solution-wide. Treat every nullability warning as a defect.
+* **StyleCop style.** Follow StyleCop conventions for layout, member ordering, and spacing.
+
+## Modern C#
+
+`LangVersion` is `latest`. Reach for the newest feature that expresses the intent directly, and do not hand-roll what the language already provides.
+
+* Primary constructors when a type captures state.
+* Collection expressions for literals and spans.
+* Pattern matching and switch expressions over branching chains.
+* Range and index operators for slicing.
+* Null-coalescing assignment (`??=`) for lazy initialization.
+* Expression-bodied members for simple accessors.
+* File-scoped namespaces.
+
+## Comments
+
+Public types and members carry XML doc comments, see [Documentation](./documentation.md). Inside the code, comments are the exception.
+
+* Names and structure carry the meaning. Default to no comment.
+* Add one only when the reason cannot be read from the code and a reader could break the code without it, such as a non-obvious invariant or a threading constraint.
+* A comment explains why, never what. Do not restate the code.
+
+## Attributes
+
+Decorate members with every JetBrains and .NET attribute that carries meaning, so analyzers, the debugger, and callers read the full contract.
+
+* `[PublicAPI]` on every public class.
+* `[Pure]` on a read-only method.
+* `[EditorBrowsable(EditorBrowsableState.Never)]` on a member Revit invokes but consumers must not call, such as the interface `Execute` and handler callbacks.
+* `[CodeTemplate]` on a deprecated member so Rider can auto-convert call sites. See [Backward Compatibility](./backward-compatibility.md).
 
 ## Naming
 
-* **Clarity is king.** Names must be descriptive and never abbreviated.
-    * Bad: `elem`, `doc`, `param`, `app`, `ctx`.
-    * Good: `element`, `document`, `parameter`, `application`, `context`.
-* **Follow Revit API naming conventions.**
-* **Scope factories use the `Begin...Scope` pattern:**
-    * Good: `BeginFailureSuppressionScope()`, `BeginDialogSuppressionScope()`, `BeginAssemblyResolveScope()`.
-    * Bad: `SuppressFailures()`, `SuppressDialogs()`.
-* Avoid single-letter variables except in very short loops or lambdas.
+* **Clarity first.** Names are descriptive and never abbreviated: `element` not `elem`, `document` not `doc`, `parameter` not `param`, `application` not `app`, `context` not `ctx`.
+* Follow the Revit API naming conventions.
+* Scope factories use the `Begin...Scope` pattern: `BeginFailureSuppressionScope()`, not `SuppressFailures()`.
+* No single-letter variables except in a short loop or lambda.
 
-## File & Class Structure
+## File and Class Structure
 
-* **File-scoped namespaces.** Use `namespace Nice3point.Revit.Toolkit;` or a sub-namespace. When a file lives in a subfolder but should keep a flatter namespace (e.g. `Nice3point.Revit.Toolkit.External`), put `// ReSharper disable once CheckNamespace` above the declaration.
-* **`[PublicAPI]`** on every public class.
-* **`[EditorBrowsable(EditorBrowsableState.Never)]`** on members Revit invokes but consumers should not call (the interface `Execute`, handler callbacks).
-* **`[Pure]`** on read-only methods.
+* **File-scoped namespaces.** Use `namespace Nice3point.Revit.Toolkit;` or a sub-namespace. When a file lives in a subfolder but keeps a flatter namespace, add `// ReSharper disable once CheckNamespace` above the declaration.
+* **Member order:** private fields, constructors, public properties, public methods, private methods.
 
 ## Disposable Scope Pattern
 
@@ -128,21 +151,14 @@ public void Raise(Action<UIApplication> action)
 }
 ```
 
-## XML Documentation
-
-* Document every public member with `<summary>`, parameters with `<param>`, and return values with `<returns>`.
-* Use `<remarks>` for implementation details, constraints, and thread-safety notes; `<example>` for non-trivial APIs.
-* For wrappers over the Revit API, mirror the corresponding Revit API documentation and document the Revit `<exception>`s the member can throw.
-* Keep comments concise and update them in the same change as the behavior.
-
 ## Error Handling
 
-* **Let Revit exceptions propagate** by default; never swallow them. Document them with `<exception>`.
-* **Optional exception handler:** for handlers that process multiple queued actions, provide a `SetExceptionHandler()` hook rather than swallowing silently.
+* **Let Revit exceptions propagate** by default. Never swallow them. Document them with `<exception>`.
+* **Optional exception handler.** For a handler that processes multiple queued actions, provide a `SetExceptionHandler()` hook rather than swallow silently.
 * **Validate custom logic** with internal guards (the `ThrowWhen()` pattern), not thin wrappers where Revit already validates.
 
 ## Compilation Directives
 
-* `#if REVIT2024_OR_GREATER` (and similar) for version-specific Revit APIs.
-* `#if NET` / `#if NET8_0_OR_GREATER` for runtime-specific features (e.g. `AssemblyLoadContext`, `UnsafeAccessor`).
+* `#if REVIT2024_OR_GREATER` and similar for version-specific Revit APIs.
+* `#if NET` or `#if NET8_0_OR_GREATER` for runtime-specific features such as `AssemblyLoadContext` and `UnsafeAccessor`.
 * Apply directives consistently across related members so a type's surface stays coherent per version. See [Revit Best Practices](./revit-best-practices.md).

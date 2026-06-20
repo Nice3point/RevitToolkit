@@ -30,7 +30,7 @@ For a class-level deprecation, mark the whole type `[Obsolete]` (e.g. `ActionEve
 * **Method signatures:** never change an existing signature. Add a new overload instead.
 * **Return types:** never change a return type.
 * **Parameters:** add new parameters only as optional, and only at the end of the list.
-* **Renaming:** use the Obsolete pattern above; keep the old member functional indefinitely.
-* **Analyzer/generator output:** treat the generated API shape and diagnostic ids (`RVTTK####`) as public surface — renaming a generated property or reusing a retired diagnostic id is a breaking change. See [Analyzers & Source Generators](./analyzers-and-generators.md).
+* **Renaming:** use the Obsolete pattern above and keep the old member functional indefinitely.
+* **Analyzer/generator output:** treat the generated API shape and diagnostic ids (`RVTTK####`) as public surface. Renaming a generated property or reusing a retired diagnostic id is a breaking change. See [Analyzers & Source Generators](./analyzers-and-generators.md).
 
-Document every change — additions, deprecations, and behavior changes — in [the Changelog](./documentation.md).
+Document every change (additions, deprecations, and behavior changes) in [the Changelog](./documentation.md).

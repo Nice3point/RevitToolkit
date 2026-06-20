@@ -1,50 +1,41 @@
 # Analyzers & Source Generators
 
-The package bundles Roslyn tooling that ships alongside the runtime library: a source generator that emits external-event boilerplate, analyzers that enforce its prerequisites, and code fixers that resolve the diagnostics. This tooling is part of the public contract — its generated API shape and diagnostic ids are stable surface.
+The package bundles Roslyn tooling alongside the runtime library: source generators that emit add-in boilerplate, analyzers that enforce their prerequisites, and code fixers that resolve the diagnostics. This tooling is part of the public contract, so its generated API shape and diagnostic ids are stable surface. This guide is for authoring and extending the tooling.
 
 ## Projects
 
-* `source/Nice3point.Revit.Toolkit.SourceGenerators`: the `[ExternalEvent]` incremental generator.
-* `source/Nice3point.Revit.Toolkit.Analyzers`: diagnostic analyzers and the `DiagnosticDescriptors` catalog.
-* `source/Nice3point.Revit.Toolkit.Analyzers.CodeFixers`: code fixers that resolve those diagnostics.
-* `source/*.Roslyn###`: Roslyn-version twins (see below).
+* The source-generator project holds the incremental generators.
+* The analyzer project holds the diagnostic analyzers and their `DiagnosticDescriptors` catalog.
+* The code-fixer project holds the fixers that resolve the diagnostics.
+* The `*.Roslyn###` twins are covered under Roslyn version targeting below.
 
-All target `netstandard2.0` with `IsRoslynComponent=true` and `EnforceExtendedAnalyzerRules=true` (configured in `Directory.Roslyn.props`).
+All target `netstandard2.0` with `IsRoslynComponent=true` and `EnforceExtendedAnalyzerRules=true`, configured in `Directory.Roslyn.props`.
 
-## The `[ExternalEvent]` Generator
+## Generators
 
-Decorate a method on a `partial` type with `[ExternalEvent]`; the generator emits the matching external-event property, picking the shape (sync vs. request/response, parameterless vs. parameterized, single argument vs. a generated argument record) from the method signature.
+A generator turns an annotated partial-type member into generated code, selecting the output shape from the member signature. The trigger attribute's XML docs are the consumer-facing contract and the source of truth for the signature-to-output matrix and its options. Keep that contract in the attribute docs, not duplicated here.
 
-```csharp
-partial class MyViewModel
-{
-    [ExternalEvent]
-    private void ShowGreeting(UIApplication application) { /* ... */ }
-}
-// generates ShowGreetingEvent / ShowGreetingAsyncEvent properties
-```
-
-The `ExternalEventAttribute` XML docs are the source of truth for the full signature-to-output matrix and options such as `AllowDirectInvocation` — keep them current there, not duplicated here.
+When you author or extend a generator, keep it incremental, emit into a stable namespace, and treat every generated member name as public surface. See [Backward Compatibility](./backward-compatibility.md).
 
 ## Diagnostics
 
-Diagnostics use the `RVTTK####` id prefix and are defined in `Analyzers/Diagnostics/DiagnosticDescriptors.cs`, which is the source of truth for the current set. They enforce the generator's prerequisites — for example, constraints on the signature and declaration of a method marked `[ExternalEvent]`.
+Diagnostics use the `RVTTK####` id prefix and live in the `DiagnosticDescriptors` catalog, the source of truth for the current set. They enforce the generators' prerequisites, such as the declaration and signature constraints on an annotated member.
 
-When adding or changing a rule:
+When you add or change a rule:
 
-* Assign the next unused `RVTTK####` id — **never** reuse a retired id.
-* Add a `DiagnosticDescriptor` with a clear `title`, a parameterized `messageFormat`, and an appropriate `category`/severity.
-* Record it in `source/Nice3point.Revit.Toolkit.Analyzers/AnalyzerReleases.Unshipped.md`.
-* Add a code fixer when the violation is mechanically resolvable, and cover both in the test projects. See [Testing Strategy](./testing-strategy.md).
+* Assign the next unused `RVTTK####` id, and never reuse a retired one.
+* Add a `DiagnosticDescriptor` with a clear title, a parameterized message format, and an appropriate category and severity.
+* Record it in the analyzer's `AnalyzerReleases.Unshipped.md`.
+* Add a code fixer when the violation is mechanically resolvable, and cover both in the test projects. See [Testing](./testing.md).
 
 ## Roslyn Version Targeting
 
-Each tooling project has a `.Roslyn###` twin. `Directory.Roslyn.props` parses the version suffix, **links the base project's `.cs` files** into the twin, and sets `ROSLYN*_OR_GREATER` constants. This means:
+Each tooling project has a `.Roslyn###` twin. `Directory.Roslyn.props` parses the version suffix, links the base project's source into the twin, and sets `ROSLYN*_OR_GREATER` constants.
 
-* Author code once in the base project; the twin compiles the same source against the older Roslyn.
+* Author code once in the base project. The twin compiles the same source against the older Roslyn.
 * Guard any API that differs across Roslyn versions with the `ROSLYN*_OR_GREATER` constants.
-* Do not duplicate source into a twin — it is intentionally empty except for its project file.
+* Do not duplicate source into a twin. It is intentionally empty except for its project file.
 
 ## Packaging
 
-The runtime `.csproj` packs each tooling assembly into the version-specific Roslyn analyzer paths so the matching build loads per IDE/SDK. It also references the tooling projects with `ReferenceOutputAssembly="false"` purely to enforce build order. See [Package Management](./package-management.md).
+The runtime project packs each tooling assembly into the version-specific Roslyn analyzer paths so the matching build loads per IDE and SDK. It references the tooling projects with `ReferenceOutputAssembly="false"` purely to enforce build order. See [Package Management](./package-management.md).

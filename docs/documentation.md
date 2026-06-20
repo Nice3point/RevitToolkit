@@ -1,30 +1,37 @@
-# Documentation Requirements
+# Documentation
 
-Documentation ships with the package. Every change to the public surface updates the README, the Changelog, and the XML docs in the same commit.
+These rules govern every piece of prose the package ships: XML doc comments, `README.md`, and `CHANGELOG.md`. Each format adds its own rules on top of the shared set.
 
-## README.md
+A public-surface change updates the README, the CHANGELOG, and the affected XML docs in the same commit. Documentation that lags the code is a defect.
 
-* **Usage examples:** every new feature must have a usage example under the matching section (`External Commands`, `External Applications`, `External events`, `Context`, `Options`, `Decorators`, `Helpers`).
-* **Add to the existing section.** New overloads or related members belong with their primary feature — do not create a new top-level section for a variant.
-* **Code blocks:** use proper C# syntax highlighting and keep examples copy-pasteable.
+## Shared Prose Rules
 
-## CHANGELOG.md
+* **State what, not how.** Describe observable behavior and contract, never the implementation. A summary survives an implementation rewrite unchanged.
+* **Plain technical English.** No corporate jargon, no marketing tone.
+* **No filler.** Omit obvious statements. State only what a reader cannot infer from the signature.
+* **Third-person present indicative.** Write "Suppresses the dialog", not "Suppressing the dialog". No `-ing` verb form for what a member does.
+* **One sentence per line.** Break at sentence boundaries, never at a fixed character width.
+* **No dashes or semicolons.** Use separate sentences or commas.
 
-* Update the current preview/release version section.
-* Categorize every change:
-    * **New Features:** new classes, methods, overloads, generated APIs, analyzers.
-    * **Breaking Changes:** renamed members, changed behavior.
-    * **Improvements:** performance, refactoring.
-    * **Bug Fixes:** corrections to existing functionality.
-* Provide migration examples at the end of the section for any breaking change or deprecation.
-* **Document all changes,** not only major ones.
+## XML Doc Comments
 
-## XML Documentation
+* Document every public member with a `<summary>` that states what it does.
+* **`<summary>` describes the member, not its parameters.** Parameters belong in `<param>`, the return value in `<returns>`, and thrown exceptions in `<exception>`. Do not restate the signature in prose.
+* For a wrapper over the Revit API, mirror the corresponding Revit API summary and document the Revit `<exception>`s the member can throw.
+* Add `<remarks>` for a non-trivial constraint or a thread-safety note. Add `<example>` for a non-trivial API, as the dialog-suppression scopes and the `[ExternalEvent]` attribute show.
+* Reference another type or member with `<see cref="..."/>` so renames stay tracked.
 
-* **Summary:** describe what the member does. For Revit API wrappers, mirror the summary from the Revit API documentation.
-* **Parameters / Returns:** document each `<param>` with context and the `<returns>` value's meaning.
-* **Remarks:** add implementation details, constraints, and thread-safety notes.
-* **Example:** provide a usage `<example>` for complex APIs (the dialog-suppression scopes and the `[ExternalEvent]` attribute are good models).
-* **Exceptions:** document every Revit API `<exception>` a member can throw.
+## README
 
-See [Code Style](./code-style.md) for the in-code XML doc conventions and [Backward Compatibility](./backward-compatibility.md) for deprecation messaging.
+Every new feature has a usage example under its matching section (`External Commands`, `External Applications`, `External events`, `Context`, `Options`, `Decorators`, `Helpers`). A new overload or related member belongs with its primary feature, not a new top-level section. Keep examples copy-pasteable with C# syntax highlighting.
+
+## CHANGELOG
+
+Update the current preview or release version section. Categorize every change, not only the major ones:
+
+* **New Features:** new classes, methods, overloads, generated APIs, analyzers.
+* **Breaking Changes:** renamed members, changed behavior.
+* **Improvements:** performance, refactoring.
+* **Bug Fixes:** corrections to existing functionality.
+
+Provide a migration example at the end of the section for any breaking change or deprecation. See [Backward Compatibility](./backward-compatibility.md) for the deprecation pattern.

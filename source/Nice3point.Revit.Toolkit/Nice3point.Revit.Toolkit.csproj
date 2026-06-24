@@ -17,8 +17,8 @@
         <RepositoryUrl>https://github.com/Nice3point/RevitToolkit</RepositoryUrl>
         <PackageProjectUrl>https://github.com/Nice3point/RevitToolkit</PackageProjectUrl>
         <PackageIcon>images\PackageIcon.png</PackageIcon>
-        <PackageLicenseFile>License.md</PackageLicenseFile>
-        <PackageReadmeFile>Readme.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -48,8 +48,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\..\Readme.md" PackagePath="" Pack="true" Visible="false"/>
-        <None Include="..\..\License.md" PackagePath="" Pack="true" Visible="false"/>
+        <None Include="..\..\README.md" PackagePath="" Pack="true" Visible="false"/>
+        <None Include="..\..\LICENSE.md" PackagePath="" Pack="true" Visible="false"/>
         <None Include="..\..\.nuget\PackageIcon.png" PackagePath="images/" Pack="true" Visible="false"/>
         <None Include="..\Nice3point.Revit.Toolkit.SourceGenerators\bin\$(Configuration)\netstandard2.0\Nice3point.Revit.Toolkit.SourceGenerators.dll" PackagePath="analyzers\dotnet\roslyn5.0\cs" Pack="true" Visible="false"/>
         <None Include="..\Nice3point.Revit.Toolkit.SourceGenerators.Roslyn414\bin\$(Configuration)\netstandard2.0\Nice3point.Revit.Toolkit.SourceGenerators.dll" PackagePath="analyzers\dotnet\roslyn4.14\cs" Pack="true" Visible="false"/>

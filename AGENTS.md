@@ -1,34 +1,32 @@
-# Nice3point.Revit.Toolkit Agent Instructions
+# Nice3point.Revit.Toolkit
 
-Nice3point.Revit.Toolkit is a public NuGet library that removes the boilerplate of building Revit add-ins. `source/Nice3point.Revit.Toolkit` is the shipped runtime library: base classes for external commands and applications, static Application and UI contexts, async support, external event handlers, options, decorators, and helpers. The package also ships bundled Roslyn analyzers, code fixers, and a source generator under `source/` that automate the external-event boilerplate and guard against misuse.
+Nice3point.Revit.Toolkit is a public NuGet library that removes the boilerplate of building Revit add-ins.
+The runtime library wraps the awkward parts of the Revit API behind clean instance base classes and static contexts.
+The same package bundles Roslyn tooling: an incremental source generator that emits external-event boilerplate, analyzers that enforce its prerequisites, and code fixers that resolve the diagnostics.
 
-## Non-Negotiables
+## Non-negotiables
 
-* **Never break an existing public API.** Deprecate with `[Obsolete]` plus `CodeTemplate`. The obsolete member keeps calling the original implementation and stays functional. See [Backward Compatibility](./docs/backward-compatibility.md).
-* **Instance classes with inheritance for entry points.** External commands and applications override a simplified `Execute()`. Global contexts are static classes. Boilerplate lives in the base class, never in the consumer's override.
-* **Scoped operations return `IDisposable`** through the `Begin...Scope()` pattern. Restore or release on `Dispose`.
-* **Attributes carry the contract.** Mark public classes `[PublicAPI]`, Revit-invoked callbacks `[EditorBrowsable(EditorBrowsableState.Never)]`, and read-only methods `[Pure]`.
-* **Thread safety is mandatory for shared state.** Synchronize with `Lock`, guard dispose with `Interlocked.Exchange`, count nested scopes under a lock, and queue cross-thread work through `ExternalEvent` or `ConcurrentQueue`.
-* **Every type compiles under every supported configuration.** Gate version-specific Revit APIs with `#if REVIT2024_OR_GREATER`-style directives and runtime features with `#if NET` or `#if NET8_0_OR_GREATER`.
-* **Roslyn tooling is public surface.** Analyzers, fixers, and the generator target `netstandard2.0`, dual-target Roslyn (5.0 default plus `*.Roslyn414`), use `RVTTK####` diagnostic ids, and need an `AnalyzerReleases.Unshipped.md` entry for every new or changed rule.
-* **Tests ship with every change.** Test custom logic only: Revit behavior on the Revit thread, analyzers and generators through the Roslyn testing harness. See [Testing](./docs/testing.md).
-* **Verify unfamiliar APIs.** When unsure of a Revit or .NET API's behavior or signature, confirm it before use. Search the web for the official docs. To read a referenced library's source, query GitHub with `gh` (`gh api`, `gh search code`). If `gh` is unavailable, search the web or ask. Never inspect compiled DLLs or XML extracted from NuGet packages.
-* **Keep docs in sync.** A public-surface change updates `README.md`, `CHANGELOG.md`, and the XML docs in the same commit. See [Documentation](./docs/documentation.md).
+* Model an add-in entry point as an instance base class the consumer inherits, and a global context as a static class. All plumbing lives in the base class behind a single override, never in the consumer's code.
+* Model a temporary state change as an `IDisposable` returned from a `Begin...Scope()` factory that reverses it on `Dispose`.
+* Shared static state is thread-safe.
+* Reflection and native interop stay non-public in `Internal/`.
+* Never break the public surface. Deprecate a renamed member with `[Obsolete]` with a JetBrains `[CodeTemplate]` auto-conversion; the obsolete member forwards to the replacement and never throws or changes behavior.
+* Mark a member Revit invokes but consumers must not call `[EditorBrowsable(EditorBrowsableState.Never)]`.
+* The Roslyn tooling is public surface. It targets `netstandard2.0`, dual-targets Roslyn (the default with the `.Roslyn414` twins), uses stable `RVTTK####` diagnostic ids, and needs an `AnalyzerReleases.Unshipped.md` entry per new or changed rule. Never rename a generated member or renumber a shipped id.
+* Every type compiles under every supported configuration.
+* A change ships with a test covering the toolkit's custom logic: Revit behavior runs on the Revit thread, and the analyzers, fixers, and generator run against the Roslyn testing harness.
+* Confirm an unfamiliar Revit or .NET API before use through official docs or `gh` (`gh api`, `gh search code`).
+* A public-surface change updates `README.md`, `CHANGELOG.md`, and the XML docs in the same commit.
 
-## Build
+## Repository map
 
-The build is a ModularPipelines project. Run `dotnet run -c Release` from the `build` directory to compile.
+* `source/Nice3point.Revit.Toolkit` it packs the runtime library and the tooling into one NuGet package for users.
+* `source/Nice3point.Revit.Toolkit.Analyzers`, `Nice3point.Revit.Toolkit.Analyzers.CodeFixers`, and `Nice3point.Revit.Toolkit.SourceGenerators` hold the analyzers, code fixers, and source generator, each with a `.Roslyn414` twin for the older Roslyn.
+* `tests/` — `Nice3point.Revit.Toolkit.Tests` runs inside a Revit process; the analyzer, fixer, and generator test projects run against the compiler.
+* `build/` — the ModularPipelines build.
+* Root — `Directory.Build.props`, `Directory.Packages.props`, `Directory.Roslyn.props`, `global.json`, the `AnalyzerReleases.*.md` release tracking, `README.md`, `CHANGELOG.md`.
 
-## Specialized Docs
+## Build and verify
 
-Read the matching file before related work.
-
-* [Project Structure](./docs/project-structure.md). Solution layout, project grouping, and change placement.
-* [Architecture](./docs/architecture.md). Design goals, contexts, the base-class model, async, and disposable scopes.
-* [Code Style](./docs/code-style.md). Naming, attributes, language features, the scope and event-handler patterns, and error handling.
-* [Backward Compatibility](./docs/backward-compatibility.md). The Obsolete plus CodeTemplate pattern and breaking-change rules.
-* [Testing](./docs/testing.md). Revit-thread tests and Roslyn analyzer, fixer, and generator tests.
-* [Revit Best Practices](./docs/revit-best-practices.md). Revit API usage, the version matrix, threading, and performance.
-* [Analyzers & Source Generators](./docs/analyzers-and-generators.md). The Roslyn projects, diagnostics, Roslyn version targeting, and packaging.
-* [Documentation](./docs/documentation.md). README, CHANGELOG, and XML documentation rules.
-* [Package Management](./docs/package-management.md). Centralized NuGet and Revit-version package rules.
+* Build: `dotnet build -c Release.R##`, where the `R##` suffix is the Revit year (`R27` targets Revit 2027).
+* Test: `dotnet test -c Release.R##`; required a matching licensed Revit installation.

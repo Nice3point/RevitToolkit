@@ -1,6 +1,6 @@
 # Contributing to Nice3point.Revit.Toolkit
 
-Thanks for taking the time to contribute. This guide covers issues and pull requests. For the architecture and conventions, see the project guidelines in [AGENTS.md](AGENTS.md) and the [docs](docs/) folder.
+Thanks for taking the time to contribute. This guide covers issues and pull requests. For the architecture and conventions, see the project guidelines in [AGENTS.md](AGENTS.md).
 
 ## Issues
 
@@ -23,6 +23,6 @@ Thanks for taking the time to contribute. This guide covers issues and pull requ
 
 ## Development
 
-Run `dotnet run` from the `build` directory to compile, and `dotnet test` to run the tests. The SDK version is pinned in `global.json`.
+Run `dotnet run` from the `build` directory to compile, and `dotnet test` to run the tests.
 
 Please keep issues and pull requests respectful and on topic.

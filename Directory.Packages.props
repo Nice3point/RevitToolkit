@@ -44,7 +44,7 @@
 
         <!-- Testing -->
         <PackageVersion Include="BenchmarkDotNet" Version="0.15.8"/>
-        <PackageVersion Include="TUnit" Version="1.53.0"/>
+        <PackageVersion Include="TUnit" Version="1.61.38"/>
         <PackageVersion Include="Shouldly" Version="4.3.0"/>
 
         <!-- Roslyn -->

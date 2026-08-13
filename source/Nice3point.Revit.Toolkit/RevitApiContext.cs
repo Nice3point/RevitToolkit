@@ -2,7 +2,6 @@
 using System.Reflection;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB.Events;
-using JetBrains.Annotations;
 using Nice3point.Revit.Toolkit.Utils;
 #if NET8_0_OR_GREATER
 using Nice3point.Revit.Toolkit.Internal;
@@ -26,10 +25,10 @@ public class RevitApiContext
         var assemblies = FindAssemblies("RevitDBAPI");
 
         var dbAssemblyMethods = assemblies[0].ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
-        var getApplicationMethod = dbAssemblyMethods.FirstOrDefault(info => info.Name == "RevitApplication.getApplication_");
+        var getApplicationMethod = dbAssemblyMethods.FirstOrDefault(static info => info.Name == "RevitApplication.getApplication_");
         ThrowWhen(getApplicationMethod is null);
 
-        var proxyType = assemblies[0].DefinedTypes.FirstOrDefault(info => info.FullName == "Autodesk.Revit.Proxy.ApplicationServices.ApplicationProxy");
+        var proxyType = assemblies[0].DefinedTypes.FirstOrDefault(static info => info.FullName == "Autodesk.Revit.Proxy.ApplicationServices.ApplicationProxy");
         ThrowWhen(proxyType is null);
 
         const BindingFlags internalFlags = BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance;
@@ -63,7 +62,7 @@ public class RevitApiContext
     ///     Failure handling is automatically restored when the returned scope is disposed.
     /// </summary>
     /// <param name="resolveErrors">
-    ///     Set <see langword="true"/> if errors should be automatically resolved, otherwise <see langword="false"/> to cancel the transaction.
+    ///     Set <see langword="true" /> if errors should be automatically resolved, otherwise <see langword="false" /> to cancel the transaction.
     /// </param>
     /// <returns>A disposable scope. Call Dispose or use 'using' statement to restore failure handling.</returns>
     /// <remarks>
@@ -112,7 +111,10 @@ public class RevitApiContext
             if (name is not null && remaining.Remove(name))
             {
                 result[name] = assembly;
-                if (remaining.Count == 0) break;
+                if (remaining.Count == 0)
+                {
+                    break;
+                }
             }
         }
 
@@ -137,7 +139,7 @@ public class RevitApiContext
     }
 
     /// <summary>
-    ///     Dynamically throw when the <paramref name="condition"/> is <c>true</c>.
+    ///     Dynamically throw when the <paramref name="condition" /> is <c>true</c>.
     /// </summary>
     private protected static void ThrowWhen([DoesNotReturnIf(true)] bool condition)
     {
@@ -153,7 +155,10 @@ public class RevitApiContext
 
         public void Dispose()
         {
-            if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
+            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            {
+                return;
+            }
 
             lock (FailureLock)
             {

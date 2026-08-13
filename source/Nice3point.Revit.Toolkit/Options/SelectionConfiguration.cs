@@ -1,5 +1,4 @@
 ﻿using Autodesk.Revit.UI.Selection;
-using JetBrains.Annotations;
 
 namespace Nice3point.Revit.Toolkit.Options;
 
@@ -85,7 +84,7 @@ public interface ISelectionFilterConfiguration
     ///     If prompting the user to select an element from a Revit Link instance, the element passed here will be the link instance, not the selected linked element.<br />
     ///     If an exception is thrown from this method, the element will not be permitted to be selected.
     /// </remarks>
-    public SelectionConfiguration Element(Func<Element, bool> elementHandler);
+    SelectionConfiguration Element(Func<Element, bool> elementHandler);
 
     /// <summary>
     ///     Handler indicating if the element should be permitted to be selected.
@@ -99,5 +98,5 @@ public interface ISelectionFilterConfiguration
     ///     Return true to allow the user to select this candidate reference. Return false to prevent selection of this candidate.<br />
     ///     If an exception is thrown from this method, the element will not be permitted to be selected.
     /// </returns>
-    public SelectionConfiguration Reference(Func<Reference, XYZ, bool> referenceHandler);
+    SelectionConfiguration Reference(Func<Reference, XYZ, bool> referenceHandler);
 }

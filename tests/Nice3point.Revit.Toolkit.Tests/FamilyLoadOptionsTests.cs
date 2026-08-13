@@ -1,7 +1,5 @@
 ﻿using Nice3point.Revit.Toolkit.Options;
 using Nice3point.Revit.Toolkit.Tests.Abstractions;
-using Nice3point.TUnit.Revit.Executors;
-using TUnit.Core.Executors;
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
@@ -50,7 +48,7 @@ public sealed class FamilyLoadOptionsTests : RevitFamilySampleTest
     public async Task FamilyLoadOptions_WithOverwriteTrue_ReloadsFamily(string path)
     {
         // Arrange
-        var options = new FamilyLoadOptions(overwrite: true);
+        var options = new FamilyLoadOptions(true);
 
         // Act
         using (var transaction = new Transaction(_document, "First Load"))
@@ -78,7 +76,7 @@ public sealed class FamilyLoadOptionsTests : RevitFamilySampleTest
     public async Task FamilyLoadOptions_WithOverwriteFalse_LoadsFamily(string path)
     {
         // Arrange
-        var options = new FamilyLoadOptions(overwrite: false);
+        var options = new FamilyLoadOptions(false);
 
         // Act
         using var transaction = new Transaction(_document, "Load Family");
@@ -99,7 +97,7 @@ public sealed class FamilyLoadOptionsTests : RevitFamilySampleTest
     public async Task FamilyLoadOptions_WithFamilySourceProject_LoadsFamily(string path)
     {
         // Arrange
-        var options = new FamilyLoadOptions(overwrite: true, familySource: FamilySource.Project);
+        var options = new FamilyLoadOptions(true, FamilySource.Project);
 
         // Act
         using var transaction = new Transaction(_document, "Load Family");
@@ -120,7 +118,7 @@ public sealed class FamilyLoadOptionsTests : RevitFamilySampleTest
     public async Task FamilyLoadOptions_WithFamilySourceFamily_LoadsFamily(string path)
     {
         // Arrange
-        var options = new FamilyLoadOptions(overwrite: true, familySource: FamilySource.Family);
+        var options = new FamilyLoadOptions(true, FamilySource.Family);
 
         // Act
         using var transaction = new Transaction(_document, "Load Family");
@@ -191,7 +189,10 @@ public sealed class FamilyLoadOptionsTests : RevitFamilySampleTest
 
         foreach (var familyPath in RevitFamilies)
         {
-            if (_document.LoadFamily(familyPath, options, out _)) loadedCount++;
+            if (_document.LoadFamily(familyPath, options, out _))
+            {
+                loadedCount++;
+            }
         }
 
         transaction.Commit();

@@ -1,5 +1,4 @@
 ﻿using Autodesk.Revit.UI;
-using JetBrains.Annotations;
 
 // ReSharper disable once CheckNamespace
 namespace Nice3point.Revit.Toolkit.External;

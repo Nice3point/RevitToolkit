@@ -47,7 +47,7 @@ partial class ExternalEventGenerator
             var typeBlocks = new List<IDisposable>();
             foreach (var typeDeclaration in info.TypeHierarchy)
             {
-                var staticModifier = typeDeclaration.IsStatic ? "static " : "";
+                var staticModifier = typeDeclaration.IsStatic ? "static " : string.Empty;
                 var block = writer.BeginBlock($"{typeDeclaration.Accessibility} {staticModifier}partial {typeDeclaration.Keyword} {typeDeclaration.Name}");
                 typeBlocks.Add(block);
             }
@@ -119,13 +119,13 @@ partial class ExternalEventGenerator
             {
                 if (info.ReturnsVoid)
                 {
-                    WriteRaiseExtensionMethod(writer, info, qualifiedRecordType, isAsync: false);
+                    WriteRaiseExtensionMethod(writer, info, qualifiedRecordType, false);
                     writer.AppendLine();
-                    WriteRaiseExtensionMethod(writer, info, qualifiedRecordType, isAsync: true);
+                    WriteRaiseExtensionMethod(writer, info, qualifiedRecordType, true);
                 }
                 else
                 {
-                    WriteRaiseExtensionMethod(writer, info, qualifiedRecordType, isAsync: true);
+                    WriteRaiseExtensionMethod(writer, info, qualifiedRecordType, true);
                 }
             }
         }
@@ -135,10 +135,10 @@ partial class ExternalEventGenerator
         /// </summary>
         private static void WriteEventProperty(CodeWriter writer, ExternalEventInfo info, bool useFieldKeyword, EventPropertyKind kind)
         {
-            var staticModifier = info.IsStatic ? "static " : "";
+            var staticModifier = info.IsStatic ? "static " : string.Empty;
             var optionsArgument = info.AllowDirectInvocation
                 ? $", {WellKnownFullyQualifiedClassNames.ExternalEventOptions}.AllowDirectInvocation"
-                : "";
+                : string.Empty;
 
             var (eventTypeName, interfaceTypeName, propertySuffix) = GetEventTypeNames(kind);
             var typeArguments = BuildTypeArguments(info, kind);
@@ -283,9 +283,8 @@ partial class ExternalEventGenerator
         /// </summary>
         private static string BuildBackingFieldName(string methodName, string suffix)
         {
-            return $"_{char.ToLowerInvariant(methodName[0])}{methodName.Substring(1)}{suffix}";
+            return $"_{char.ToLowerInvariant(methodName[0])}{methodName[1..]}{suffix}";
         }
-
 
         /// <summary>
         ///     Builds the property initializer expression, choosing between direct method reference and lambda for record types.

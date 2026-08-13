@@ -4,7 +4,6 @@ using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
-using JetBrains.Annotations;
 using Nice3point.Revit.Toolkit.Utils;
 #if NET8_0_OR_GREATER
 using Nice3point.Revit.Toolkit.Internal;
@@ -32,16 +31,16 @@ public static class Context
     static Context()
     {
         const BindingFlags staticFlags = BindingFlags.NonPublic | BindingFlags.Static;
-        var apiAssembly = AppDomain.CurrentDomain.GetAssemblies().First(assembly => assembly.GetName().Name == "APIUIAPI");
-        var dbAssembly = AppDomain.CurrentDomain.GetAssemblies().First(assembly => assembly.GetName().Name == "RevitDBAPI");
+        var apiAssembly = AppDomain.CurrentDomain.GetAssemblies().First(static assembly => assembly.GetName().Name == "APIUIAPI");
+        var dbAssembly = AppDomain.CurrentDomain.GetAssemblies().First(static assembly => assembly.GetName().Name == "RevitDBAPI");
 
         var apiAssemblyMethods = apiAssembly.ManifestModule.GetMethods(staticFlags);
         var dbAssemblyMethods = dbAssembly.ManifestModule.GetMethods(staticFlags);
 
-        var getApplicationMethod = dbAssemblyMethods.FirstOrDefault(info => info.Name == "RevitApplication.getApplication_");
+        var getApplicationMethod = dbAssemblyMethods.FirstOrDefault(static info => info.Name == "RevitApplication.getApplication_");
         ThrowWhen(getApplicationMethod is null);
 
-        var proxyType = dbAssembly.DefinedTypes.FirstOrDefault(info => info.FullName == "Autodesk.Revit.Proxy.ApplicationServices.ApplicationProxy");
+        var proxyType = dbAssembly.DefinedTypes.FirstOrDefault(static info => info.FullName == "Autodesk.Revit.Proxy.ApplicationServices.ApplicationProxy");
         ThrowWhen(proxyType is null);
 
         const BindingFlags internalFlags = BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance;
@@ -51,10 +50,10 @@ public static class Context
         var proxy = proxyConstructor.Invoke([getApplicationMethod.Invoke(null, null)]);
         ThrowWhen(proxy is null);
 
-        var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.singletonfactory");
+        var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(static info => info.Name == "APICallDepthManager.singletonfactory");
         ThrowWhen(apiCallDepthManagerMethod is null);
 
-        var isRevitInApiModeMethod = apiAssemblyMethods.FirstOrDefault(info => info.Name == "APICallDepthManager.isRevitInAPIMode");
+        var isRevitInApiModeMethod = apiAssemblyMethods.FirstOrDefault(static info => info.Name == "APICallDepthManager.isRevitInAPIMode");
         ThrowWhen(isRevitInApiModeMethod is null);
 
         GetIsRevitInApiMode = () =>
@@ -84,7 +83,7 @@ public static class Context
     /// </summary>
     [Obsolete("Use RevitContext.UiApplication instead")]
     [CodeTemplate(
-        searchTemplate: "Context.UiApplication",
+        "Context.UiApplication",
         Message = "Context.UiApplication is obsolete, use RevitContext.UiApplication instead",
         ReplaceTemplate = "RevitContext.UiApplication",
         ReplaceMessage = "Replace with RevitContext.UiApplication")]
@@ -95,7 +94,7 @@ public static class Context
     /// </summary>
     [Obsolete("Use AsControlledApplication instead from Nice3point.Revit.Extensions package")]
     [CodeTemplate(
-        searchTemplate: "Context.UiControlledApplication",
+        "Context.UiControlledApplication",
         Message = "Context.UiControlledApplication is obsolete, use Nice3point.Revit.Extensions.AsControlledApplication instead",
         ReplaceTemplate = "RevitContext.UiApplication.AsControlledApplication()",
         ReplaceMessage = "Replace with RevitContext.UiApplication.AsControlledApplication()")]
@@ -116,7 +115,7 @@ public static class Context
     /// </summary>
     [Obsolete("Use RevitApiContext.Application instead")]
     [CodeTemplate(
-        searchTemplate: "Context.Application",
+        "Context.Application",
         Message = "Context.Application is obsolete, use RevitApiContext.Application instead",
         ReplaceTemplate = "RevitApiContext.Application",
         ReplaceMessage = "Replace with RevitApiContext.Application")]
@@ -128,12 +127,12 @@ public static class Context
     /// </remarks>
     /// <exception cref="T:Autodesk.Revit.Exceptions.InvalidOperationException">Thrown when attempting to modify the property.</exception>
     /// <returns>
-    ///     Currently active project.<br/>
+    ///     Currently active project.<br />
     ///     Returns <see langword="null" /> if there are no active projects.
     /// </returns>
     [Obsolete("Use RevitContext.ActiveUiDocument instead")]
     [CodeTemplate(
-        searchTemplate: "Context.ActiveUiDocument",
+        "Context.ActiveUiDocument",
         Message = "Context.ActiveUiDocument is obsolete, use RevitContext.ActiveUiDocument instead",
         ReplaceTemplate = "RevitContext.ActiveUiDocument",
         ReplaceMessage = "Replace with RevitContext.ActiveUiDocument")]
@@ -142,12 +141,12 @@ public static class Context
     /// <summary>Represents a currently active Autodesk Revit project at the database level.</summary>
     /// <remarks>
     ///     Revit can have multiple projects open and multiple views to those projects.
-    ///     The active or top most view will be the active project and hence the active document which is available from the Application object.<br/><br/>
+    ///     The active or top most view will be the active project and hence the active document which is available from the Application object.<br /><br />
     ///     Returns <see langword="null" /> if there are no active projects.
     /// </remarks>
     [Obsolete("Use RevitContext.ActiveDocument instead")]
     [CodeTemplate(
-        searchTemplate: "Context.ActiveDocument",
+        "Context.ActiveDocument",
         Message = "Context.ActiveDocument is obsolete, use RevitContext.ActiveDocument instead",
         ReplaceTemplate = "RevitContext.ActiveDocument",
         ReplaceMessage = "Replace with RevitContext.ActiveDocument")]
@@ -156,7 +155,7 @@ public static class Context
     /// <summary>Represents the currently active view of the currently active document.</summary>
     /// <remarks>
     ///     <para>
-    ///         This property is applicable to the currently active document only.<br/>
+    ///         This property is applicable to the currently active document only.<br />
     ///         Returns <see langword="null" /> if there are no active projects.
     ///     </para>
     ///     <para>
@@ -190,7 +189,7 @@ public static class Context
     /// </exception>
     [Obsolete("Use RevitContext.ActiveView instead")]
     [CodeTemplate(
-        searchTemplate: "Context.ActiveView",
+        "Context.ActiveView",
         Message = "Context.ActiveView is obsolete, use RevitContext.ActiveView instead",
         ReplaceTemplate = "RevitContext.ActiveView",
         ReplaceMessage = "Replace with RevitContext.ActiveView")]
@@ -199,7 +198,11 @@ public static class Context
         get => UiApplication.ActiveUIDocument?.ActiveView;
         set
         {
-            if (UiApplication.ActiveUIDocument is null) throw new InvalidOperationException("There are no active documents in the current Autodesk Revit session");
+            if (UiApplication.ActiveUIDocument is null)
+            {
+                throw new InvalidOperationException("There are no active documents in the current Autodesk Revit session");
+            }
+
             UiApplication.ActiveUIDocument.ActiveView = value;
         }
     }
@@ -211,7 +214,7 @@ public static class Context
     /// </remarks>
     [Obsolete("Use RevitContext.ActiveGraphicalView instead")]
     [CodeTemplate(
-        searchTemplate: "Context.ActiveGraphicalView",
+        "Context.ActiveGraphicalView",
         Message = "Context.ActiveGraphicalView is obsolete, use RevitContext.ActiveGraphicalView instead",
         ReplaceTemplate = "RevitContext.ActiveGraphicalView",
         ReplaceMessage = "Replace with RevitContext.ActiveGraphicalView")]
@@ -222,14 +225,14 @@ public static class Context
     /// </summary>
     /// <remarks>
     ///     If Revit is within an API context, direct API calls should be used.
-    ///     Otherwise, when Revit is outside the API context, API calls should be handled 
-    ///     through the <see cref="Autodesk.Revit.UI.IExternalEventHandler"/> interface.
-    ///     IExternalEventHandler enables safely executing commands and operations from external threads 
+    ///     Otherwise, when Revit is outside the API context, API calls should be handled
+    ///     through the <see cref="Autodesk.Revit.UI.IExternalEventHandler" /> interface.
+    ///     IExternalEventHandler enables safely executing commands and operations from external threads
     ///     or the user interface, ensuring they are synchronized with Revit's main thread.
     /// </remarks>
     [Obsolete("Use RevitContext.IsRevitInApiMode instead")]
     [CodeTemplate(
-        searchTemplate: "Context.IsRevitInApiMode",
+        "Context.IsRevitInApiMode",
         Message = "Context.IsRevitInApiMode is obsolete, use RevitContext.IsRevitInApiMode instead",
         ReplaceTemplate = "RevitContext.IsRevitInApiMode",
         ReplaceMessage = "Replace with RevitContext.IsRevitInApiMode")]
@@ -239,11 +242,11 @@ public static class Context
     ///     Suppresses the display of the Revit error and warning messages during transaction.
     /// </summary>
     /// <param name="resolveErrors">
-    ///     Set <see langword="true"/> if errors should be automatically resolved, otherwise <see langword="false"/> to cancel the transaction.
+    ///     Set <see langword="true" /> if errors should be automatically resolved, otherwise <see langword="false" /> to cancel the transaction.
     /// </param>
     [Obsolete("Use RevitApiContext.BeginFailureSuppressionScope instead")]
     [CodeTemplate(
-        searchTemplate: "Context.SuppressFailures($args$)",
+        "Context.SuppressFailures($args$)",
         Message = "Context.SuppressFailures is obsolete, use RevitApiContext.BeginFailureSuppressionScope with 'using' statement instead",
         ReplaceTemplate = "RevitApiContext.BeginFailureSuppressionScope($args$)",
         ReplaceMessage = "Replace with RevitApiContext.BeginFailureSuppressionScope")]
@@ -266,7 +269,7 @@ public static class Context
     /// <param name="resultCode">The result code you wish the Revit dialog to return.</param>
     [Obsolete("Use RevitContext.BeginDialogSuppressionScope instead")]
     [CodeTemplate(
-        searchTemplate: "Context.SuppressDialogs($args$)",
+        "Context.SuppressDialogs($args$)",
         Message = "Context.SuppressDialogs is obsolete, use RevitContext.BeginDialogSuppressionScope with 'using' statement instead",
         ReplaceTemplate = "RevitContext.BeginDialogSuppressionScope($args$)",
         ReplaceMessage = "Replace with RevitContext.BeginDialogSuppressionScope")]
@@ -289,7 +292,7 @@ public static class Context
     /// <param name="handler">Suppress handler.</param>
     [Obsolete("Use RevitContext.BeginDialogSuppressionScope instead")]
     [CodeTemplate(
-        searchTemplate: "Context.SuppressDialogs($args$)",
+        "Context.SuppressDialogs($args$)",
         Message = "Context.SuppressDialogs is obsolete, use RevitContext.BeginDialogSuppressionScope with 'using' statement instead",
         ReplaceTemplate = "RevitContext.BeginDialogSuppressionScope($args$)",
         ReplaceMessage = "Replace with RevitContext.BeginDialogSuppressionScope")]
@@ -348,7 +351,7 @@ public static class Context
     }
 
     /// <summary>
-    ///     Dynamically throw when the <paramref name="condition"/> is <c>true</c>.
+    ///     Dynamically throw when the <paramref name="condition" /> is <c>true</c>.
     /// </summary>
     private static void ThrowWhen([DoesNotReturnIf(true)] bool condition)
     {

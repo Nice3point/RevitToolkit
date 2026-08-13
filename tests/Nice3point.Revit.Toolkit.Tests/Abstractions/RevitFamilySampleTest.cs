@@ -1,8 +1,3 @@
-using Nice3point.Revit.Injector;
-using Nice3point.TUnit.Revit;
-using Nice3point.TUnit.Revit.Executors;
-using TUnit.Core.Executors;
-
 namespace Nice3point.Revit.Toolkit.Tests.Abstractions;
 
 public class RevitFamilySampleTest : RevitApiTest

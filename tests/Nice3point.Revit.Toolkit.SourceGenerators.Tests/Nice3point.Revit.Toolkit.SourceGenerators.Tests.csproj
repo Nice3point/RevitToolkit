@@ -18,7 +18,7 @@
 
     <ItemGroup>
         <Compile Include="..\..\source\Nice3point.Revit.Toolkit.Analyzers\Diagnostics\DiagnosticDescriptors.cs"
-                 Link="Diagnostics\DiagnosticDescriptors.cs" />
+                 Link="Diagnostics\DiagnosticDescriptors.cs"/>
     </ItemGroup>
 
 </Project>

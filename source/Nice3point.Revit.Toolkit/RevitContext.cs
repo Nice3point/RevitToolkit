@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
-using JetBrains.Annotations;
 
 namespace Nice3point.Revit.Toolkit;
 
@@ -16,7 +15,7 @@ public class RevitContext : RevitApiContext
     private static readonly Func<bool> GetIsRevitInApiMode;
     private static readonly IntPtr IncrementConstructorPointer;
     private static readonly IntPtr IncrementDestructorPointer;
-    
+
     private static readonly Lock DialogLock = new();
     private static int _dialogScopeCount;
     private static int? _suppressDialogCode;
@@ -27,17 +26,17 @@ public class RevitContext : RevitApiContext
         var assemblies = FindAssemblies("APIUIAPI", "RevitAPIUI");
 
         var apiAssemblyMethods = assemblies[0].ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
-        var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(method => method.Name == "APICallDepthManager.singletonfactory");
+        var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(static method => method.Name == "APICallDepthManager.singletonfactory");
         ThrowWhen(apiCallDepthManagerMethod is null);
 
-        var isRevitInApiModeMethod = apiAssemblyMethods.FirstOrDefault(method => method.Name == "APICallDepthManager.isRevitInAPIMode");
+        var isRevitInApiModeMethod = apiAssemblyMethods.FirstOrDefault(static method => method.Name == "APICallDepthManager.isRevitInAPIMode");
         ThrowWhen(isRevitInApiModeMethod is null);
-        
+
         var uiAssemblyMethods = assemblies[1].ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
-        var incrementConstructor = uiAssemblyMethods.FirstOrDefault(method => method.Name == "IncrementAPICallDepth.{ctor}");
+        var incrementConstructor = uiAssemblyMethods.FirstOrDefault(static method => method.Name == "IncrementAPICallDepth.{ctor}");
         ThrowWhen(incrementConstructor is null);
 
-        var incrementDestructor = uiAssemblyMethods.FirstOrDefault(method => method.Name == "IncrementAPICallDepth.{dtor}");
+        var incrementDestructor = uiAssemblyMethods.FirstOrDefault(static method => method.Name == "IncrementAPICallDepth.{dtor}");
         ThrowWhen(incrementDestructor is null);
 
         IncrementConstructorPointer = incrementConstructor.MethodHandle.GetFunctionPointer();
@@ -64,7 +63,7 @@ public class RevitContext : RevitApiContext
     /// </remarks>
     /// <exception cref="T:Autodesk.Revit.Exceptions.InvalidOperationException">Thrown when attempting to modify the property.</exception>
     /// <returns>
-    ///     Currently active project.<br/>
+    ///     Currently active project.<br />
     ///     Returns <see langword="null" /> if there are no active projects.
     /// </returns>
     public static UIDocument? ActiveUiDocument => UiApplication.ActiveUIDocument;
@@ -72,7 +71,7 @@ public class RevitContext : RevitApiContext
     /// <summary>Represents a currently active Autodesk Revit project at the database level.</summary>
     /// <remarks>
     ///     Revit can have multiple projects open and multiple views to those projects.
-    ///     The active or top most view will be the active project and hence the active document which is available from the Application object.<br/><br/>
+    ///     The active or top most view will be the active project and hence the active document which is available from the Application object.<br /><br />
     ///     Returns <see langword="null" /> if there are no active projects.
     /// </remarks>
     public static Document? ActiveDocument => UiApplication.ActiveUIDocument?.Document;
@@ -80,7 +79,7 @@ public class RevitContext : RevitApiContext
     /// <summary>Represents the currently active view of the currently active document.</summary>
     /// <remarks>
     ///     <para>
-    ///         This property is applicable to the currently active document only.<br/>
+    ///         This property is applicable to the currently active document only.<br />
     ///         Returns <see langword="null" /> if there are no active projects.
     ///     </para>
     ///     <para>
@@ -117,7 +116,11 @@ public class RevitContext : RevitApiContext
         get => UiApplication.ActiveUIDocument?.ActiveView;
         set
         {
-            if (UiApplication.ActiveUIDocument is null) throw new InvalidOperationException("There are no active documents in the current Autodesk Revit session");
+            if (UiApplication.ActiveUIDocument is null)
+            {
+                throw new InvalidOperationException("There are no active documents in the current Autodesk Revit session");
+            }
+
             UiApplication.ActiveUIDocument.ActiveView = value;
         }
     }
@@ -134,9 +137,9 @@ public class RevitContext : RevitApiContext
     /// </summary>
     /// <remarks>
     ///     If Revit is within an API context, direct API calls should be used.
-    ///     Otherwise, when Revit is outside the API context, API calls should be handled 
-    ///     through the <see cref="Autodesk.Revit.UI.IExternalEventHandler"/> interface.
-    ///     IExternalEventHandler enables safely executing commands and operations from external threads 
+    ///     Otherwise, when Revit is outside the API context, API calls should be handled
+    ///     through the <see cref="Autodesk.Revit.UI.IExternalEventHandler" /> interface.
+    ///     IExternalEventHandler enables safely executing commands and operations from external threads
     ///     or the user interface, ensuring they are synchronized with Revit's main thread.
     /// </remarks>
     public static bool IsRevitInApiMode => GetIsRevitInApiMode();
@@ -321,7 +324,7 @@ public class RevitContext : RevitApiContext
 
         return new DialogSuppressionScope();
     }
-    
+
     internal static IDisposable BeginApiContextScope()
     {
         return new ApiContextScope(IncrementConstructorPointer, IncrementDestructorPointer);
@@ -349,8 +352,8 @@ public class RevitContext : RevitApiContext
 
     private sealed class ApiContextScope : IDisposable
     {
-        private readonly IntPtr _memory;
         private readonly IntPtr _deconstructorPointer;
+        private readonly IntPtr _memory;
         private int _disposed;
 
         internal ApiContextScope(IntPtr constructorPointer, IntPtr deconstructorPointer)
@@ -365,7 +368,10 @@ public class RevitContext : RevitApiContext
 
         public void Dispose()
         {
-            if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
+            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            {
+                return;
+            }
 
             var deconstructorDelegate = Marshal.GetDelegateForFunctionPointer<IncrementDtor>(_deconstructorPointer);
             deconstructorDelegate(_memory);
@@ -380,7 +386,10 @@ public class RevitContext : RevitApiContext
 
         public void Dispose()
         {
-            if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
+            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            {
+                return;
+            }
 
             lock (DialogLock)
             {

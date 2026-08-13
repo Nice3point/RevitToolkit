@@ -9,53 +9,50 @@ namespace Nice3point.Revit.Toolkit.SourceGenerators.Extensions;
 /// </summary>
 internal static class DiagnosticsExtensions
 {
-    /// <summary>
-    ///     Adds a new diagnostic to the target builder from a symbol location.
-    /// </summary>
-    /// <param name="diagnostics">The collection of produced <see cref="Nice3point.Revit.Toolkit.SourceGenerators.Models.DiagnosticInfo"/> instances.</param>
-    /// <param name="descriptor">The input <see cref="DiagnosticDescriptor"/> for the diagnostic to create.</param>
-    /// <param name="symbol">The source <see cref="ISymbol"/> to attach the diagnostic to.</param>
-    /// <param name="args">The optional arguments for the formatted message to include.</param>
-    public static void Add(
-        this ImmutableArray<DiagnosticInfo>.Builder diagnostics,
-        DiagnosticDescriptor descriptor,
-        ISymbol symbol,
-        params string[] args)
+    /// <param name="diagnostics">The collection of produced <see cref="Nice3point.Revit.Toolkit.SourceGenerators.Models.DiagnosticInfo" /> instances.</param>
+    extension(ImmutableArray<DiagnosticInfo>.Builder diagnostics)
     {
-        diagnostics.Add(DiagnosticInfo.Create(descriptor, symbol, args));
-    }
-
-    /// <summary>
-    ///     Adds a new diagnostic to the target builder from a syntax node location.
-    /// </summary>
-    /// <param name="diagnostics">The input <see cref="IncrementalValuesProvider{TValues}"/> sequence of diagnostics.</param>
-    /// <param name="descriptor">The input <see cref="DiagnosticDescriptor"/> for the diagnostic to create.</param>
-    /// <param name="node">The input <see cref="SyntaxNode"/> for the diagnostic to create.</param>
-    /// <param name="args">The optional arguments for the formatted message to include.</param>
-    public static void Add(
-        this ImmutableArray<DiagnosticInfo>.Builder diagnostics,
-        DiagnosticDescriptor descriptor,
-        SyntaxNode node,
-        params string[] args)
-    {
-        diagnostics.Add(DiagnosticInfo.Create(descriptor, node, args));
-    }
-
-    /// <summary>
-    ///     Registers an output node into an <see cref="IncrementalGeneratorInitializationContext"/> to output diagnostics.
-    /// </summary>
-    /// <param name="context">The input <see cref="IncrementalGeneratorInitializationContext"/> instance.</param>
-    /// <param name="diagnostics">The input <see cref="IncrementalValuesProvider{TValues}"/> sequence of diagnostics.</param>
-    public static void ReportDiagnostics(
-        this IncrementalGeneratorInitializationContext context,
-        IncrementalValuesProvider<EquatableArray<DiagnosticInfo>> diagnostics)
-    {
-        context.RegisterSourceOutput(diagnostics, static (sourceProductionContext, diagnostics) =>
+        /// <summary>
+        ///     Adds a new diagnostic to the target builder from a symbol location.
+        /// </summary>
+        /// <param name="descriptor">The input <see cref="DiagnosticDescriptor" /> for the diagnostic to create.</param>
+        /// <param name="symbol">The source <see cref="ISymbol" /> to attach the diagnostic to.</param>
+        /// <param name="args">The optional arguments for the formatted message to include.</param>
+        public void Add(DiagnosticDescriptor descriptor, ISymbol symbol, params string[] args)
         {
-            foreach (var diagnostic in diagnostics)
+            diagnostics.Add(DiagnosticInfo.Create(descriptor, symbol, args));
+        }
+
+        /// <summary>
+        ///     Adds a new diagnostic to the target builder from a syntax node location.
+        /// </summary>
+        /// <param name="descriptor">The input <see cref="DiagnosticDescriptor" /> for the diagnostic to create.</param>
+        /// <param name="node">The input <see cref="SyntaxNode" /> for the diagnostic to create.</param>
+        /// <param name="args">The optional arguments for the formatted message to include.</param>
+        public void Add(DiagnosticDescriptor descriptor,
+            SyntaxNode node,
+            params string[] args)
+        {
+            diagnostics.Add(DiagnosticInfo.Create(descriptor, node, args));
+        }
+    }
+
+    /// <param name="context">The input <see cref="IncrementalGeneratorInitializationContext" /> instance.</param>
+    extension(IncrementalGeneratorInitializationContext context)
+    {
+        /// <summary>
+        ///     Registers an output node into an <see cref="IncrementalGeneratorInitializationContext" /> to output diagnostics.
+        /// </summary>
+        /// <param name="diagnostics">The input <see cref="IncrementalValuesProvider{TValues}" /> sequence of diagnostics.</param>
+        public void ReportDiagnostics(IncrementalValuesProvider<EquatableArray<DiagnosticInfo>> diagnostics)
+        {
+            context.RegisterSourceOutput(diagnostics, static (sourceProductionContext, diagnostics) =>
             {
-                sourceProductionContext.ReportDiagnostic(diagnostic.ToDiagnostic());
-            }
-        });
+                foreach (var diagnostic in diagnostics)
+                {
+                    sourceProductionContext.ReportDiagnostic(diagnostic.ToDiagnostic());
+                }
+            });
+        }
     }
 }

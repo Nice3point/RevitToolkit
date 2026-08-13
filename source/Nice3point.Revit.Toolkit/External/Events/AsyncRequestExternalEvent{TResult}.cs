@@ -1,28 +1,27 @@
 ﻿using System.ComponentModel;
 using Autodesk.Revit.UI;
-using JetBrains.Annotations;
 
 // ReSharper disable once CheckNamespace
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
-///     A generic asynchronous external event expanding <see cref="AsyncExternalEvent"/>
-///     to return a result of type <typeparamref name="TResult"/> via <see cref="RaiseAsync"/>.
+///     A generic asynchronous external event expanding <see cref="AsyncExternalEvent" />
+///     to return a result of type <typeparamref name="TResult" /> via <see cref="RaiseAsync" />.
 /// </summary>
 /// <typeparam name="TResult">The type of the result produced by the handler.</typeparam>
 [PublicAPI]
 public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, IAsyncRequestExternalEvent<TResult>
 {
     private readonly Func<TResult>? _handler;
-    private readonly Func<UIApplication, TResult>? _uiHandler;
     private readonly ExternalEventOptions _options;
+    private readonly Func<UIApplication, TResult>? _uiHandler;
     private TaskCompletionSource<TResult>? _taskCompletionSource;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{TResult}"/> class.
+    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{TResult}" /> class.
     /// </summary>
-    /// <param name="handler">The execution logic that returns a result of type <typeparamref name="TResult"/>.</param>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler"/> is <see langword="null"/>.</exception>
+    /// <param name="handler">The execution logic that returns a result of type <typeparamref name="TResult" />.</param>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
     public AsyncRequestExternalEvent(Func<TResult> handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
@@ -31,11 +30,11 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{TResult}"/> class.
+    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{TResult}" /> class.
     /// </summary>
-    /// <param name="handler">The execution logic that returns a result of type <typeparamref name="TResult"/>.</param>
+    /// <param name="handler">The execution logic that returns a result of type <typeparamref name="TResult" />.</param>
     /// <param name="options">The options to use to configure the external event.</param>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler"/> is <see langword="null"/>.</exception>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
     public AsyncRequestExternalEvent(Func<TResult> handler, ExternalEventOptions options)
     {
         ArgumentNullException.ThrowIfNull(handler);
@@ -45,11 +44,11 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{TResult}"/> class
-    ///     with access to the <see cref="UIApplication"/> instance.
+    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{TResult}" /> class
+    ///     with access to the <see cref="UIApplication" /> instance.
     /// </summary>
-    /// <param name="handler">The execution logic that receives the current <see cref="UIApplication"/> and returns a result of type <typeparamref name="TResult"/>.</param>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler"/> is <see langword="null"/>.</exception>
+    /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" /> and returns a result of type <typeparamref name="TResult" />.</param>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
     public AsyncRequestExternalEvent(Func<UIApplication, TResult> handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
@@ -58,12 +57,12 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{TResult}"/> class
-    ///     with access to the <see cref="UIApplication"/> instance.
+    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{TResult}" /> class
+    ///     with access to the <see cref="UIApplication" /> instance.
     /// </summary>
-    /// <param name="handler">The execution logic that receives the current <see cref="UIApplication"/> and returns a result of type <typeparamref name="TResult"/>.</param>
+    /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" /> and returns a result of type <typeparamref name="TResult" />.</param>
     /// <param name="options">The options to use to configure the external event.</param>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler"/> is <see langword="null"/>.</exception>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
     public AsyncRequestExternalEvent(Func<UIApplication, TResult> handler, ExternalEventOptions options)
     {
         ArgumentNullException.ThrowIfNull(handler);
@@ -72,30 +71,15 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
         _options = options;
     }
 
-    /// <summary>Callback invoked by Revit. Not intended to be called in user code.</summary>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public override void Execute(UIApplication uiApplication)
-    {
-        try
-        {
-            var result = ExecuteHandler(uiApplication);
-            _taskCompletionSource?.SetResult(result);
-        }
-        catch (Exception exception)
-        {
-            _taskCompletionSource?.SetException(exception);
-        }
-    }
-
     /// <summary>
     ///     Raises the external event asynchronously, instructing Revit to execute the handler within the Revit API context.
     /// </summary>
-    /// <returns>The <see cref="Task{TResult}"/> representing the async operation being executed, containing the result of type <typeparamref name="TResult"/>.</returns>
+    /// <returns>The <see cref="Task{TResult}" /> representing the async operation being executed, containing the result of type <typeparamref name="TResult" />.</returns>
     /// <remarks>
     ///     Revit will wait until it is ready to process the event and then it will execute its event handler.
     ///     Revit processes external events only when no other commands or edit modes are currently active in Revit,
-    ///     which is the same policy like the one that applies to evoking external commands.<br/><br/>
-    ///     When <see cref="ExternalEventOptions.AllowDirectInvocation"/> is specified and Revit is in API mode,
+    ///     which is the same policy like the one that applies to evoking external commands.<br /><br />
+    ///     When <see cref="ExternalEventOptions.AllowDirectInvocation" /> is specified and Revit is in API mode,
     ///     the handler is executed directly on the calling thread instead of being queued.
     /// </remarks>
     public Task<TResult> RaiseAsync()
@@ -117,6 +101,21 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
         Raise();
 
         return _taskCompletionSource.Task;
+    }
+
+    /// <summary>Callback invoked by Revit. Not intended to be called in user code.</summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public override void Execute(UIApplication uiApplication)
+    {
+        try
+        {
+            var result = ExecuteHandler(uiApplication);
+            _taskCompletionSource?.SetResult(result);
+        }
+        catch (Exception exception)
+        {
+            _taskCompletionSource?.SetException(exception);
+        }
     }
 
     private TResult ExecuteHandler(UIApplication uiApplication)

@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using JetBrains.Annotations;
 
 namespace Nice3point.Revit.Toolkit.Options;
 

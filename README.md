@@ -30,35 +30,37 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
 ## Table of contents
 
 <!-- TOC -->
+
 * [External Commands](#external-commands)
-  * [ExternalCommand](#externalcommand)
-  * [AsyncExternalCommand](#asyncexternalcommand)
+    * [ExternalCommand](#externalcommand)
+    * [AsyncExternalCommand](#asyncexternalcommand)
 * [External Applications](#external-applications)
-  * [ExternalApplication](#externalapplication)
-  * [AsyncExternalApplication](#asyncexternalapplication)
-  * [ExternalDBApplication](#externaldbapplication)
+    * [ExternalApplication](#externalapplication)
+    * [AsyncExternalApplication](#asyncexternalapplication)
+    * [ExternalDBApplication](#externaldbapplication)
 * [External events](#external-events)
-  * [ExternalEvent](#externalevent)
-  * [ExternalEvent\<T>](#externaleventt)
-  * [AsyncExternalEvent](#asyncexternalevent)
-  * [AsyncExternalEvent\<T>](#asyncexternaleventt)
-  * [AsyncRequestExternalEvent\<TResult>](#asyncrequestexternaleventtresult)
-  * [AsyncRequestExternalEvent\<T, TResult>](#asyncrequestexternaleventt-tresult)
-  * [ExternalEventOptions](#externaleventoptions)
-  * [ExternalEvent attribute](#externalevent-attribute)
+    * [ExternalEvent](#externalevent)
+    * [ExternalEvent\<T>](#externaleventt)
+    * [AsyncExternalEvent](#asyncexternalevent)
+    * [AsyncExternalEvent\<T>](#asyncexternaleventt)
+    * [AsyncRequestExternalEvent\<TResult>](#asyncrequestexternaleventtresult)
+    * [AsyncRequestExternalEvent\<T, TResult>](#asyncrequestexternaleventt-tresult)
+    * [ExternalEventOptions](#externaleventoptions)
+    * [ExternalEvent attribute](#externalevent-attribute)
 * [Context](#context)
-  * [RevitApiContext](#revitapicontext)
-  * [RevitContext](#revitcontext)
+    * [RevitApiContext](#revitapicontext)
+    * [RevitContext](#revitcontext)
 * [Options](#options)
-  * [FamilyLoadOptions](#familyloadoptions)
-  * [DuplicateTypeNamesHandler](#duplicatetypenameshandler)
-  * [SaveSharedCoordinatesCallback](#savesharedcoordinatescallback)
-  * [FrameworkElementCreator](#frameworkelementcreator)
-  * [SelectionConfiguration](#selectionconfiguration)
+    * [FamilyLoadOptions](#familyloadoptions)
+    * [DuplicateTypeNamesHandler](#duplicatetypenameshandler)
+    * [SaveSharedCoordinatesCallback](#savesharedcoordinatescallback)
+    * [FrameworkElementCreator](#frameworkelementcreator)
+    * [SelectionConfiguration](#selectionconfiguration)
 * [Decorators](#decorators)
-  * [DockablePaneProvider](#dockablepaneprovider)
+    * [DockablePaneProvider](#dockablepaneprovider)
 * [Helpers](#helpers)
-  * [ResolveHelper](#resolvehelper)
+    * [ResolveHelper](#resolvehelper)
+
 <!-- TOC -->
 
 ## Features
@@ -350,7 +352,7 @@ private async Task DeleteWindowAsync(ElementId elementId)
 
 #### ExternalEventOptions
 
-You can configure the behavior of external events using `ExternalEventOptions`. 
+You can configure the behavior of external events using `ExternalEventOptions`.
 The `AllowDirectInvocation` option enables the handler to be invoked directly on the calling thread when Revit is in API mode, instead of being queued:
 
 ```c#
@@ -418,7 +420,7 @@ For `void` methods, the generator creates both sync and async properties:
 
 ```c#
 [ExternalEvent]
-private void DeleteWindows() 
+private void DeleteWindows()
 {
     _document.Delete(_windowIds);
 }
@@ -432,7 +434,7 @@ For methods that return a value, only an async property is generated:
 
 ```c#
 [ExternalEvent]
-private int CountWindows() 
+private int CountWindows()
 {
     return _document.GetInstanceIds(BuiltInCategory.OST_Windows).Count;
 }

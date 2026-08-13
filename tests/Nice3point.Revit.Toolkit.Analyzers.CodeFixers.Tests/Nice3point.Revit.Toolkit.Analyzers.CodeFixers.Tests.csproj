@@ -8,19 +8,19 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="TUnit" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
+        <PackageReference Include="TUnit"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit.Analyzers.CodeFixers\Nice3point.Revit.Toolkit.Analyzers.CodeFixers.csproj" />
-        <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit.Analyzers\Nice3point.Revit.Toolkit.Analyzers.csproj" />
+        <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit.Analyzers.CodeFixers\Nice3point.Revit.Toolkit.Analyzers.CodeFixers.csproj"/>
+        <ProjectReference Include="..\..\source\Nice3point.Revit.Toolkit.Analyzers\Nice3point.Revit.Toolkit.Analyzers.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
         <Compile Include="..\..\source\Nice3point.Revit.Toolkit.Analyzers\Diagnostics\DiagnosticDescriptors.cs"
-                 Link="Diagnostics\DiagnosticDescriptors.cs" />
+                 Link="Diagnostics\DiagnosticDescriptors.cs"/>
     </ItemGroup>
 
 </Project>

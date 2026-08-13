@@ -48,7 +48,7 @@ public sealed class PackProjectsModule(IOptions<BuildOptions> buildOptions) : Mo
             Properties = new List<KeyValue>
             {
                 ("Version", version),
-                ("PackageReleaseNotes", changelog ?? string.Empty),
+                ("PackageReleaseNotes", changelog ?? string.Empty)
             },
             Output = output
         }, cancellationToken: cancellationToken);

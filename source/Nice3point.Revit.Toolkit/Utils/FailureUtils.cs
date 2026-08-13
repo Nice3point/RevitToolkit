@@ -10,7 +10,7 @@ internal static class FailureUtils
     /// </summary>
     /// <param name="failuresAccessor">An object that provides access to the failure messages and their handling options.</param>
     /// <returns>
-    ///     Returns <see cref="FailureProcessingResult.ProceedWithCommit"/> if all failures are resolved or deleted, otherwise returns <see cref="FailureProcessingResult.ProceedWithRollBack"/>.
+    ///     Returns <see cref="FailureProcessingResult.ProceedWithCommit" /> if all failures are resolved or deleted, otherwise returns <see cref="FailureProcessingResult.ProceedWithRollBack" />.
     /// </returns>
     /// <remarks>
     ///     Warnings are automatically deleted, and failures with available resolutions are resolved.
@@ -22,7 +22,7 @@ internal static class FailureUtils
         {
             return FailureProcessingResult.Continue;
         }
-        
+
         var hasUnresolvedFailures = false;
         foreach (var failureMessage in failureMessages)
         {
@@ -44,21 +44,24 @@ internal static class FailureUtils
             }
         }
 
-        if (!hasUnresolvedFailures) return FailureProcessingResult.ProceedWithCommit;
-        
+        if (!hasUnresolvedFailures)
+        {
+            return FailureProcessingResult.ProceedWithCommit;
+        }
+
         var failureHandlingOptions = failuresAccessor.GetFailureHandlingOptions();
         failureHandlingOptions.SetClearAfterRollback(true);
         failuresAccessor.SetFailureHandlingOptions(failureHandlingOptions);
 
         return FailureProcessingResult.ProceedWithRollBack;
     }
-    
+
     /// <summary>
     ///     Automatically processes failure messages during transaction flow by cancelling all them, eliminating the need for manual intervention.
     /// </summary>
     /// <param name="failuresAccessor">An object that provides access to the failure messages and their handling options.</param>
     /// <returns>
-    ///     Returns <see cref="FailureProcessingResult.ProceedWithRollBack"/> if the failuresAccessor has any message.
+    ///     Returns <see cref="FailureProcessingResult.ProceedWithRollBack" /> if the failuresAccessor has any message.
     /// </returns>
     internal static FailureProcessingResult DismissFailures(FailuresAccessor failuresAccessor)
     {

@@ -26,7 +26,7 @@ internal sealed class FullyQualifiedTypeName
     public string WithGlobalPrefix { get; }
 
     /// <summary>
-    ///     Implicitly converts a string to a <see cref="FullyQualifiedTypeName"/>.
+    ///     Implicitly converts a string to a <see cref="FullyQualifiedTypeName" />.
     /// </summary>
     public static implicit operator FullyQualifiedTypeName(string name)
     {

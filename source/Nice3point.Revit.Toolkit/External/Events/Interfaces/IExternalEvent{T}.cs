@@ -1,11 +1,10 @@
 using Autodesk.Revit.UI;
-using JetBrains.Annotations;
 
 // ReSharper disable once CheckNamespace
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
-///     An interface for raising an external event with an argument of type <typeparamref name="T"/>
+///     An interface for raising an external event with an argument of type <typeparamref name="T" />
 ///     to execute a handler within the Revit API context.
 /// </summary>
 /// <typeparam name="T">The type of the argument passed to the handler.</typeparam>

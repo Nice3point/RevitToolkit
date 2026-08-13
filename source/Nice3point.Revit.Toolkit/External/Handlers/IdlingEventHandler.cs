@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
-using JetBrains.Annotations;
 
 namespace Nice3point.Revit.Toolkit.External.Handlers;
 
@@ -31,8 +30,11 @@ public class IdlingEventHandler : ExternalEventHandler
         var uiApplication = (UIApplication)sender!;
         uiApplication.Idling -= HandleIdling;
 
-        if (_handler is null) return;
-        
+        if (_handler is null)
+        {
+            return;
+        }
+
         try
         {
             _handler(uiApplication);
@@ -55,8 +57,14 @@ public class IdlingEventHandler : ExternalEventHandler
     /// </remarks>
     public void Raise(Action<UIApplication> action)
     {
-        if (_handler is null) _handler = action;
-        else _handler += action;
+        if (_handler is null)
+        {
+            _handler = action;
+        }
+        else
+        {
+            _handler += action;
+        }
 
         Raise();
     }

@@ -11,7 +11,7 @@ using System.Security.Cryptography;
 namespace System;
 
 /// <summary>
-/// A polyfill type that mirrors some methods from <see cref="HashCode"/> on .NET 6.
+///     A polyfill type that mirrors some methods from <see cref="HashCode" /> on .NET 6.
 /// </summary>
 internal struct HashCode
 {
@@ -28,7 +28,7 @@ internal struct HashCode
     private uint _length;
 
     /// <summary>
-    /// Initializes the default seed.
+    ///     Initializes the default seed.
     /// </summary>
     /// <returns>A random seed.</returns>
     private static uint GenerateGlobalSeed()
@@ -44,7 +44,7 @@ internal struct HashCode
     }
 
     /// <summary>
-    /// Adds a single value to the current hash.
+    ///     Adds a single value to the current hash.
     /// </summary>
     /// <typeparam name="T">The type of the value to add into the hash code.</typeparam>
     /// <param name="value">The value to add into the hash code.</param>
@@ -131,7 +131,7 @@ internal struct HashCode
     }
 
     /// <summary>
-    /// Gets the resulting hashcode from the current instance.
+    ///     Gets the resulting hashcode from the current instance.
     /// </summary>
     /// <returns>The resulting hashcode from the current instance.</returns>
     public readonly int ToHashCode()
@@ -162,23 +162,31 @@ internal struct HashCode
         return (int)hash;
     }
 
-    /// <inheritdoc/>
-    [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes. Use ToHashCode to retrieve the computed hash code.", error: true)]
+    /// <inheritdoc />
+    [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes. Use ToHashCode to retrieve the computed hash code.", true)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public readonly override int GetHashCode() => throw new NotSupportedException();
+    public readonly override int GetHashCode()
+    {
+        throw new NotSupportedException();
+    }
 
-    /// <inheritdoc/>
-    [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes.", error: true)]
+    /// <inheritdoc />
+    [Obsolete("HashCode is a mutable struct and should not be compared with other HashCodes.", true)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public readonly override bool Equals(object? obj) => throw new NotSupportedException();
+    public readonly override bool Equals(object? obj)
+    {
+        throw new NotSupportedException();
+    }
 
     /// <summary>
-    /// Rotates the specified value left by the specified number of bits.
-    /// Similar in behavior to the x86 instruction ROL.
+    ///     Rotates the specified value left by the specified number of bits.
+    ///     Similar in behavior to the x86 instruction ROL.
     /// </summary>
     /// <param name="value">The value to rotate.</param>
-    /// <param name="offset">The number of bits to rotate by.
-    /// Any value outside the range [0..31] is treated as congruent mod 32.</param>
+    /// <param name="offset">
+    ///     The number of bits to rotate by.
+    ///     Any value outside the range [0..31] is treated as congruent mod 32.
+    /// </param>
     /// <returns>The rotated value.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint RotateLeft(uint value, int offset)

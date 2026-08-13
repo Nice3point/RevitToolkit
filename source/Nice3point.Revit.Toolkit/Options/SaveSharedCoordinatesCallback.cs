@@ -1,6 +1,4 @@
-﻿using JetBrains.Annotations;
-
-namespace Nice3point.Revit.Toolkit.Options;
+﻿namespace Nice3point.Revit.Toolkit.Options;
 
 /// <summary>
 ///     Callback that may be used to control Revit when trying to unload or reload a Revit link with changes in shared coordinates.
@@ -46,7 +44,11 @@ public sealed class SaveSharedCoordinatesCallback : ISaveSharedCoordinatesCallba
     /// </returns>
     public SaveModifiedLinksOptions GetSaveModifiedLinksOption(RevitLinkType link)
     {
-        if (_handler is not null) return _handler.Invoke(link);
+        if (_handler is not null)
+        {
+            return _handler.Invoke(link);
+        }
+
         return _options;
     }
 }

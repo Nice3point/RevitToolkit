@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using Autodesk.Revit.UI;
-using JetBrains.Annotations;
 
 namespace Nice3point.Revit.Toolkit.External.Handlers;
 
@@ -17,7 +16,10 @@ public class ActionEventHandler : ExternalEventHandler
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override void Execute(UIApplication uiApplication)
     {
-        if (_action is null) return;
+        if (_action is null)
+        {
+            return;
+        }
 
         try
         {
@@ -37,7 +39,7 @@ public class ActionEventHandler : ExternalEventHandler
     ///     it will execute its event handler by calling the Execute method.
     ///     Revit processes external events only when no other commands or
     ///     edit modes are currently active in Revit, which is the same policy
-    ///     like the one that applies to evoking external commands.<br/><br/>
+    ///     like the one that applies to evoking external commands.<br /><br />
     ///     Executes the handler out of queue if Revit is in API mode.
     /// </remarks>
     public void Raise(Action<UIApplication> action)
@@ -47,9 +49,15 @@ public class ActionEventHandler : ExternalEventHandler
             action(RevitContext.UiApplication);
             return;
         }
-        
-        if (_action is null) _action = action;
-        else _action += action;
+
+        if (_action is null)
+        {
+            _action = action;
+        }
+        else
+        {
+            _action += action;
+        }
 
         Raise();
     }

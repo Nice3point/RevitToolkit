@@ -27,7 +27,7 @@ public sealed class CompileProjectsModule : Module
         return await context.DotNet().Build(new DotNetBuildOptions
         {
             ProjectSolution = Projects.Nice3point_Revit_Toolkit.FullName,
-            Configuration = configuration,
+            Configuration = configuration
         }, cancellationToken: cancellationToken);
     }
 }

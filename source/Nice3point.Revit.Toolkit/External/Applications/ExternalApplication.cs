@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using Autodesk.Revit.UI;
-using JetBrains.Annotations;
 using Nice3point.Revit.Toolkit.Helpers;
 #if NET
 using System.Runtime.Loader;
@@ -22,7 +21,7 @@ public abstract class ExternalApplication : IExternalApplication
     ///     Reference to the <see cref="Autodesk.Revit.UI.UIControlledApplication" /> that is needed by an external application.
     /// </summary>
     public UIControlledApplication Application { get; private set; } = null!;
-    
+
     /// <summary>
     ///     Indicates if the external application completes its work successfully.
     /// </summary>
@@ -34,7 +33,7 @@ public abstract class ExternalApplication : IExternalApplication
     /// <summary></summary>
     [Obsolete("Use RevitContext.UiApplication instead")]
     [CodeTemplate(
-        searchTemplate: "UiApplication",
+        "UiApplication",
         Message = "UiApplication is obsolete, use RevitContext.UiApplication instead",
         ReplaceTemplate = "RevitContext.UiApplication",
         ReplaceMessage = "Replace with RevitContext.UiApplication")]
@@ -80,7 +79,7 @@ public abstract class ExternalApplication : IExternalApplication
             using (ResolveHelper.BeginAssemblyResolveScope(currentType))
             {
                 OnShutdown();
-            }   
+            }
         }
         else
         {

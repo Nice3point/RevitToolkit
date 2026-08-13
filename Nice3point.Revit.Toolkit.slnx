@@ -1,206 +1,206 @@
 ﻿<Solution>
-    <Configurations>
-        <BuildType Name="Debug.R20" />
-        <BuildType Name="Debug.R21" />
-        <BuildType Name="Debug.R22" />
-        <BuildType Name="Debug.R23" />
-        <BuildType Name="Debug.R24" />
-        <BuildType Name="Debug.R25" />
-        <BuildType Name="Debug.R26" />
-        <BuildType Name="Debug.R27" />
-        <BuildType Name="Release.R20" />
-        <BuildType Name="Release.R21" />
-        <BuildType Name="Release.R22" />
-        <BuildType Name="Release.R23" />
-        <BuildType Name="Release.R24" />
-        <BuildType Name="Release.R25" />
-        <BuildType Name="Release.R26" />
-        <BuildType Name="Release.R27" />
-    </Configurations>
-    <Folder Name="/Solution Items/">
-        <File Path="build/appsettings.json" />
-        <File Path="CHANGELOG.md" />
-        <File Path="Directory.Build.props" />
-        <File Path="Directory.Packages.props" />
-        <File Path="Directory.Roslyn.props" />
-        <File Path="README.md" />
-    </Folder>
-    <Folder Name="/Automation/">
-        <Project Path="build/Build.csproj">
-            <BuildType Solution="Debug.R20|*" Project="Debug" />
-            <BuildType Solution="Debug.R21|*" Project="Debug" />
-            <BuildType Solution="Debug.R22|*" Project="Debug" />
-            <BuildType Solution="Debug.R23|*" Project="Debug" />
-            <BuildType Solution="Debug.R24|*" Project="Debug" />
-            <BuildType Solution="Debug.R25|*" Project="Debug" />
-            <BuildType Solution="Debug.R26|*" Project="Debug" />
-            <BuildType Solution="Debug.R27|*" Project="Debug" />
-            <BuildType Solution="Release.R20|*" Project="Release" />
-            <BuildType Solution="Release.R21|*" Project="Release" />
-            <BuildType Solution="Release.R22|*" Project="Release" />
-            <BuildType Solution="Release.R23|*" Project="Release" />
-            <BuildType Solution="Release.R24|*" Project="Release" />
-            <BuildType Solution="Release.R25|*" Project="Release" />
-            <BuildType Solution="Release.R26|*" Project="Release" />
-            <BuildType Solution="Release.R27|*" Project="Release" />
-            <Build Project="false" />
-        </Project>
-    </Folder>
-    <Folder Name="/Tests/">
-        <Project Path="tests/Nice3point.Revit.Toolkit.Tests/Nice3point.Revit.Toolkit.Tests.csproj">
-            <BuildType Solution="Debug.R20|*" Project="Debug.R21" />
-            <BuildType Solution="Release.R20|*" Project="Release.R21" />
-            <Build Solution="Debug.R20|*" Project="false" />
-            <Build Solution="Release.R20|*" Project="false" />
-        </Project>
-        <Project Path="tests/Nice3point.Revit.Toolkit.SourceGenerators.Tests/Nice3point.Revit.Toolkit.SourceGenerators.Tests.csproj">
-            <BuildType Solution="Debug.R20|*" Project="Debug" />
-            <BuildType Solution="Debug.R21|*" Project="Debug" />
-            <BuildType Solution="Debug.R22|*" Project="Debug" />
-            <BuildType Solution="Debug.R23|*" Project="Debug" />
-            <BuildType Solution="Debug.R24|*" Project="Debug" />
-            <BuildType Solution="Debug.R25|*" Project="Debug" />
-            <BuildType Solution="Debug.R26|*" Project="Debug" />
-            <BuildType Solution="Debug.R27|*" Project="Debug" />
-            <BuildType Solution="Release.R20|*" Project="Release" />
-            <BuildType Solution="Release.R21|*" Project="Release" />
-            <BuildType Solution="Release.R22|*" Project="Release" />
-            <BuildType Solution="Release.R23|*" Project="Release" />
-            <BuildType Solution="Release.R24|*" Project="Release" />
-            <BuildType Solution="Release.R25|*" Project="Release" />
-            <BuildType Solution="Release.R26|*" Project="Release" />
-            <BuildType Solution="Release.R27|*" Project="Release" />
-        </Project>
-        <Project Path="tests/Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Tests/Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Tests.csproj">
-            <BuildType Solution="Debug.R20|*" Project="Debug" />
-            <BuildType Solution="Debug.R21|*" Project="Debug" />
-            <BuildType Solution="Debug.R22|*" Project="Debug" />
-            <BuildType Solution="Debug.R23|*" Project="Debug" />
-            <BuildType Solution="Debug.R24|*" Project="Debug" />
-            <BuildType Solution="Debug.R25|*" Project="Debug" />
-            <BuildType Solution="Debug.R26|*" Project="Debug" />
-            <BuildType Solution="Debug.R27|*" Project="Debug" />
-            <BuildType Solution="Release.R20|*" Project="Release" />
-            <BuildType Solution="Release.R21|*" Project="Release" />
-            <BuildType Solution="Release.R22|*" Project="Release" />
-            <BuildType Solution="Release.R23|*" Project="Release" />
-            <BuildType Solution="Release.R24|*" Project="Release" />
-            <BuildType Solution="Release.R25|*" Project="Release" />
-            <BuildType Solution="Release.R26|*" Project="Release" />
-            <BuildType Solution="Release.R27|*" Project="Release" />
-        </Project>
-    </Folder>
-    <Project Path="source/Nice3point.Revit.Toolkit/Nice3point.Revit.Toolkit.csproj" />
-    <Folder Name="/SourceGenerators/">
-        <Project Path="source/Nice3point.Revit.Toolkit.SourceGenerators.Roslyn414/Nice3point.Revit.Toolkit.SourceGenerators.Roslyn414.csproj">
-            <BuildType Solution="Debug.R20|*" Project="Debug" />
-            <BuildType Solution="Debug.R21|*" Project="Debug" />
-            <BuildType Solution="Debug.R22|*" Project="Debug" />
-            <BuildType Solution="Debug.R23|*" Project="Debug" />
-            <BuildType Solution="Debug.R24|*" Project="Debug" />
-            <BuildType Solution="Debug.R25|*" Project="Debug" />
-            <BuildType Solution="Debug.R26|*" Project="Debug" />
-            <BuildType Solution="Debug.R27|*" Project="Debug" />
-            <BuildType Solution="Release.R20|*" Project="Release" />
-            <BuildType Solution="Release.R21|*" Project="Release" />
-            <BuildType Solution="Release.R22|*" Project="Release" />
-            <BuildType Solution="Release.R23|*" Project="Release" />
-            <BuildType Solution="Release.R24|*" Project="Release" />
-            <BuildType Solution="Release.R25|*" Project="Release" />
-            <BuildType Solution="Release.R26|*" Project="Release" />
-            <BuildType Solution="Release.R27|*" Project="Release" />
-        </Project>
-        <Project Path="source/Nice3point.Revit.Toolkit.SourceGenerators/Nice3point.Revit.Toolkit.SourceGenerators.csproj">
-            <BuildType Solution="Debug.R20|*" Project="Debug" />
-            <BuildType Solution="Debug.R21|*" Project="Debug" />
-            <BuildType Solution="Debug.R22|*" Project="Debug" />
-            <BuildType Solution="Debug.R23|*" Project="Debug" />
-            <BuildType Solution="Debug.R24|*" Project="Debug" />
-            <BuildType Solution="Debug.R25|*" Project="Debug" />
-            <BuildType Solution="Debug.R26|*" Project="Debug" />
-            <BuildType Solution="Debug.R27|*" Project="Debug" />
-            <BuildType Solution="Release.R20|*" Project="Release" />
-            <BuildType Solution="Release.R21|*" Project="Release" />
-            <BuildType Solution="Release.R22|*" Project="Release" />
-            <BuildType Solution="Release.R23|*" Project="Release" />
-            <BuildType Solution="Release.R24|*" Project="Release" />
-            <BuildType Solution="Release.R25|*" Project="Release" />
-            <BuildType Solution="Release.R26|*" Project="Release" />
-            <BuildType Solution="Release.R27|*" Project="Release" />
-        </Project>
-    </Folder>
-    <Folder Name="/Analyzers/">
-        <Project Path="source/Nice3point.Revit.Toolkit.Analyzers/Nice3point.Revit.Toolkit.Analyzers.csproj">
-            <BuildType Solution="Debug.R20|*" Project="Debug" />
-            <BuildType Solution="Debug.R21|*" Project="Debug" />
-            <BuildType Solution="Debug.R22|*" Project="Debug" />
-            <BuildType Solution="Debug.R23|*" Project="Debug" />
-            <BuildType Solution="Debug.R24|*" Project="Debug" />
-            <BuildType Solution="Debug.R25|*" Project="Debug" />
-            <BuildType Solution="Debug.R26|*" Project="Debug" />
-            <BuildType Solution="Debug.R27|*" Project="Debug" />
-            <BuildType Solution="Release.R20|*" Project="Release" />
-            <BuildType Solution="Release.R21|*" Project="Release" />
-            <BuildType Solution="Release.R22|*" Project="Release" />
-            <BuildType Solution="Release.R23|*" Project="Release" />
-            <BuildType Solution="Release.R24|*" Project="Release" />
-            <BuildType Solution="Release.R25|*" Project="Release" />
-            <BuildType Solution="Release.R26|*" Project="Release" />
-            <BuildType Solution="Release.R27|*" Project="Release" />
-        </Project>
-        <Project Path="source/Nice3point.Revit.Toolkit.Analyzers.Roslyn414/Nice3point.Revit.Toolkit.Analyzers.Roslyn414.csproj">
-            <BuildType Solution="Debug.R20|*" Project="Debug" />
-            <BuildType Solution="Debug.R21|*" Project="Debug" />
-            <BuildType Solution="Debug.R22|*" Project="Debug" />
-            <BuildType Solution="Debug.R23|*" Project="Debug" />
-            <BuildType Solution="Debug.R24|*" Project="Debug" />
-            <BuildType Solution="Debug.R25|*" Project="Debug" />
-            <BuildType Solution="Debug.R26|*" Project="Debug" />
-            <BuildType Solution="Debug.R27|*" Project="Debug" />
-            <BuildType Solution="Release.R20|*" Project="Release" />
-            <BuildType Solution="Release.R21|*" Project="Release" />
-            <BuildType Solution="Release.R22|*" Project="Release" />
-            <BuildType Solution="Release.R23|*" Project="Release" />
-            <BuildType Solution="Release.R24|*" Project="Release" />
-            <BuildType Solution="Release.R25|*" Project="Release" />
-            <BuildType Solution="Release.R26|*" Project="Release" />
-            <BuildType Solution="Release.R27|*" Project="Release" />
-        </Project>
-        <Project Path="source/Nice3point.Revit.Toolkit.Analyzers.CodeFixers/Nice3point.Revit.Toolkit.Analyzers.CodeFixers.csproj">
-            <BuildType Solution="Debug.R20|*" Project="Debug" />
-            <BuildType Solution="Debug.R21|*" Project="Debug" />
-            <BuildType Solution="Debug.R22|*" Project="Debug" />
-            <BuildType Solution="Debug.R23|*" Project="Debug" />
-            <BuildType Solution="Debug.R24|*" Project="Debug" />
-            <BuildType Solution="Debug.R25|*" Project="Debug" />
-            <BuildType Solution="Debug.R26|*" Project="Debug" />
-            <BuildType Solution="Debug.R27|*" Project="Debug" />
-            <BuildType Solution="Release.R20|*" Project="Release" />
-            <BuildType Solution="Release.R21|*" Project="Release" />
-            <BuildType Solution="Release.R22|*" Project="Release" />
-            <BuildType Solution="Release.R23|*" Project="Release" />
-            <BuildType Solution="Release.R24|*" Project="Release" />
-            <BuildType Solution="Release.R25|*" Project="Release" />
-            <BuildType Solution="Release.R26|*" Project="Release" />
-            <BuildType Solution="Release.R27|*" Project="Release" />
-        </Project>
-        <Project Path="source/Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Roslyn414/Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Roslyn414.csproj">
-            <BuildType Solution="Debug.R20|*" Project="Debug" />
-            <BuildType Solution="Debug.R21|*" Project="Debug" />
-            <BuildType Solution="Debug.R22|*" Project="Debug" />
-            <BuildType Solution="Debug.R23|*" Project="Debug" />
-            <BuildType Solution="Debug.R24|*" Project="Debug" />
-            <BuildType Solution="Debug.R25|*" Project="Debug" />
-            <BuildType Solution="Debug.R26|*" Project="Debug" />
-            <BuildType Solution="Debug.R27|*" Project="Debug" />
-            <BuildType Solution="Release.R20|*" Project="Release" />
-            <BuildType Solution="Release.R21|*" Project="Release" />
-            <BuildType Solution="Release.R22|*" Project="Release" />
-            <BuildType Solution="Release.R23|*" Project="Release" />
-            <BuildType Solution="Release.R24|*" Project="Release" />
-            <BuildType Solution="Release.R25|*" Project="Release" />
-            <BuildType Solution="Release.R26|*" Project="Release" />
-            <BuildType Solution="Release.R27|*" Project="Release" />
-        </Project>
-    </Folder>
+  <Configurations>
+    <BuildType Name="Debug.R20"/>
+    <BuildType Name="Debug.R21"/>
+    <BuildType Name="Debug.R22"/>
+    <BuildType Name="Debug.R23"/>
+    <BuildType Name="Debug.R24"/>
+    <BuildType Name="Debug.R25"/>
+    <BuildType Name="Debug.R26"/>
+    <BuildType Name="Debug.R27"/>
+    <BuildType Name="Release.R20"/>
+    <BuildType Name="Release.R21"/>
+    <BuildType Name="Release.R22"/>
+    <BuildType Name="Release.R23"/>
+    <BuildType Name="Release.R24"/>
+    <BuildType Name="Release.R25"/>
+    <BuildType Name="Release.R26"/>
+    <BuildType Name="Release.R27"/>
+  </Configurations>
+  <Folder Name="/Solution Items/">
+    <File Path="build/appsettings.json"/>
+    <File Path="CHANGELOG.md"/>
+    <File Path="Directory.Build.props"/>
+    <File Path="Directory.Packages.props"/>
+    <File Path="Directory.Roslyn.props"/>
+    <File Path="README.md"/>
+  </Folder>
+  <Folder Name="/Automation/">
+    <Project Path="build/Build.csproj">
+      <BuildType Solution="Debug.R20|*" Project="Debug"/>
+      <BuildType Solution="Debug.R21|*" Project="Debug"/>
+      <BuildType Solution="Debug.R22|*" Project="Debug"/>
+      <BuildType Solution="Debug.R23|*" Project="Debug"/>
+      <BuildType Solution="Debug.R24|*" Project="Debug"/>
+      <BuildType Solution="Debug.R25|*" Project="Debug"/>
+      <BuildType Solution="Debug.R26|*" Project="Debug"/>
+      <BuildType Solution="Debug.R27|*" Project="Debug"/>
+      <BuildType Solution="Release.R20|*" Project="Release"/>
+      <BuildType Solution="Release.R21|*" Project="Release"/>
+      <BuildType Solution="Release.R22|*" Project="Release"/>
+      <BuildType Solution="Release.R23|*" Project="Release"/>
+      <BuildType Solution="Release.R24|*" Project="Release"/>
+      <BuildType Solution="Release.R25|*" Project="Release"/>
+      <BuildType Solution="Release.R26|*" Project="Release"/>
+      <BuildType Solution="Release.R27|*" Project="Release"/>
+      <Build Project="false"/>
+    </Project>
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/Nice3point.Revit.Toolkit.Tests/Nice3point.Revit.Toolkit.Tests.csproj">
+      <BuildType Solution="Debug.R20|*" Project="Debug.R21"/>
+      <BuildType Solution="Release.R20|*" Project="Release.R21"/>
+      <Build Solution="Debug.R20|*" Project="false"/>
+      <Build Solution="Release.R20|*" Project="false"/>
+    </Project>
+    <Project Path="tests/Nice3point.Revit.Toolkit.SourceGenerators.Tests/Nice3point.Revit.Toolkit.SourceGenerators.Tests.csproj">
+      <BuildType Solution="Debug.R20|*" Project="Debug"/>
+      <BuildType Solution="Debug.R21|*" Project="Debug"/>
+      <BuildType Solution="Debug.R22|*" Project="Debug"/>
+      <BuildType Solution="Debug.R23|*" Project="Debug"/>
+      <BuildType Solution="Debug.R24|*" Project="Debug"/>
+      <BuildType Solution="Debug.R25|*" Project="Debug"/>
+      <BuildType Solution="Debug.R26|*" Project="Debug"/>
+      <BuildType Solution="Debug.R27|*" Project="Debug"/>
+      <BuildType Solution="Release.R20|*" Project="Release"/>
+      <BuildType Solution="Release.R21|*" Project="Release"/>
+      <BuildType Solution="Release.R22|*" Project="Release"/>
+      <BuildType Solution="Release.R23|*" Project="Release"/>
+      <BuildType Solution="Release.R24|*" Project="Release"/>
+      <BuildType Solution="Release.R25|*" Project="Release"/>
+      <BuildType Solution="Release.R26|*" Project="Release"/>
+      <BuildType Solution="Release.R27|*" Project="Release"/>
+    </Project>
+    <Project Path="tests/Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Tests/Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Tests.csproj">
+      <BuildType Solution="Debug.R20|*" Project="Debug"/>
+      <BuildType Solution="Debug.R21|*" Project="Debug"/>
+      <BuildType Solution="Debug.R22|*" Project="Debug"/>
+      <BuildType Solution="Debug.R23|*" Project="Debug"/>
+      <BuildType Solution="Debug.R24|*" Project="Debug"/>
+      <BuildType Solution="Debug.R25|*" Project="Debug"/>
+      <BuildType Solution="Debug.R26|*" Project="Debug"/>
+      <BuildType Solution="Debug.R27|*" Project="Debug"/>
+      <BuildType Solution="Release.R20|*" Project="Release"/>
+      <BuildType Solution="Release.R21|*" Project="Release"/>
+      <BuildType Solution="Release.R22|*" Project="Release"/>
+      <BuildType Solution="Release.R23|*" Project="Release"/>
+      <BuildType Solution="Release.R24|*" Project="Release"/>
+      <BuildType Solution="Release.R25|*" Project="Release"/>
+      <BuildType Solution="Release.R26|*" Project="Release"/>
+      <BuildType Solution="Release.R27|*" Project="Release"/>
+    </Project>
+  </Folder>
+  <Project Path="source/Nice3point.Revit.Toolkit/Nice3point.Revit.Toolkit.csproj"/>
+  <Folder Name="/SourceGenerators/">
+    <Project Path="source/Nice3point.Revit.Toolkit.SourceGenerators.Roslyn414/Nice3point.Revit.Toolkit.SourceGenerators.Roslyn414.csproj">
+      <BuildType Solution="Debug.R20|*" Project="Debug"/>
+      <BuildType Solution="Debug.R21|*" Project="Debug"/>
+      <BuildType Solution="Debug.R22|*" Project="Debug"/>
+      <BuildType Solution="Debug.R23|*" Project="Debug"/>
+      <BuildType Solution="Debug.R24|*" Project="Debug"/>
+      <BuildType Solution="Debug.R25|*" Project="Debug"/>
+      <BuildType Solution="Debug.R26|*" Project="Debug"/>
+      <BuildType Solution="Debug.R27|*" Project="Debug"/>
+      <BuildType Solution="Release.R20|*" Project="Release"/>
+      <BuildType Solution="Release.R21|*" Project="Release"/>
+      <BuildType Solution="Release.R22|*" Project="Release"/>
+      <BuildType Solution="Release.R23|*" Project="Release"/>
+      <BuildType Solution="Release.R24|*" Project="Release"/>
+      <BuildType Solution="Release.R25|*" Project="Release"/>
+      <BuildType Solution="Release.R26|*" Project="Release"/>
+      <BuildType Solution="Release.R27|*" Project="Release"/>
+    </Project>
+    <Project Path="source/Nice3point.Revit.Toolkit.SourceGenerators/Nice3point.Revit.Toolkit.SourceGenerators.csproj">
+      <BuildType Solution="Debug.R20|*" Project="Debug"/>
+      <BuildType Solution="Debug.R21|*" Project="Debug"/>
+      <BuildType Solution="Debug.R22|*" Project="Debug"/>
+      <BuildType Solution="Debug.R23|*" Project="Debug"/>
+      <BuildType Solution="Debug.R24|*" Project="Debug"/>
+      <BuildType Solution="Debug.R25|*" Project="Debug"/>
+      <BuildType Solution="Debug.R26|*" Project="Debug"/>
+      <BuildType Solution="Debug.R27|*" Project="Debug"/>
+      <BuildType Solution="Release.R20|*" Project="Release"/>
+      <BuildType Solution="Release.R21|*" Project="Release"/>
+      <BuildType Solution="Release.R22|*" Project="Release"/>
+      <BuildType Solution="Release.R23|*" Project="Release"/>
+      <BuildType Solution="Release.R24|*" Project="Release"/>
+      <BuildType Solution="Release.R25|*" Project="Release"/>
+      <BuildType Solution="Release.R26|*" Project="Release"/>
+      <BuildType Solution="Release.R27|*" Project="Release"/>
+    </Project>
+  </Folder>
+  <Folder Name="/Analyzers/">
+    <Project Path="source/Nice3point.Revit.Toolkit.Analyzers/Nice3point.Revit.Toolkit.Analyzers.csproj">
+      <BuildType Solution="Debug.R20|*" Project="Debug"/>
+      <BuildType Solution="Debug.R21|*" Project="Debug"/>
+      <BuildType Solution="Debug.R22|*" Project="Debug"/>
+      <BuildType Solution="Debug.R23|*" Project="Debug"/>
+      <BuildType Solution="Debug.R24|*" Project="Debug"/>
+      <BuildType Solution="Debug.R25|*" Project="Debug"/>
+      <BuildType Solution="Debug.R26|*" Project="Debug"/>
+      <BuildType Solution="Debug.R27|*" Project="Debug"/>
+      <BuildType Solution="Release.R20|*" Project="Release"/>
+      <BuildType Solution="Release.R21|*" Project="Release"/>
+      <BuildType Solution="Release.R22|*" Project="Release"/>
+      <BuildType Solution="Release.R23|*" Project="Release"/>
+      <BuildType Solution="Release.R24|*" Project="Release"/>
+      <BuildType Solution="Release.R25|*" Project="Release"/>
+      <BuildType Solution="Release.R26|*" Project="Release"/>
+      <BuildType Solution="Release.R27|*" Project="Release"/>
+    </Project>
+    <Project Path="source/Nice3point.Revit.Toolkit.Analyzers.Roslyn414/Nice3point.Revit.Toolkit.Analyzers.Roslyn414.csproj">
+      <BuildType Solution="Debug.R20|*" Project="Debug"/>
+      <BuildType Solution="Debug.R21|*" Project="Debug"/>
+      <BuildType Solution="Debug.R22|*" Project="Debug"/>
+      <BuildType Solution="Debug.R23|*" Project="Debug"/>
+      <BuildType Solution="Debug.R24|*" Project="Debug"/>
+      <BuildType Solution="Debug.R25|*" Project="Debug"/>
+      <BuildType Solution="Debug.R26|*" Project="Debug"/>
+      <BuildType Solution="Debug.R27|*" Project="Debug"/>
+      <BuildType Solution="Release.R20|*" Project="Release"/>
+      <BuildType Solution="Release.R21|*" Project="Release"/>
+      <BuildType Solution="Release.R22|*" Project="Release"/>
+      <BuildType Solution="Release.R23|*" Project="Release"/>
+      <BuildType Solution="Release.R24|*" Project="Release"/>
+      <BuildType Solution="Release.R25|*" Project="Release"/>
+      <BuildType Solution="Release.R26|*" Project="Release"/>
+      <BuildType Solution="Release.R27|*" Project="Release"/>
+    </Project>
+    <Project Path="source/Nice3point.Revit.Toolkit.Analyzers.CodeFixers/Nice3point.Revit.Toolkit.Analyzers.CodeFixers.csproj">
+      <BuildType Solution="Debug.R20|*" Project="Debug"/>
+      <BuildType Solution="Debug.R21|*" Project="Debug"/>
+      <BuildType Solution="Debug.R22|*" Project="Debug"/>
+      <BuildType Solution="Debug.R23|*" Project="Debug"/>
+      <BuildType Solution="Debug.R24|*" Project="Debug"/>
+      <BuildType Solution="Debug.R25|*" Project="Debug"/>
+      <BuildType Solution="Debug.R26|*" Project="Debug"/>
+      <BuildType Solution="Debug.R27|*" Project="Debug"/>
+      <BuildType Solution="Release.R20|*" Project="Release"/>
+      <BuildType Solution="Release.R21|*" Project="Release"/>
+      <BuildType Solution="Release.R22|*" Project="Release"/>
+      <BuildType Solution="Release.R23|*" Project="Release"/>
+      <BuildType Solution="Release.R24|*" Project="Release"/>
+      <BuildType Solution="Release.R25|*" Project="Release"/>
+      <BuildType Solution="Release.R26|*" Project="Release"/>
+      <BuildType Solution="Release.R27|*" Project="Release"/>
+    </Project>
+    <Project Path="source/Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Roslyn414/Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Roslyn414.csproj">
+      <BuildType Solution="Debug.R20|*" Project="Debug"/>
+      <BuildType Solution="Debug.R21|*" Project="Debug"/>
+      <BuildType Solution="Debug.R22|*" Project="Debug"/>
+      <BuildType Solution="Debug.R23|*" Project="Debug"/>
+      <BuildType Solution="Debug.R24|*" Project="Debug"/>
+      <BuildType Solution="Debug.R25|*" Project="Debug"/>
+      <BuildType Solution="Debug.R26|*" Project="Debug"/>
+      <BuildType Solution="Debug.R27|*" Project="Debug"/>
+      <BuildType Solution="Release.R20|*" Project="Release"/>
+      <BuildType Solution="Release.R21|*" Project="Release"/>
+      <BuildType Solution="Release.R22|*" Project="Release"/>
+      <BuildType Solution="Release.R23|*" Project="Release"/>
+      <BuildType Solution="Release.R24|*" Project="Release"/>
+      <BuildType Solution="Release.R25|*" Project="Release"/>
+      <BuildType Solution="Release.R26|*" Project="Release"/>
+      <BuildType Solution="Release.R27|*" Project="Release"/>
+    </Project>
+  </Folder>
 </Solution>

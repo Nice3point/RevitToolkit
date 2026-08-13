@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using Autodesk.Revit.UI;
-using JetBrains.Annotations;
 
 namespace Nice3point.Revit.Toolkit.External.Handlers;
 
@@ -12,19 +11,26 @@ namespace Nice3point.Revit.Toolkit.External.Handlers;
 [Obsolete("Use Nice3point.Revit.Toolkit.External.AsyncExternalEvent class or ExternalEvent source-generator instead")]
 public sealed class AsyncEventHandler<T> : ExternalEventHandler
 {
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
     private Func<UIApplication, T>? _handler;
     private TaskCompletionSource<T>? _resultTask;
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
-    
+
     /// <summary>
     ///     This method is called to handle the external event.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override void Execute(UIApplication uiApplication)
     {
-        if (_handler is null) return;
-        if (_resultTask is null) return;
-        
+        if (_handler is null)
+        {
+            return;
+        }
+
+        if (_resultTask is null)
+        {
+            return;
+        }
+
         try
         {
             var result = _handler(uiApplication);
@@ -51,7 +57,7 @@ public sealed class AsyncEventHandler<T> : ExternalEventHandler
     ///     This method async awaiting completion of the <see cref="Nice3point.Revit.Toolkit.External.Handlers.AsyncEventHandler.Execute" /> method. <br />
     ///     Exceptions in the delegate will not be ignored and will be rethrown in the original synchronization context.<br />
     ///     <see cref="System.Threading.Tasks.Task.WaitAll(System.Threading.Tasks.Task[])" />,
-    ///     <see cref="System.Threading.Tasks.Task.Wait()" /> will cause a deadlock.<br/><br/>
+    ///     <see cref="System.Threading.Tasks.Task.Wait()" /> will cause a deadlock.<br /><br />
     ///     Executes the handler out of queue if Revit is in API mode.
     /// </remarks>
     public async Task<T> RaiseAsync(Func<UIApplication, T> handler)
@@ -60,14 +66,14 @@ public sealed class AsyncEventHandler<T> : ExternalEventHandler
         {
             return handler(RevitContext.UiApplication)!;
         }
-        
+
         await _semaphore.WaitAsync();
 
         try
         {
             _handler = handler;
             _resultTask = new TaskCompletionSource<T>();
-        
+
             Raise();
             return await _resultTask.Task;
         }

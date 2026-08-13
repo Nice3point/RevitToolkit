@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using Autodesk.Revit.UI;
-using JetBrains.Annotations;
 using Nice3point.Revit.Toolkit.Helpers;
 #if NET
 using System.Runtime.Loader;
@@ -10,7 +9,7 @@ using System.Runtime.Loader;
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
-///     Implementation for a Revit <see cref="Autodesk.Revit.UI.IExternalCommand"/>.
+///     Implementation for a Revit <see cref="Autodesk.Revit.UI.IExternalCommand" />.
 /// </summary>
 [PublicAPI]
 public abstract class ExternalCommand : IExternalCommand
@@ -19,7 +18,7 @@ public abstract class ExternalCommand : IExternalCommand
     ///     An object that represents the current Application for external command.
     /// </summary>
     public UIApplication Application { get; private set; } = null!;
-    
+
     /// <summary>
     ///     An object that represents the View external command work on.
     /// </summary>
@@ -61,7 +60,7 @@ public abstract class ExternalCommand : IExternalCommand
     /// <summary></summary>
     [Obsolete("Use Application instead")]
     [CodeTemplate(
-        searchTemplate: "UiApplication",
+        "UiApplication",
         Message = "UiApplication is obsolete, use Application instead",
         ReplaceTemplate = "Application",
         ReplaceMessage = "Replace with Application")]
@@ -70,7 +69,7 @@ public abstract class ExternalCommand : IExternalCommand
     /// <summary></summary>
     [Obsolete("Use Application.ActiveUIDocument instead")]
     [CodeTemplate(
-        searchTemplate: "ActiveUiDocument",
+        "ActiveUiDocument",
         Message = "ActiveUiDocument is obsolete, use Application.ActiveUIDocument instead",
         ReplaceTemplate = "Application.ActiveUIDocument",
         ReplaceMessage = "Replace with Application.ActiveUIDocument")]
@@ -79,7 +78,7 @@ public abstract class ExternalCommand : IExternalCommand
     /// <summary></summary>
     [Obsolete("Use Application.ActiveUIDocument instead")]
     [CodeTemplate(
-        searchTemplate: "UiDocument",
+        "UiDocument",
         Message = "UiDocument is obsolete, use Application.ActiveUIDocument instead",
         ReplaceTemplate = "Application.ActiveUIDocument",
         ReplaceMessage = "Replace with Application.ActiveUIDocument")]
@@ -88,7 +87,7 @@ public abstract class ExternalCommand : IExternalCommand
     /// <summary></summary>
     [Obsolete("Use Application.ActiveUIDocument.Document instead")]
     [CodeTemplate(
-        searchTemplate: "ActiveDocument",
+        "ActiveDocument",
         Message = "ActiveDocument is obsolete, use Application.ActiveUIDocument.Document instead",
         ReplaceTemplate = "Application.ActiveUIDocument.Document",
         ReplaceMessage = "Replace with Application.ActiveUIDocument.Document")]
@@ -97,7 +96,7 @@ public abstract class ExternalCommand : IExternalCommand
     /// <summary></summary>
     [Obsolete("Use Application.ActiveUIDocument.Document instead")]
     [CodeTemplate(
-        searchTemplate: "Document",
+        "Document",
         Message = "Document is obsolete, use Application.ActiveUIDocument.Document instead",
         ReplaceTemplate = "Application.ActiveUIDocument.Document",
         ReplaceMessage = "Replace with Application.ActiveUIDocument.Document")]
@@ -106,7 +105,7 @@ public abstract class ExternalCommand : IExternalCommand
     /// <summary></summary>
     [Obsolete("Use Application.ActiveUIDocument.ActiveView instead")]
     [CodeTemplate(
-        searchTemplate: "ActiveView",
+        "ActiveView",
         Message = "ActiveView is obsolete, use Application.ActiveUIDocument.ActiveView instead",
         ReplaceTemplate = "Application.ActiveUIDocument.ActiveView",
         ReplaceMessage = "Replace with Application.ActiveUIDocument.ActiveView")]

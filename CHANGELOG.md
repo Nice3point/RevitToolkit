@@ -32,7 +32,7 @@ public partial class MyViewModel : ObservableObject
         document.Delete(document.GetInstanceIds(BuiltInCategory.OST_Windows));
         transaction.Commit();
     }
-    
+
     [RelayCommand]
     private void DeleteWindows()
     {
@@ -64,10 +64,10 @@ New analyzer package with diagnostics for `[ExternalEvent]` annotated methods:
 - New **RevitApiContext** class for database-level application context access.
 - New **AsyncExternalCommand** class for async/await support in external commands.
 - New **AsyncExternalApplication** class for async/await support in external applications.
-- New **BeginDialogSuppressionScope()** method with disposable pattern for dialog suppression.
-- New **BeginFailureSuppressionScope()** method with disposable pattern for failure handling.
-- New **BeginAssemblyResolveScope()** method with disposable pattern for dependency resolution.
-- New **BeginAssemblyResolveScope(string directory)** overload for explicit path specification.`
+- New **BeginDialogSuppressionScope ()** method with disposable pattern for dialog suppression.
+- New **BeginFailureSuppressionScope ()** method with disposable pattern for failure handling.
+- New **BeginAssemblyResolveScope ()** method with disposable pattern for dependency resolution.
+- New **BeginAssemblyResolveScope (string directory)** overload for explicit path specification.`
 - New overloads for `BeginDialogSuppressionScope()`: `MessageBoxResult`, `TaskDialogResult`, custom handler.
 
 ## Improvements
@@ -80,9 +80,9 @@ New analyzer package with diagnostics for `[ExternalEvent]` annotated methods:
 ## Breaking Changes
 
 - **Context** class is now obsolete, use `RevitContext` or `RevitApiContext` instead.
-- **SuppressDialogs()** / **RestoreDialogs()** are obsolete, use `BeginDialogSuppressionScope()` instead.
-- **SuppressFailures()** / **RestoreFailures()** are obsolete, use `BeginFailureSuppressionScope()` instead.
-- **BeginAssemblyResolve()** / **EndAssemblyResolve()** are obsolete, use `BeginAssemblyResolveScope()` instead.
+- **SuppressDialogs ()** / **RestoreDialogs ()** are obsolete, use `BeginDialogSuppressionScope()` instead.
+- **SuppressFailures ()** / **RestoreFailures ()** are obsolete, use `BeginFailureSuppressionScope()` instead.
+- **BeginAssemblyResolve ()** / **EndAssemblyResolve ()** are obsolete, use `BeginAssemblyResolveScope()` instead.
 - **ExternalCommand.UiApplication** is obsolete, use `Application` instead.
 - **ExternalCommand.UiDocument** is obsolete, use `Application.ActiveUIDocument` instead.
 - **ExternalCommand.Document** is obsolete, use `Application.ActiveUIDocument.Document` instead.
@@ -247,7 +247,7 @@ await DeleteElementAsyncEvent.RaiseAsync();
 
 # 2026.0.0
 
-- New `Context.UiControlledApplication` property. Helps to manipulate with the Revit ribbon, context menus outside ExternalApplication. 
+- New `Context.UiControlledApplication` property. Helps to manipulate with the Revit ribbon, context menus outside ExternalApplication.
 - Now `AsyncEventHandler{T}` works in a multithreaded application and returns the result to each recipient.
 - Removed `AssemblyLoadContext` for addins isolation. It will be moved to Revit itself. [More info.](https://feedback.autodesk.com/project/forum/thread.html?cap=cb0fd5af18bb49b791dfa3f5efc47a72&forid=%7B057e532f-e478-43d9-affc-01b3deb82a76%7D&topid=%7B8C202188-9EA5-49BE-B95F-7F5115507C88%7D)
 - Removed deprecated features.
@@ -284,17 +284,18 @@ await DeleteElementAsyncEvent.RaiseAsync();
 
 This release introduces an isolated plugin dependency container using .NET **AssemblyLoadContext**.
 This feature allows plugins to run in a separate, isolated context, ensuring
-independent operation and preventing conflicts from incompatible library versions. 
+independent operation and preventing conflicts from incompatible library versions.
 This enhancement is available for Revit 2025 and higher, addressing the limitations of Revit's traditional plugin loading mechanism, which loads plugins by path without native support for isolation.
 
 ![изображение](https://github.com/jeremytammik/RevitLookup/assets/20504884/d1e160a2-36ef-43ad-a384-fdcc15b0106e)
 
 **How It Works:**
 
-The core functionality centers on **AssemblyLoadContext**, which creates an isolated container for each plugin. 
-When a plugin is loaded, it is assigned a unique **AssemblyLoadContext** instance, encapsulating the plugin and its dependencies to prevent interference with other plugins or the main application. 
+The core functionality centers on **AssemblyLoadContext**, which creates an isolated container for each plugin.
+When a plugin is loaded, it is assigned a unique **AssemblyLoadContext** instance, encapsulating the plugin and its dependencies to prevent interference with other plugins or the main application.
 
 To use this isolation feature, developers must inherit their classes from:
+
 - ExternalCommand
 - ExternalApplication
 - ExternalDbApplication
@@ -305,7 +306,7 @@ Plugins using interfaces such as **IExternalCommand** will not benefit from this
 
 **Limitations:**
 
-- The isolated plugin context feature is available starting with Revit 2025. 
+- The isolated plugin context feature is available starting with Revit 2025.
 - For older Revit versions, this library uses a **ResolveHelper** to help load dependencies from the plugin's folder, but does not protect against conflicts arising from incompatible packages.
 - Additionally, plugins that do not inherit from the specified classes will not be isolated and may experience compatibility issues if they rely on the default context.
 
@@ -313,12 +314,12 @@ Plugins using interfaces such as **IExternalCommand** will not benefit from this
 
 - Added **ExternalCommandAvailability** class.
 
-    It involves isolating dependencies.
-    If your implementation does not include dependencies, use the IExternalCommandAvailability interface to reduce memory allocation
-- Added **AvailableCommandController** class. 
+  It involves isolating dependencies.
+  If your implementation does not include dependencies, use the IExternalCommandAvailability interface to reduce memory allocation
+- Added **AvailableCommandController** class.
 
-    ExternalCommandAvailability implementation. 
-    Controller providing permanent accessibility for ExternalCommand invocation. Usage:
+  ExternalCommandAvailability implementation.
+  Controller providing permanent accessibility for ExternalCommand invocation. Usage:
     ```C#
     panel.AddPushButton<StartupCommand>("Execute")
         .SetAvailabilityController<AvailableCommandController>()
@@ -335,7 +336,7 @@ Plugins using interfaces such as **IExternalCommand** will not benefit from this
 
 - New **Context** class.
 
-    Provides computed properties to retrieve Revit objects in the current session. Values are provided even outside the Revit context.
+  Provides computed properties to retrieve Revit objects in the current session. Values are provided even outside the Revit context.
 
     - Context.UiApplication;
     - Context.Application;
@@ -439,8 +440,8 @@ Fixed dependency search issue for several plugins loaded in Revit
 
 External command:
 
-- New SuppressExceptions() method
-- New SuppressDialogs() method
+- New SuppressExceptions () method
+- New SuppressDialogs () method
 - New ActiveView property
 - New Application property
 - Updated Assembly resolver

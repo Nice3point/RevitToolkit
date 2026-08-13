@@ -10,7 +10,7 @@ using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
 namespace Nice3point.Revit.Toolkit.Analyzers.CodeFixers.CodeFixes;
 
 /// <summary>
-///     A code fixer that removes the <see langword="async"/> modifier from an <see langword="async"/> <see langword="void"/> method
+///     A code fixer that removes the <see langword="async" /> modifier from an <see langword="async" /> <see langword="void" /> method
 ///     marked with <c>[ExternalEvent]</c>.
 /// </summary>
 [Shared]
@@ -20,7 +20,11 @@ public sealed class RemoveAsyncModifierCodeFixer : CodeFixProvider
     private const string Title = "Remove async modifier";
 
     public override ImmutableArray<string> FixableDiagnosticIds { get; } = [DiagnosticDescriptors.ExternalEventAsyncVoidMethod.Id];
-    public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
+
+    public override FixAllProvider GetFixAllProvider()
+    {
+        return WellKnownFixAllProviders.BatchFixer;
+    }
 
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
@@ -29,18 +33,21 @@ public sealed class RemoveAsyncModifierCodeFixer : CodeFixProvider
 
         var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
         var methodDeclaration = root!.FindNode(diagnosticSpan).FirstAncestorOrSelf<MethodDeclarationSyntax>();
-        if (methodDeclaration is null) return;
+        if (methodDeclaration is null)
+        {
+            return;
+        }
 
         context.RegisterCodeFix(
             CodeAction.Create(
-                title: Title,
-                createChangedDocument: _ => RemoveAsyncModifier(context.Document, root, methodDeclaration),
-                equivalenceKey: Title),
+                Title,
+                _ => RemoveAsyncModifier(context.Document, root, methodDeclaration),
+                Title),
             diagnostic);
     }
 
     /// <summary>
-    ///     Removes the <see langword="async"/> modifier from the method declaration.
+    ///     Removes the <see langword="async" /> modifier from the method declaration.
     /// </summary>
     private static Task<Document> RemoveAsyncModifier(Document document, SyntaxNode root, MethodDeclarationSyntax methodDeclaration)
     {

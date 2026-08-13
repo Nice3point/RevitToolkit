@@ -26,7 +26,7 @@
         <Compile Include="..\$(_BaseProjectName)\**\*.cs"
                  Exclude="..\$(_BaseProjectName)\obj\**\*.cs"/>
     </ItemGroup>
-    
+
     <ItemGroup>
         <AdditionalFiles Include="..\Nice3point.Revit.Toolkit.Analyzers\AnalyzerReleases.Shipped.md"
                          Condition="!Exists('AnalyzerReleases.Shipped.md')"

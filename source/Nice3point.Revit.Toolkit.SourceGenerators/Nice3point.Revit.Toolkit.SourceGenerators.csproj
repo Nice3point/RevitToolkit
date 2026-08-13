@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\Directory.Roslyn.props" />
+    <Import Project="..\..\Directory.Roslyn.props"/>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all"/>
@@ -8,7 +8,7 @@
 
     <ItemGroup>
         <Compile Include="..\Nice3point.Revit.Toolkit.Analyzers\Diagnostics\DiagnosticDescriptors.cs"
-                 Link="Diagnostics\DiagnosticDescriptors.cs" />
+                 Link="Diagnostics\DiagnosticDescriptors.cs"/>
     </ItemGroup>
 
 </Project>

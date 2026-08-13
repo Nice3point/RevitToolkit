@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using Autodesk.Revit.ApplicationServices;
-using JetBrains.Annotations;
 using Nice3point.Revit.Toolkit.Helpers;
 #if NET
 using System.Runtime.Loader;

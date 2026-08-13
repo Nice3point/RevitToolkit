@@ -1,21 +1,20 @@
 ﻿using Autodesk.Revit.UI;
-using JetBrains.Annotations;
 
 // ReSharper disable once CheckNamespace
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
-///     A base class wrapping the Revit <see cref="Autodesk.Revit.UI.ExternalEvent"/> and
-///     <see cref="IExternalEventHandler"/> boilerplate to simplify external event handler implementation.
+///     A base class wrapping the Revit <see cref="Autodesk.Revit.UI.ExternalEvent" /> and
+///     <see cref="IExternalEventHandler" /> boilerplate to simplify external event handler implementation.
 /// </summary>
 [PublicAPI]
 public abstract class ExternalEventHandler : IExternalEventHandler
 {
-    private string? _identifier;
     private readonly Autodesk.Revit.UI.ExternalEvent _externalEvent;
+    private string? _identifier;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ExternalEventHandler"/> class
+    ///     Initializes a new instance of the <see cref="ExternalEventHandler" /> class
     ///     and creates the underlying Revit external event.
     /// </summary>
     protected ExternalEventHandler()
@@ -29,7 +28,7 @@ public abstract class ExternalEventHandler : IExternalEventHandler
     /// <summary>
     ///     This method is called to handle the external event.
     /// </summary>
-    /// <param name="uiApplication">The current <see cref="UIApplication"/> instance provided by Revit.</param>
+    /// <param name="uiApplication">The current <see cref="UIApplication" /> instance provided by Revit.</param>
     public abstract void Execute(UIApplication uiApplication);
 
     /// <summary>
@@ -51,7 +50,7 @@ public abstract class ExternalEventHandler : IExternalEventHandler
     /// </returns>
     /// <remarks>
     ///     Revit will wait until it is ready to process the event and then it will execute its event handler
-    ///     by calling the <see cref="Execute"/> method. Revit processes external events only when no other commands
+    ///     by calling the <see cref="Execute" /> method. Revit processes external events only when no other commands
     ///     or edit modes are currently active in Revit, which is the same policy like the one that applies
     ///     to evoking external commands.
     /// </remarks>

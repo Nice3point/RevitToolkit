@@ -10,14 +10,17 @@ namespace Build.Modules;
 [DependsOn<PackProjectsModule>(Optional = true)]
 public sealed class RestoreReadmeModule : Module
 {
-    protected override ModuleConfiguration Configure() => ModuleConfiguration.Create()
-        .WithAlwaysRun()
-        .WithSkipWhen(async context =>
-        {
-            var nugetReadmeModule = await context.GetModule<UpdateReadmeModule>();
-            return !nugetReadmeModule.IsSuccess;
-        })
-        .Build();
+    protected override ModuleConfiguration Configure()
+    {
+        return ModuleConfiguration.Create()
+            .WithAlwaysRun()
+            .WithSkipWhen(async context =>
+            {
+                var nugetReadmeModule = await context.GetModule<UpdateReadmeModule>();
+                return !nugetReadmeModule.IsSuccess;
+            })
+            .Build();
+    }
 
     protected override async Task ExecuteModuleAsync(IModuleContext context, CancellationToken cancellationToken)
     {

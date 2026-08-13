@@ -20,8 +20,8 @@ partial class ExternalEventGenerator
         ///     Symbol display format that omits the global namespace prefix and nullable annotations.
         /// </summary>
         private static readonly SymbolDisplayFormat NullableFlowFormat = new(
-            globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
-            typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+            SymbolDisplayGlobalNamespaceStyle.Omitted,
+            SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
             miscellaneousOptions: SymbolDisplayMiscellaneousOptions.None);
 
         /// <summary>
@@ -94,7 +94,7 @@ partial class ExternalEventGenerator
         }
 
         /// <summary>
-        ///     Builds the <see cref="ExternalEventInfo"/> from a validated method symbol,
+        ///     Builds the <see cref="ExternalEventInfo" /> from a validated method symbol,
         ///     extracting attribute data, parameters, and type hierarchy.
         /// </summary>
         private static ExternalEventInfo BuildExternalEventInfo(IMethodSymbol methodSymbol)
@@ -107,17 +107,17 @@ partial class ExternalEventGenerator
             var delegateType = BuildDelegateType(methodSymbol, hasUiApplicationParameter, returnsVoid, returnType, extraParameters);
 
             return new ExternalEventInfo(
-                HintName: $"{GetHintName(methodSymbol)}.{methodSymbol.Name}",
-                Namespace: containingNamespace,
-                MethodName: methodSymbol.Name,
-                IsStatic: methodSymbol.IsStatic,
-                ReturnsVoid: returnsVoid,
-                FullyQualifiedReturnType: returnType,
-                FullyQualifiedDelegateType: delegateType,
-                HasUiApplicationParameter: hasUiApplicationParameter,
-                AllowDirectInvocation: allowDirectInvocation,
-                TypeHierarchy: typeHierarchy,
-                ExtraParameters: extraParameters);
+                $"{GetHintName(methodSymbol)}.{methodSymbol.Name}",
+                containingNamespace,
+                methodSymbol.Name,
+                methodSymbol.IsStatic,
+                returnsVoid,
+                returnType,
+                delegateType,
+                hasUiApplicationParameter,
+                allowDirectInvocation,
+                typeHierarchy,
+                extraParameters);
         }
 
         /// <summary>
@@ -264,7 +264,7 @@ partial class ExternalEventGenerator
 
             return (false, methodSymbol.ReturnType.GetFullyQualifiedNameWithNullabilityAnnotations());
         }
-        
+
         /// <summary>
         ///     Builds the fully qualified delegate type for wrapping the method reference.
         ///     Used to generate explicit delegate casts like <c>new global::System.Action(Method)</c>
@@ -300,8 +300,8 @@ partial class ExternalEventGenerator
         }
 
         /// <summary>
-        ///     Determines whether the specified type is <see cref="System.Threading.Tasks.Task"/>
-        ///     or <see cref="System.Threading.Tasks.Task{TResult}"/>.
+        ///     Determines whether the specified type is <see cref="System.Threading.Tasks.Task" />
+        ///     or <see cref="System.Threading.Tasks.Task{TResult}" />.
         /// </summary>
         private static bool IsTaskType(ITypeSymbol type)
         {

@@ -9,11 +9,10 @@ namespace Nice3point.Revit.Toolkit.SourceGenerators;
 /// </summary>
 internal sealed class CodeWriter : ICodeWriter
 {
+    private static readonly ConcurrentDictionary<string, string> IndentCache = new();
     private readonly StringBuilder _builder = new();
     private readonly string _indentString;
     private bool _isNewLine = true;
-
-    private static readonly ConcurrentDictionary<string, string> IndentCache = new();
 
     public CodeWriter(string indentString = "    ")
     {
@@ -34,22 +33,6 @@ internal sealed class CodeWriter : ICodeWriter
     {
         IndentLevel = Math.Max(0, level);
         return this;
-    }
-
-    /// <summary>
-    ///     Gets the cached indentation string for the specified level, building it if necessary.
-    /// </summary>
-    private string GetIndentation(int level)
-    {
-        var key = _indentString + ":" + level;
-        if (IndentCache.TryGetValue(key, out var cached))
-        {
-            return cached;
-        }
-
-        var indentation = string.Concat(Enumerable.Repeat(_indentString, level));
-        IndentCache.TryAdd(key, indentation);
-        return indentation;
     }
 
     /// <summary>
@@ -188,6 +171,22 @@ internal sealed class CodeWriter : ICodeWriter
     public void Dispose()
     {
         _builder.Clear();
+    }
+
+    /// <summary>
+    ///     Gets the cached indentation string for the specified level, building it if necessary.
+    /// </summary>
+    private string GetIndentation(int level)
+    {
+        var key = _indentString + ":" + level;
+        if (IndentCache.TryGetValue(key, out var cached))
+        {
+            return cached;
+        }
+
+        var indentation = string.Concat(Enumerable.Repeat(_indentString, level));
+        IndentCache.TryAdd(key, indentation);
+        return indentation;
     }
 
     /// <summary>

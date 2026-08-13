@@ -6,7 +6,7 @@ namespace Nice3point.Revit.Toolkit.SourceGenerators.Models;
 
 /// <summary>
 ///     A serializable model representing diagnostic information,
-///     suitable for incremental source generator caching where <see cref="Diagnostic"/> instances cannot be compared by value.
+///     suitable for incremental source generator caching where <see cref="Diagnostic" /> instances cannot be compared by value.
 /// </summary>
 internal sealed record DiagnosticInfo(
     DiagnosticDescriptor Descriptor,
@@ -15,7 +15,7 @@ internal sealed record DiagnosticInfo(
     EquatableArray<string> Arguments)
 {
     /// <summary>
-    ///     Creates a <see cref="Diagnostic"/> instance from the stored state.
+    ///     Creates a <see cref="Diagnostic" /> instance from the stored state.
     /// </summary>
     public Diagnostic ToDiagnostic()
     {
@@ -34,7 +34,7 @@ internal sealed record DiagnosticInfo(
     }
 
     /// <summary>
-    ///     Creates a new <see cref="DiagnosticInfo"/> from a <see cref="DiagnosticDescriptor"/> and an <see cref="ISymbol"/>.
+    ///     Creates a new <see cref="DiagnosticInfo" /> from a <see cref="DiagnosticDescriptor" /> and an <see cref="ISymbol" />.
     /// </summary>
     public static DiagnosticInfo Create(DiagnosticDescriptor descriptor, ISymbol symbol, params string[] arguments)
     {
@@ -48,7 +48,7 @@ internal sealed record DiagnosticInfo(
     }
 
     /// <summary>
-    ///     Creates a new <see cref="DiagnosticInfo"/> from a <see cref="DiagnosticDescriptor"/> and a <see cref="SyntaxNode"/>.
+    ///     Creates a new <see cref="DiagnosticInfo" /> from a <see cref="DiagnosticDescriptor" /> and a <see cref="SyntaxNode" />.
     /// </summary>
     public static DiagnosticInfo Create(DiagnosticDescriptor descriptor, SyntaxNode node, params string[] arguments)
     {

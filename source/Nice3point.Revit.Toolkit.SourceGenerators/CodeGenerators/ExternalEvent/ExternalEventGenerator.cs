@@ -21,14 +21,14 @@ public sealed partial class ExternalEventGenerator : IIncrementalGenerator
         var results = context.SyntaxProvider
             .ForAttributeWithMetadataName(
                 WellKnownFullyQualifiedClassNames.ExternalEventAttribute.WithoutGlobalPrefix,
-                predicate: static (node, cancellationToken) => node is MethodDeclarationSyntax,
-                transform: static (syntaxContext, cancellationToken) => Extractor.GetMethodResult(syntaxContext, cancellationToken));
+                static (node, _) => node is MethodDeclarationSyntax,
+                static (syntaxContext, cancellationToken) => Extractor.GetMethodResult(syntaxContext, cancellationToken));
 
-        context.ReportDiagnostics(results.Select(static (result, cancellationToken) => result.Diagnostics));
+        context.ReportDiagnostics(results.Select(static (result, _) => result.Diagnostics));
 
         var infosWithOptions = results
             .Where(static result => result.Info is not null)
-            .Select(static (result, cancellationToken) => result.Info!)
+            .Select(static (result, _) => result.Info!)
             .Combine(context.ParseOptionsProvider);
 
         context.RegisterSourceOutput(infosWithOptions, static (sourceProductionContext, pair) =>

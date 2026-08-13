@@ -8,7 +8,7 @@ using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
 namespace Nice3point.Revit.Toolkit.Analyzers;
 
 /// <summary>
-///     A diagnostic analyzer that reports an error when a method marked with <c>[ExternalEvent]</c> is declared inside a type that is not <see langword="partial"/>.
+///     A diagnostic analyzer that reports an error when a method marked with <c>[ExternalEvent]</c> is declared inside a type that is not <see langword="partial" />.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class ExternalEventContainingTypeNotPartialAnalyzer : DiagnosticAnalyzer

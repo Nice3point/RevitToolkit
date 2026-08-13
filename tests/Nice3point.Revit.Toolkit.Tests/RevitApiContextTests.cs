@@ -1,8 +1,4 @@
-﻿using Nice3point.TUnit.Revit;
-using Nice3point.TUnit.Revit.Executors;
-using TUnit.Core.Executors;
-
-namespace Nice3point.Revit.Toolkit.Tests;
+﻿namespace Nice3point.Revit.Toolkit.Tests;
 
 public sealed class RevitApiContextTests : RevitApiTest
 {
@@ -14,7 +10,7 @@ public sealed class RevitApiContextTests : RevitApiTest
     public void CreateDocument()
     {
         _document = Application.NewProjectDocument(UnitSystem.Metric);
-        _level = (Level) _document.CollectElements()
+        _level = (Level)_document.CollectElements()
             .Instances()
             .OfCategory(BuiltInCategory.OST_Levels)
             .First();
@@ -41,7 +37,7 @@ public sealed class RevitApiContextTests : RevitApiTest
             await Assert.That(application.VersionNumber).IsNotEmpty();
         }
     }
-    
+
     [Test]
     public async Task BeginFailureSuppressionScope_WithoutScope_RollsBackOnError()
     {
@@ -61,7 +57,7 @@ public sealed class RevitApiContextTests : RevitApiTest
     public async Task BeginFailureSuppressionScope_WithResolveErrors_CommitsTransaction()
     {
         // Arrange
-        using (RevitApiContext.BeginFailureSuppressionScope(resolveErrors: true))
+        using (RevitApiContext.BeginFailureSuppressionScope(true))
         {
             // Act
             using var transaction = new Transaction(_document, "Create overlapping walls");
@@ -114,7 +110,7 @@ public sealed class RevitApiContextTests : RevitApiTest
     public async Task BeginFailureSuppressionScope_WithResolveErrorsFalse_RollsBackOnError()
     {
         // Arrange
-        using (RevitApiContext.BeginFailureSuppressionScope(resolveErrors: false))
+        using (RevitApiContext.BeginFailureSuppressionScope(false))
         {
             // Act
             using var transaction = new Transaction(_document, "Create overlapping walls");
@@ -145,7 +141,10 @@ public sealed class RevitApiContextTests : RevitApiTest
 
                 Wall.Create(_document, Line.CreateBound(new XYZ(0, i * 5, 0), new XYZ(10, i * 5, 0)), _level.Id, false);
 
-                if (transaction.Commit() == TransactionStatus.Committed) committedCount++;
+                if (transaction.Commit() == TransactionStatus.Committed)
+                {
+                    committedCount++;
+                }
             }
         }
 

@@ -6,15 +6,15 @@ using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
 namespace Nice3point.Revit.Toolkit.Analyzers;
 
 /// <summary>
-///     A diagnostic analyzer that reports a warning when a method marked with <c>[ExternalEvent]</c> is declared as <see langword="async"/> <see langword="void"/>.
+///     A diagnostic analyzer that reports a warning when a method marked with <c>[ExternalEvent]</c> is declared as <see langword="async" /> <see langword="void" />.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class AsyncVoidMethodAnalyzer : DiagnosticAnalyzer
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [DiagnosticDescriptors.ExternalEventAsyncVoidMethod];
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -41,9 +41,9 @@ public sealed class AsyncVoidMethodAnalyzer : DiagnosticAnalyzer
                 }
 
                 context.ReportDiagnostic(Diagnostic.Create(
-                    descriptor: DiagnosticDescriptors.ExternalEventAsyncVoidMethod,
-                    location: methodSymbol.Locations[0],
-                    messageArgs: methodSymbol.Name));
+                    DiagnosticDescriptors.ExternalEventAsyncVoidMethod,
+                    methodSymbol.Locations[0],
+                    methodSymbol.Name));
             }, SymbolKind.Method);
         });
     }

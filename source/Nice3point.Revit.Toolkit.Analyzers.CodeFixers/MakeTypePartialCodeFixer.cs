@@ -10,7 +10,7 @@ using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
 namespace Nice3point.Revit.Toolkit.Analyzers.CodeFixers.CodeFixes;
 
 /// <summary>
-///     A code fixer that adds the <see langword="partial"/> modifier to a type declaration
+///     A code fixer that adds the <see langword="partial" /> modifier to a type declaration
 ///     when a method marked with <c>[ExternalEvent]</c> is inside a non-partial type.
 /// </summary>
 [Shared]
@@ -20,7 +20,11 @@ public sealed class MakeTypePartialCodeFixer : CodeFixProvider
     private const string Title = "Make type partial";
 
     public override ImmutableArray<string> FixableDiagnosticIds { get; } = [DiagnosticDescriptors.ExternalEventContainingTypeNotPartial.Id];
-    public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
+
+    public override FixAllProvider GetFixAllProvider()
+    {
+        return WellKnownFixAllProviders.BatchFixer;
+    }
 
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
@@ -29,18 +33,21 @@ public sealed class MakeTypePartialCodeFixer : CodeFixProvider
 
         var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
         var typeDeclaration = root!.FindNode(diagnosticSpan).FirstAncestorOrSelf<TypeDeclarationSyntax>();
-        if (typeDeclaration is null) return;
+        if (typeDeclaration is null)
+        {
+            return;
+        }
 
         context.RegisterCodeFix(
             CodeAction.Create(
-                title: Title,
-                createChangedDocument: cancellationToken => AddPartialModifier(context.Document, root, typeDeclaration, cancellationToken),
-                equivalenceKey: Title),
+                Title,
+                cancellationToken => AddPartialModifier(context.Document, root, typeDeclaration, cancellationToken),
+                Title),
             diagnostic);
     }
 
     /// <summary>
-    ///     Adds the <see langword="partial"/> modifier to the target type declaration.
+    ///     Adds the <see langword="partial" /> modifier to the target type declaration.
     /// </summary>
     private static Task<Document> AddPartialModifier(Document document, SyntaxNode root, TypeDeclarationSyntax typeDeclaration, CancellationToken cancellationToken)
     {

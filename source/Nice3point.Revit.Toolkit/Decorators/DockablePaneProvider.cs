@@ -1,5 +1,4 @@
 ﻿using Autodesk.Revit.UI;
-using JetBrains.Annotations;
 
 namespace Nice3point.Revit.Toolkit.Decorators;
 
@@ -9,13 +8,6 @@ namespace Nice3point.Revit.Toolkit.Decorators;
 [PublicAPI]
 public class DockablePaneProvider : IDockablePaneProvider, IDockablePaneProviderId, IDockablePaneProviderTitle, IDockablePaneProviderConfiguration
 {
-#nullable disable //Nullable values controlled by Fluent API
-    private UIControlledApplication _application;
-    private DockablePaneId _id;
-    private Action<DockablePaneProviderData> _setupHandler;
-    private string _title;
-#nullable restore
-
     private DockablePaneProvider()
     {
     }
@@ -96,6 +88,12 @@ public class DockablePaneProvider : IDockablePaneProvider, IDockablePaneProvider
             _title = title
         };
     }
+#nullable disable //Nullable values controlled by Fluent API
+    private UIControlledApplication _application;
+    private DockablePaneId _id;
+    private Action<DockablePaneProviderData> _setupHandler;
+    private string _title;
+#nullable restore
 }
 
 /// <summary>
@@ -139,7 +137,8 @@ public interface IDockablePaneProviderConfiguration
     /// <summary>
     ///     Sets the configuration of the dockable pane.
     /// </summary>
-    /// <param name="handler">Configuration handler.
+    /// <param name="handler">
+    ///     Configuration handler.
     ///     Provides a container for information about the new dockable pane.
     ///     Implementers should set the FrameworkElement and InitialState Properties.
     ///     Optionally, providers can set the ContextualHelp property if they wish to provide or react to help requests on the pane,

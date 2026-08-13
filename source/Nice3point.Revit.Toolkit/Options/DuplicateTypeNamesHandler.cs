@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using JetBrains.Annotations;
 
 namespace Nice3point.Revit.Toolkit.Options;
 
@@ -11,8 +10,8 @@ namespace Nice3point.Revit.Toolkit.Options;
 [PublicAPI]
 public sealed class DuplicateTypeNamesHandler : IDuplicateTypeNamesHandler
 {
-    private readonly DuplicateTypeAction _duplicateTypeAction;
     private readonly Func<DuplicateTypeNamesHandlerArgs, DuplicateTypeAction>? _actionHandler;
+    private readonly DuplicateTypeAction _duplicateTypeAction;
 
     /// <summary>
     ///     Creates a new handler with <see cref="DuplicateTypeAction.UseDestinationTypes" /> by default.

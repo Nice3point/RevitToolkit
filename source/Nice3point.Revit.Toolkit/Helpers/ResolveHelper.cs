@@ -1,9 +1,9 @@
 ﻿using System.IO;
 using System.Reflection;
-using JetBrains.Annotations;
 #if NET8_0_OR_GREATER
 using Nice3point.Revit.Toolkit.Internal;
 #endif
+
 #if !NET8_0_OR_GREATER && NET
 using System.Runtime.Loader;
 #endif
@@ -153,7 +153,7 @@ public static class ResolveHelper
     /// </remarks>
     [Obsolete("Use BeginAssemblyResolveScope<T> instead for automatic resource management")]
     [CodeTemplate(
-        searchTemplate: "BeginAssemblyResolve<$T$>()",
+        "BeginAssemblyResolve<$T$>()",
         Message = "BeginAssemblyResolve is obsolete. Use BeginAssemblyResolveScope with 'using' statement instead",
         ReplaceTemplate = "BeginAssemblyResolveScope<$T$>()",
         ReplaceMessage = "Replace with BeginAssemblyResolveScope")]
@@ -173,7 +173,7 @@ public static class ResolveHelper
     /// </remarks>
     [Obsolete("Use BeginAssemblyResolveScope instead for automatic resource management")]
     [CodeTemplate(
-        searchTemplate: "BeginAssemblyResolve($type$)",
+        "BeginAssemblyResolve($type$)",
         Message = "BeginAssemblyResolve is obsolete. Use BeginAssemblyResolveScope with 'using' statement instead",
         ReplaceTemplate = "BeginAssemblyResolveScope($type$)",
         ReplaceMessage = "Replace with BeginAssemblyResolveScope")]
@@ -190,7 +190,11 @@ public static class ResolveHelper
     {
         lock (ResolveLock)
         {
-            if (ModuleDirectories.Count == 0) return;
+            if (ModuleDirectories.Count == 0)
+            {
+                return;
+            }
+
             ModuleDirectories.Pop();
 
             if (ModuleDirectories.Count == 0)
@@ -205,7 +209,11 @@ public static class ResolveHelper
         string[] directories;
         lock (ResolveLock)
         {
-            if (ModuleDirectories.Count == 0) return null;
+            if (ModuleDirectories.Count == 0)
+            {
+                return null;
+            }
+
             directories = ModuleDirectories.ToArray();
         }
 
@@ -226,7 +234,10 @@ public static class ResolveHelper
 
     private static void RestoreResolvers()
     {
-        if (_domainResolvers is null) return;
+        if (_domainResolvers is null)
+        {
+            return;
+        }
 
         AppDomain.CurrentDomain.AssemblyResolve -= OnAssemblyResolve;
 
@@ -251,11 +262,18 @@ public static class ResolveHelper
 
         public void Dispose()
         {
-            if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
+            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            {
+                return;
+            }
 
             lock (ResolveLock)
             {
-                if (ModuleDirectories.Count == 0) return;
+                if (ModuleDirectories.Count == 0)
+                {
+                    return;
+                }
+
                 ModuleDirectories.Pop();
 
                 if (ModuleDirectories.Count == 0)

@@ -7,7 +7,7 @@ namespace Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Tests.Verifiers;
 internal static class CSharpVerifierHelper
 {
     /// <summary>
-    ///     Compiler diagnostic IDs related to nullability mapped to <see cref="ReportDiagnostic.Error"/>,
+    ///     Compiler diagnostic IDs related to nullability mapped to <see cref="ReportDiagnostic.Error" />,
     ///     used to enable all nullable warnings for default validation during analyzer and code fix tests.
     /// </summary>
     internal static ImmutableDictionary<string, ReportDiagnostic> NullableWarnings { get; } = GetNullableWarningsFromCompiler();
@@ -15,7 +15,7 @@ internal static class CSharpVerifierHelper
     private static ImmutableDictionary<string, ReportDiagnostic> GetNullableWarningsFromCompiler()
     {
         string[] args = ["/warnaserror:nullable", "-p:LangVersion=preview"];
-        var commandLineArguments = CSharpCommandLineParser.Default.Parse(args, baseDirectory: Environment.CurrentDirectory, sdkDirectory: Environment.CurrentDirectory);
+        var commandLineArguments = CSharpCommandLineParser.Default.Parse(args, Environment.CurrentDirectory, Environment.CurrentDirectory);
         var nullableWarnings = commandLineArguments.CompilationOptions.SpecificDiagnosticOptions;
 
         nullableWarnings = nullableWarnings

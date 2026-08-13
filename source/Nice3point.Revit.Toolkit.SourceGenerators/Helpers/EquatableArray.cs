@@ -20,7 +20,11 @@ internal static class EquatableArray
         /// <returns>An <see cref="EquatableArray{T}" /> instance from a given <see cref="ImmutableArray{T}" />.</returns>
         public EquatableArray<T> AsEquatableArray()
         {
+#if NET
             return [with(array)];
+#else
+            return new EquatableArray<T>(array);
+#endif
         }
     }
 }
@@ -126,7 +130,11 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IEnume
     /// <returns>An <see cref="EquatableArray{T}" /> instance from a given <see cref="ImmutableArray{T}" />.</returns>
     public static EquatableArray<T> FromImmutableArray(ImmutableArray<T> array)
     {
+#if NET
+            return [with(array)];
+#else
         return new EquatableArray<T>(array);
+#endif
     }
 
     /// <summary>

@@ -1,4 +1,4 @@
-﻿#IDE folders
+#IDE folders
 *.idea/
 *.vs/
 *.vscode/
@@ -10,6 +10,7 @@
 
 #Build output folder
 /output/
+BenchmarkDotNet.Artifacts/
 
 #User-specific files
 *.user

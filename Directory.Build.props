@@ -1,5 +1,6 @@
 <Project>
 
+    <!-- Global build configuration -->
     <PropertyGroup>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
@@ -11,6 +12,12 @@
     <!-- Polyfill configuration -->
     <PropertyGroup>
         <PolyArgumentExceptions>true</PolyArgumentExceptions>
+        <PolyUseEmbeddedAttribute>true</PolyUseEmbeddedAttribute>
     </PropertyGroup>
+
+    <!-- Global usings -->
+    <ItemGroup>
+        <Using Include="JetBrains.Annotations"/>
+    </ItemGroup>
 
 </Project>

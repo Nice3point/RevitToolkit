@@ -2,7 +2,7 @@ using ModularPipelines.Attributes;
 
 namespace Build.Options;
 
-[Serializable]
+[PublicAPI]
 public sealed record NuGetOptions
 {
     [SecretValue] public string? ApiKey { get; init; }

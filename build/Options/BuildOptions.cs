@@ -1,6 +1,6 @@
 namespace Build.Options;
 
-[Serializable]
+[PublicAPI]
 public sealed record BuildOptions
 {
     public Dictionary<string, string> Versions { get; init; } = [];

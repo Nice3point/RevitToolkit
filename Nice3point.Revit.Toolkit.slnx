@@ -25,7 +25,7 @@
     <File Path="Directory.Roslyn.props"/>
     <File Path="README.md"/>
   </Folder>
-  <Folder Name="/Automation/">
+  <Folder Name="/Build/">
     <Project Path="build/Build.csproj">
       <BuildType Solution="Debug.R20|*" Project="Debug"/>
       <BuildType Solution="Debug.R21|*" Project="Debug"/>

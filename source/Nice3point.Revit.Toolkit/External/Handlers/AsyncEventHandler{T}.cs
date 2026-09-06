@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Autodesk.Revit.UI;
 
 namespace Nice3point.Revit.Toolkit.External.Handlers;

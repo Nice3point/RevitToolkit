@@ -1,4 +1,4 @@
-﻿using Nice3point.Revit.Toolkit.SourceGenerators.Models;
+using Nice3point.Revit.Toolkit.SourceGenerators.Models;
 
 namespace Nice3point.Revit.Toolkit.SourceGenerators;
 

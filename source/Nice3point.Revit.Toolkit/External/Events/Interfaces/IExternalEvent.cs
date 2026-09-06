@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.UI;
+using Autodesk.Revit.UI;
 
 // ReSharper disable once CheckNamespace
 namespace Nice3point.Revit.Toolkit.External;

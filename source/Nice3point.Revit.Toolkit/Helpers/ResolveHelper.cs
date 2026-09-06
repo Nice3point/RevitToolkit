@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Reflection;
 #if NET8_0_OR_GREATER
 using Nice3point.Revit.Toolkit.Internal;

@@ -1,4 +1,4 @@
-﻿using Nice3point.Revit.Toolkit.Options;
+using Nice3point.Revit.Toolkit.Options;
 using Nice3point.Revit.Toolkit.Tests.Abstractions;
 
 namespace Nice3point.Revit.Toolkit.Tests;

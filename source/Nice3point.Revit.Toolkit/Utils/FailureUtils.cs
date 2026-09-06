@@ -1,4 +1,4 @@
-﻿namespace Nice3point.Revit.Toolkit.Utils;
+namespace Nice3point.Revit.Toolkit.Utils;
 
 /// <summary>
 ///     Provides utils for processing failures.

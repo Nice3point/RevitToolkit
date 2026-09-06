@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Text;
 
 namespace Nice3point.Revit.Toolkit.SourceGenerators;

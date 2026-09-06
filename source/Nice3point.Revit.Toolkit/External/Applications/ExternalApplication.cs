@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Autodesk.Revit.UI;
 using Nice3point.Revit.Toolkit.Helpers;
 #if NET

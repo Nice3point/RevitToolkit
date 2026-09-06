@@ -1,4 +1,4 @@
-﻿using System.Windows.Threading;
+using System.Windows.Threading;
 
 // ReSharper disable once CheckNamespace
 namespace Nice3point.Revit.Toolkit.External;

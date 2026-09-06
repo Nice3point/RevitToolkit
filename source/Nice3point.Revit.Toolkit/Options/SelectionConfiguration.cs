@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.UI.Selection;
+using Autodesk.Revit.UI.Selection;
 
 namespace Nice3point.Revit.Toolkit.Options;
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
 using Nice3point.Revit.Toolkit.SourceGenerators.Tests.Helpers;
 

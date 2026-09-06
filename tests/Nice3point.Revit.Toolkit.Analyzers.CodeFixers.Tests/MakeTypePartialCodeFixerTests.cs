@@ -1,4 +1,4 @@
-﻿using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
+using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
 using Verifier = Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Tests.Verifiers.CSharpCodeFixVerifier<
     Nice3point.Revit.Toolkit.Analyzers.ExternalEventContainingTypeNotPartialAnalyzer,
     Nice3point.Revit.Toolkit.Analyzers.CodeFixers.CodeFixes.MakeTypePartialCodeFixer>;

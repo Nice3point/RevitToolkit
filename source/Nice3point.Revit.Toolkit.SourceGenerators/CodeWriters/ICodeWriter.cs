@@ -1,4 +1,4 @@
-﻿namespace Nice3point.Revit.Toolkit.SourceGenerators;
+namespace Nice3point.Revit.Toolkit.SourceGenerators;
 
 /// <summary>
 ///     Interface for fluent code generation with automatic formatting and indentation.

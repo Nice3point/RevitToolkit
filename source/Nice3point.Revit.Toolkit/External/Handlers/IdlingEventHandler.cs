@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 

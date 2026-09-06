@@ -12,8 +12,7 @@
 [![Last Commit](https://img.shields.io/github/last-commit/Nice3point/RevitToolkit/develop?style=for-the-badge&color=1A1A1A&labelColor=C42A2A)](https://github.com/Nice3point/RevitToolkit/commits/develop)
 
 This library provides a modern interface for working with the Revit API.
-Package contains interfaces implementation frequently encountered in revit, aiming to provide as much flexibility as possible, so developers are free to choose which components to
-use.
+Package contains interfaces implementation frequently encountered in revit, and developers are free to choose which components to use.
 
 ## Installation
 

@@ -8,8 +8,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Include="..\Nice3point.Revit.Toolkit.Analyzers\Diagnostics\DiagnosticDescriptors.cs"
-                 Link="Diagnostics\DiagnosticDescriptors.cs"/>
+        <Compile Include="..\Nice3point.Revit.Toolkit.Analyzers\ExternalEvents\ExternalEventDiagnostics.cs"
+                 Link="ExternalEvents\ExternalEventDiagnostics.cs"/>
     </ItemGroup>
 
 </Project>

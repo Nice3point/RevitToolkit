@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
+using Nice3point.Revit.Toolkit.Analyzers.ExternalEvents;
 
 namespace Nice3point.Revit.Toolkit.Analyzers.CodeFixers.CodeFixes;
 
@@ -19,7 +19,10 @@ public sealed class MakeTypePartialCodeFixer : CodeFixProvider
 {
     private const string Title = "Make type partial";
 
-    public override ImmutableArray<string> FixableDiagnosticIds { get; } = [DiagnosticDescriptors.ExternalEventContainingTypeNotPartial.Id];
+    public override ImmutableArray<string> FixableDiagnosticIds { get; } =
+    [
+        ExternalEventDiagnostics.ContainingTypeNotPartial.Id
+    ];
 
     public override FixAllProvider GetFixAllProvider()
     {
@@ -41,7 +44,7 @@ public sealed class MakeTypePartialCodeFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 Title,
-                cancellationToken => AddPartialModifier(context.Document, root, typeDeclaration, cancellationToken),
+                _ => AddPartialModifierAsync(context.Document, root, typeDeclaration),
                 Title),
             diagnostic);
     }
@@ -49,11 +52,12 @@ public sealed class MakeTypePartialCodeFixer : CodeFixProvider
     /// <summary>
     ///     Adds the <see langword="partial" /> modifier to the target type declaration.
     /// </summary>
-    private static Task<Document> AddPartialModifier(Document document, SyntaxNode root, TypeDeclarationSyntax typeDeclaration, CancellationToken cancellationToken)
+    private static Task<Document> AddPartialModifierAsync(Document document, SyntaxNode root, TypeDeclarationSyntax typeDeclaration)
     {
         var partialKeyword = SyntaxFactory.Token(SyntaxKind.PartialKeyword).WithTrailingTrivia(SyntaxFactory.Space);
-        var newModifiers = typeDeclaration.Modifiers.Add(partialKeyword);
-        var newTypeDeclaration = typeDeclaration.WithModifiers(newModifiers);
+        var declaration = typeDeclaration.WithoutLeadingTrivia();
+        var newTypeDeclaration = declaration.WithModifiers(declaration.Modifiers.Add(partialKeyword))
+            .WithLeadingTrivia(typeDeclaration.GetLeadingTrivia());
 
         var newRoot = root.ReplaceNode(typeDeclaration, newTypeDeclaration);
         return Task.FromResult(document.WithSyntaxRoot(newRoot));

@@ -1,0 +1,42 @@
+﻿{
+  Diagnostics: [
+    {
+      Location: /*
+    [ExternalEvent]
+    private void Run() { }
+                 ^^^
+
+*/
+ Input.cs: (7,17)-(7,20),
+      Message: Method 'Run' marked with [ExternalEvent] must not have overloads also marked with [ExternalEvent],
+      Severity: Error,
+      Descriptor: {
+        Id: RVTTK0004,
+        Title: Duplicate method overloads,
+        MessageFormat: Method '{0}' marked with [ExternalEvent] must not have overloads also marked with [ExternalEvent],
+        Category: ExternalEventGenerator,
+        DefaultSeverity: Error,
+        IsEnabledByDefault: true
+      }
+    },
+    {
+      Location: /*
+    [ExternalEvent]
+    private void Run(int quantity) { }
+                 ^^^
+}
+*/
+ Input.cs: (10,17)-(10,20),
+      Message: Method 'Run' marked with [ExternalEvent] must not have overloads also marked with [ExternalEvent],
+      Severity: Error,
+      Descriptor: {
+        Id: RVTTK0004,
+        Title: Duplicate method overloads,
+        MessageFormat: Method '{0}' marked with [ExternalEvent] must not have overloads also marked with [ExternalEvent],
+        Category: ExternalEventGenerator,
+        DefaultSeverity: Error,
+        IsEnabledByDefault: true
+      }
+    }
+  ]
+}

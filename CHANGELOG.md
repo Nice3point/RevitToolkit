@@ -1,5 +1,19 @@
 # 2027.0.0
 
+### Compiler Tooling Fixes
+
+- Generic containing types preserve type parameters and extension-method constraints; shadowed parameters receive distinct names in extension signatures.
+- Generated file names distinguish generic arity and case-sensitive identifiers.
+- Escaped identifiers and colliding argument names produce compilable event wrappers.
+- Struct instance handlers with multiple arguments use a captured delegate.
+- Private nested types expose argument records without inaccessible top-level extensions.
+- The async-removal code fix preserves trivia and remains unavailable when the method body requires `await`; Fix All leaves those methods unchanged.
+- The partial-type code fix preserves leading comments and directives.
+- Default and empty `EquatableArray` values have equal hash codes.
+- Concurrent first access initializes each generated event property once; failed initialization remains retryable.
+- Generated event properties use `System.Threading.Lock` when the consumer supports C# 13 and provides the type; other targets use an object lock.
+- Unsupported signatures report `RVTTK0006`; conflicting generated member names report `RVTTK0007`.
+
 ### External Events
 
 New family of external event types replacing legacy `ActionEventHandler`, `AsyncEventHandler`:

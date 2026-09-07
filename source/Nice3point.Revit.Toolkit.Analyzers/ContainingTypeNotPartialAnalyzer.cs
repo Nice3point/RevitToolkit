@@ -3,7 +3,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
+using Nice3point.Revit.Toolkit.Analyzers.CSharp;
+using Nice3point.Revit.Toolkit.Analyzers.ExternalEvents;
 
 namespace Nice3point.Revit.Toolkit.Analyzers;
 
@@ -13,7 +14,10 @@ namespace Nice3point.Revit.Toolkit.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class ExternalEventContainingTypeNotPartialAnalyzer : DiagnosticAnalyzer
 {
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [DiagnosticDescriptors.ExternalEventContainingTypeNotPartial];
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
+    [
+        ExternalEventDiagnostics.ContainingTypeNotPartial
+    ];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -35,17 +39,17 @@ public sealed class ExternalEventContainingTypeNotPartialAnalyzer : DiagnosticAn
                     return;
                 }
 
-                var methodName = FindFirstAttributedMethodName(typeSymbol, attributeSymbol);
-                if (methodName is null)
+                var nonPartialIdentifier = FindNonPartialIdentifier(typeSymbol, context.CancellationToken);
+                if (nonPartialIdentifier is null)
                 {
                     return;
                 }
 
-                var nonPartialIdentifier = FindNonPartialIdentifier(context, typeSymbol);
-                if (nonPartialIdentifier.HasValue)
+                var methodName = FindFirstAttributedMethodName(typeSymbol, attributeSymbol, context.CancellationToken);
+                if (methodName is not null)
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
-                        DiagnosticDescriptors.ExternalEventContainingTypeNotPartial,
+                        ExternalEventDiagnostics.ContainingTypeNotPartial,
                         nonPartialIdentifier.Value.GetLocation(),
                         typeSymbol.Name,
                         methodName));
@@ -54,27 +58,30 @@ public sealed class ExternalEventContainingTypeNotPartialAnalyzer : DiagnosticAn
         });
     }
 
-    private static string? FindFirstAttributedMethodName(INamedTypeSymbol typeSymbol, INamedTypeSymbol attributeSymbol)
+    private static string? FindFirstAttributedMethodName(INamedTypeSymbol typeSymbol, INamedTypeSymbol attributeSymbol, CancellationToken cancellationToken)
     {
-        foreach (var member in typeSymbol.GetMembers())
+        var members = typeSymbol.GetMembers();
+        foreach (var member in members)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (member is IMethodSymbol methodSymbol)
             {
-                if (HasTargetAttribute(methodSymbol, attributeSymbol))
+                if (methodSymbol.HasAttribute(attributeSymbol))
                 {
                     return methodSymbol.Name;
                 }
             }
         }
 
-        foreach (var member in typeSymbol.GetMembers())
+        foreach (var member in members)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (member is INamedTypeSymbol nestedType)
             {
-                var name = FindFirstAttributedMethodName(nestedType, attributeSymbol);
-                if (name is not null)
+                var attributedMethodName = FindFirstAttributedMethodName(nestedType, attributeSymbol, cancellationToken);
+                if (attributedMethodName is not null)
                 {
-                    return name;
+                    return attributedMethodName;
                 }
             }
         }
@@ -82,40 +89,22 @@ public sealed class ExternalEventContainingTypeNotPartialAnalyzer : DiagnosticAn
         return null;
     }
 
-    private static bool HasTargetAttribute(IMethodSymbol methodSymbol, INamedTypeSymbol attributeSymbol)
+    private static SyntaxToken? FindNonPartialIdentifier(INamedTypeSymbol type, CancellationToken cancellationToken)
     {
-        foreach (var attribute in methodSymbol.GetAttributes())
-        {
-            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeSymbol))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static SyntaxToken? FindNonPartialIdentifier(SymbolAnalysisContext context, INamedTypeSymbol type)
-    {
+        SyntaxToken? identifier = null;
         foreach (var syntaxReference in type.DeclaringSyntaxReferences)
         {
-            if (syntaxReference.GetSyntax(context.CancellationToken) is TypeDeclarationSyntax typeDeclaration)
+            if (syntaxReference.GetSyntax(cancellationToken) is TypeDeclarationSyntax typeDeclaration)
             {
                 if (typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
                 {
                     return null;
                 }
+
+                identifier ??= typeDeclaration.Identifier;
             }
         }
 
-        if (type.DeclaringSyntaxReferences.Length > 0)
-        {
-            if (type.DeclaringSyntaxReferences[0].GetSyntax(context.CancellationToken) is TypeDeclarationSyntax firstDeclaration)
-            {
-                return firstDeclaration.Identifier;
-            }
-        }
-
-        return null;
+        return identifier;
     }
 }

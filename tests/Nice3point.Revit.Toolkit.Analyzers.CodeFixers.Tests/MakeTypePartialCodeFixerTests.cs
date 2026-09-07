@@ -1,5 +1,6 @@
-using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
-using Verifier = Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Tests.Verifiers.CSharpCodeFixVerifier<
+using Microsoft.CodeAnalysis.Testing;
+using Nice3point.Revit.Toolkit.Analyzers.ExternalEvents;
+using FixTest = Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Tests.Verifiers.CodeFixTest<
     Nice3point.Revit.Toolkit.Analyzers.ExternalEventContainingTypeNotPartialAnalyzer,
     Nice3point.Revit.Toolkit.Analyzers.CodeFixers.CodeFixes.MakeTypePartialCodeFixer>;
 
@@ -8,127 +9,181 @@ namespace Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Tests;
 public sealed class MakeTypePartialCodeFixerTests
 {
     [Test]
-    public async Task NonPartialClass_ReportsDiagnosticAndFixes()
+    [Arguments("class")]
+    [Arguments("struct")]
+    [Arguments("record")]
+    [Arguments("record struct")]
+    public async Task NonPartialType_AddsModifierAsync(string typeKind)
     {
-        await Verifier.VerifyCodeFixAsync(
-            """
-            namespace Nice3point.Revit.Toolkit.External
-            {
-                public sealed class ExternalEventAttribute : System.Attribute { }
-            }
+        var test = new FixTest
+        {
+            TestCode = $$"""
+                         using Nice3point.Revit.Toolkit.External;
 
-            namespace TestApplication
-            {
-                public class {|#0:MyViewModel|}
-                {
-                    [Nice3point.Revit.Toolkit.External.ExternalEvent]
-                    private void DoWork() { }
-                }
-            }
-            """,
-            Verifier.Diagnostic(DiagnosticDescriptors.ExternalEventContainingTypeNotPartial)
-                .WithLocation(0)
-                .WithArguments("MyViewModel", "DoWork"),
-            """
-            namespace Nice3point.Revit.Toolkit.External
-            {
-                public sealed class ExternalEventAttribute : System.Attribute { }
-            }
+                         public {{typeKind}} {|#0:Model|}
+                         {
+                             [ExternalEvent]
+                             private void Run() { }
+                         }
+                         """,
+            FixedCode = $$"""
+                          using Nice3point.Revit.Toolkit.External;
 
-            namespace TestApplication
-            {
-                public partial class MyViewModel
-                {
-                    [Nice3point.Revit.Toolkit.External.ExternalEvent]
-                    private void DoWork() { }
-                }
-            }
-            """);
+                          public partial {{typeKind}} Model
+                          {
+                              [ExternalEvent]
+                              private void Run() { }
+                          }
+                          """
+        };
+
+        test.ExpectedDiagnostics.Add(PartialDiagnostic(0, "Model"));
+        await test.RunAsync();
     }
 
     [Test]
-    public async Task PartialClass_NoDiagnostic()
+    public async Task GenericType_PreservesConstraintsAsync()
     {
-        await Verifier.VerifyAnalyzerAsync(
-            """
-            namespace Nice3point.Revit.Toolkit.External
-            {
-                public sealed class ExternalEventAttribute : System.Attribute { }
-            }
+        var test = new FixTest
+        {
+            TestCode = """
+                       using Nice3point.Revit.Toolkit.External;
 
-            namespace TestApplication
-            {
-                public partial class MyViewModel
-                {
-                    [Nice3point.Revit.Toolkit.External.ExternalEvent]
-                    private void DoWork() { }
-                }
-            }
-            """);
+                       public class {|#0:Model|}<T> where T : class, new()
+                       {
+                           [ExternalEvent]
+                           private void Run(T value) { }
+                       }
+                       """,
+            FixedCode = """
+                        using Nice3point.Revit.Toolkit.External;
+
+                        public partial class Model<T> where T : class, new()
+                        {
+                            [ExternalEvent]
+                            private void Run(T value) { }
+                        }
+                        """
+        };
+
+        test.ExpectedDiagnostics.Add(PartialDiagnostic(0, "Model"));
+        await test.RunAsync();
     }
 
     [Test]
-    public async Task MethodWithoutAttribute_NoDiagnostic()
+    public async Task NonPartialOuterType_AddsModifierAsync()
     {
-        await Verifier.VerifyAnalyzerAsync(
-            """
-            namespace Nice3point.Revit.Toolkit.External
-            {
-                public sealed class ExternalEventAttribute : System.Attribute { }
-            }
+        var test = new FixTest
+        {
+            TestCode = """
+                       using Nice3point.Revit.Toolkit.External;
 
-            namespace TestApplication
-            {
-                public class MyViewModel
-                {
-                    private void DoWork() { }
-                }
-            }
-            """);
+                       public class {|#0:Outer|}
+                       {
+                           public partial class Inner
+                           {
+                               [ExternalEvent]
+                               private void Run() { }
+                           }
+                       }
+                       """,
+            FixedCode = """
+                        using Nice3point.Revit.Toolkit.External;
+
+                        public partial class Outer
+                        {
+                            public partial class Inner
+                            {
+                                [ExternalEvent]
+                                private void Run() { }
+                            }
+                        }
+                        """
+        };
+
+        test.ExpectedDiagnostics.Add(PartialDiagnostic(0, "Outer"));
+        await test.RunAsync();
     }
 
     [Test]
-    public async Task NestedNonPartialClass_ReportsDiagnosticAndFixes()
+    [Category("Regression")]
+    [Arguments("// Revit command model.", "")]
+    [Arguments("#region Models", "\n#endregion")]
+    public async Task LeadingTrivia_PreservesPositionAsync(string leadingTrivia, string trailingTrivia)
     {
-        await Verifier.VerifyCodeFixAsync(
-            """
-            namespace Nice3point.Revit.Toolkit.External
-            {
-                public sealed class ExternalEventAttribute : System.Attribute { }
-            }
+        var test = new FixTest
+        {
+            TestCode = $$"""
+                         using Nice3point.Revit.Toolkit.External;
 
-            namespace TestApplication
-            {
-                public class {|#0:Outer|}
-                {
-                    public partial class Inner
-                    {
-                        [Nice3point.Revit.Toolkit.External.ExternalEvent]
-                        private void DoWork() { }
-                    }
-                }
-            }
-            """,
-            Verifier.Diagnostic(DiagnosticDescriptors.ExternalEventContainingTypeNotPartial)
-                .WithLocation(0)
-                .WithArguments("Outer", "DoWork"),
-            """
-            namespace Nice3point.Revit.Toolkit.External
-            {
-                public sealed class ExternalEventAttribute : System.Attribute { }
-            }
+                         {{leadingTrivia}}
+                         class {|#0:Model|}
+                         {
+                             [ExternalEvent]
+                             private void Run() { }
+                         }{{trailingTrivia}}
+                         """,
+            FixedCode = $$"""
+                          using Nice3point.Revit.Toolkit.External;
 
-            namespace TestApplication
-            {
-                public partial class Outer
-                {
-                    public partial class Inner
-                    {
-                        [Nice3point.Revit.Toolkit.External.ExternalEvent]
-                        private void DoWork() { }
-                    }
-                }
-            }
-            """);
+                          {{leadingTrivia}}
+                          partial class Model
+                          {
+                              [ExternalEvent]
+                              private void Run() { }
+                          }{{trailingTrivia}}
+                          """
+        };
+
+        test.ExpectedDiagnostics.Add(PartialDiagnostic(0, "Model"));
+        await test.RunAsync();
+    }
+
+    [Test]
+    public async Task FixAll_MakesContainingTypesPartialAsync()
+    {
+        var test = new FixTest
+        {
+            TestCode = """
+                       using Nice3point.Revit.Toolkit.External;
+
+                       public class {|#0:Outer|}
+                       {
+                           public class {|#1:Inner|}
+                           {
+                               [ExternalEvent]
+                               private void Run() { }
+                           }
+                       }
+                       """,
+            FixedCode = """
+                        using Nice3point.Revit.Toolkit.External;
+
+                        public partial class Outer
+                        {
+                            public partial class Inner
+                            {
+                                [ExternalEvent]
+                                private void Run() { }
+                            }
+                        }
+                        """,
+            NumberOfIncrementalIterations = 2,
+            NumberOfFixAllIterations = 1
+        };
+
+        test.ExpectedDiagnostics.AddRange([
+            PartialDiagnostic(0, "Outer"),
+            PartialDiagnostic(1, "Inner")
+        ]);
+
+        await test.RunAsync();
+    }
+
+    private static DiagnosticResult PartialDiagnostic(int location, string typeName)
+    {
+        return new DiagnosticResult(ExternalEventDiagnostics.ContainingTypeNotPartial)
+            .WithLocation(location)
+            .WithArguments(typeName, "Run");
     }
 }

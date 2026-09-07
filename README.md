@@ -1,7 +1,7 @@
 <p align="center">
     <picture>
         <source media="(prefers-color-scheme: dark)" width="610" srcset="https://github.com/Nice3point/RevitToolkit/assets/20504884/852aba24-118f-4908-949d-2e0c019c83da">
-        <img alt="RevitLookup" width="610" src="https://github.com/Nice3point/RevitToolkit/assets/20504884/c59042df-b9b5-4829-9417-006912781cf2">
+        <img alt="Revit Toolkit" width="610" src="https://github.com/Nice3point/RevitToolkit/assets/20504884/c59042df-b9b5-4829-9417-006912781cf2">
     </picture>
 </p>
 
@@ -73,7 +73,9 @@ The Toolkit provides base classes for Revit external commands with implemented:
 
 #### ExternalCommand
 
-Implementation for **IExternalCommand**. Override `Execute()` to implement a command:
+An implementation for **IExternalCommand**.
+Use `ExternalCommand` for synchronous operations.
+Access the current `UIApplication` through the inherited `Application` property:
 
 ```c#
 [Transaction(TransactionMode.Manual)]
@@ -82,16 +84,17 @@ public class Command : ExternalCommand
     public override void Execute()
     {
         var document = Application.ActiveUIDocument.Document;
+        TaskDialog.Show("Active document", document.Title);
     }
 }
 ```
 
 #### AsyncExternalCommand
 
-Implementation for asynchronous **IExternalCommand**. Override `ExecuteAsync()` for async/await support.
-
-The Revit UI remains responsive during async operations through dispatcher message pumping.
-Ideal for I/O-bound operations such as HTTP requests, file operations, or database queries.
+An implementation for asynchronous **IExternalCommand**.
+Use `AsyncExternalCommand` when a command awaits HTTP requests, file access, or other asynchronous work.
+Override `ExecuteAsync()` and use `await` for those operations.
+The base class keeps the Revit UI responsive while awaiting completion.
 
 ```c#
 [Transaction(TransactionMode.Manual)]
@@ -122,7 +125,9 @@ The Toolkit provides base classes for Revit external applications with implement
 
 #### ExternalApplication
 
-Implementation for **IExternalApplication**. Override `OnStartup()` and optionally `OnShutdown()`:
+An implementation for **IExternalApplication**.
+Override `OnStartup()` to create ribbon controls or register event handlers.
+Override `OnShutdown()` when the add-in needs to release resources or save the state.
 
 ```c#
 public class Application : ExternalApplication
@@ -134,19 +139,15 @@ public class Application : ExternalApplication
             .SetImage("/RevitAddin;component/Resources/Icons/RibbonIcon16.png");
             .SetLargeImage("/RevitAddin;component/Resources/Icons/RibbonIcon32.png");
     }
-
-    public override void OnShutdown()
-    {
-    }
 }
 ```
 
 #### AsyncExternalApplication
 
-Implementation for asynchronous **IExternalApplication**. Override `OnStartupAsync()` and optionally `OnShutdownAsync()` for async/await support.
-
-The Revit UI remains responsive during async operations through dispatcher message pumping.
-Ideal for I/O-bound operations such as HTTP requests, file operations, or database queries during application startup and shutdown.
+An implementation for asynchronous **IExternalApplication**.
+Use `AsyncExternalApplication` when startup or shutdown needs asynchronous work.
+Override `OnStartupAsync()` and, when needed, `OnShutdownAsync()`.
+The Revit UI remains responsive while these methods await completion.
 
 ```c#
 public class Application : AsyncExternalApplication
@@ -169,17 +170,21 @@ public class Application : AsyncExternalApplication
 
 #### ExternalDBApplication
 
-Implementation for **IExternalDBApplication**. Same as `ExternalApplication` but without UI access:
+An implementation for **IExternalDBApplication**.
+Use `ExternalDBApplication` for a database-level add-in that doesn't create UI controls.
+Its `Application` property exposes `ControlledApplication`.
 
 ```c#
-public class Application : ExternalDBApplication
+public class DocumentLoggingApplication : ExternalDBApplication
 {
     public override void OnStartup()
     {
+        Application.DocumentOpened += OnDocumentOpened;
     }
 
     public override void OnShutdown()
     {
+        SaveSettings();
     }
 }
 ```
@@ -192,11 +197,14 @@ which is particularly useful when working with modeless windows.
 Events do not need to be created inside the Revit API context before use — the Toolkit handles all the initialization for you,
 so you can create them anywhere in your code and on any thread.
 
+Use `Raise()` when the caller does not need to wait, or `RaiseAsync()` when it needs completion or a return value.
+For generated event properties, see the [ExternalEvent attribute](#externalevent-attribute).
+
 #### ExternalEvent
 
 A synchronous external event that queues the handler via the Revit external event mechanism.
-When `Raise()` is called, the delegate is placed into the Revit event queue and will be executed
-in the next event-processing cycle, once Revit is ready and no other commands or edit modes are active.
+When `Raise()` is called, the delegate is placed into the Revit event queue and will be executed in the next event-processing cycle,
+once Revit is ready and no other commands or edit modes are active.
 
 ```c#
 private readonly ExternalEvent _deleteWindowsEvent = new(application =>
@@ -249,12 +257,6 @@ An asynchronous external event that queues the handler and asynchronously awaits
 The `RaiseAsync()` method returns a `Task` that completes when Revit has finished executing the delegate.
 
 Exceptions thrown inside the delegate are rethrown in the original synchronization context.
-
-> [!WARNING]
-> Synchronously blocking the result of `RaiseAsync()` on the Revit main thread
-> (e.g. `.Wait()`, `.Result`, `.GetAwaiter().GetResult()`) will cause a deadlock,
-> because Revit cannot process the external event while its main thread is blocked by the waiting call.
-> Use `await` instead, which releases the thread and allows Revit to process the event.
 
 ```c#
 private readonly AsyncExternalEvent _deleteWindowsAsyncEvent = new(application =>
@@ -315,7 +317,7 @@ private readonly AsyncRequestExternalEvent<int> _countWindowsAsyncEvent = new(ap
     return elementIds.Count;
 });
 
-private async Task CountWindowsAsync()
+private async Task<int> CountWindowsAsync()
 {
     var count = await _countWindowsAsyncEvent.RaiseAsync();
 
@@ -341,7 +343,7 @@ private readonly AsyncRequestExternalEvent<ElementId, bool> _deleteWindowRequest
     return true;
 });
 
-private async Task DeleteWindowAsync(ElementId elementId)
+private async Task<ElementId, bool> DeleteWindowAsync(ElementId elementId)
 {
     var result = await _deleteWindowRequestEvent.RaiseAsync(elementId);
 
@@ -349,28 +351,32 @@ private async Task DeleteWindowAsync(ElementId elementId)
 }
 ```
 
+> [!IMPORTANT]
+> Await asynchronous events. Blocking a pending event with `.Wait()`, `.Result`, or `.GetAwaiter().GetResult()` on the Revit main thread prevents Revit from processing it and can deadlock.
+> The event handler itself remains synchronous; perform asynchronous I/O before or after raising the event.
+
 #### ExternalEventOptions
 
 You can configure the behavior of external events using `ExternalEventOptions`.
 The `AllowDirectInvocation` option enables the handler to be invoked directly on the calling thread when Revit is in API mode, instead of being queued:
 
 ```c#
-private readonly ExternalEvent _deleteWindowsEvent = new(application =>
+private readonly ExternalEvent _showDocumentTitleEvent = new(application =>
 {
-    //Execution logic
+    TaskDialog.Show("Active document", application.ActiveUIDocument.Document.Title);
 }, ExternalEventOptions.AllowDirectInvocation);
 ```
 
-This option useful if you want support Modal and Modeless windows from a single codebase without wasting time on queue management and Revit event-processing cycle.
+Use this option when the same operation is called from both a Revit callback and a modeless window.
 
 #### ExternalEvent attribute
 
-The `ExternalEventAttribute` is an attribute that allows generating external event properties for annotated methods.
-Its purpose is to completely eliminate the boilerplate that is needed to define external events wrapping private methods in a class.
+The `ExternalEventAttribute` generates external event properties for annotated methods.
+Add `[ExternalEvent]` to your handler, then call the generated property's `Raise()` or `RaiseAsync()` method to run it in the Revit API context.
 
 **How it works**
 
-The `ExternalEvent` attribute can be used to annotate a method in a partial type, like so:
+Declare the containing class as `partial` and annotate the method:
 
 ```c#
 public partial class MyViewModel
@@ -387,31 +393,19 @@ public partial class MyViewModel
 }
 ```
 
-And it will generate properties like this:
+The generator adds `DeleteWindowsEvent` and `DeleteWindowsAsyncEvent` properties.
+Call either property from your code:
 
 ```c#
-public partial class MyViewModel
-{
-    public IExternalEvent DeleteWindowsEvent => field ??= new ExternalEvent(DeleteWindows);
-    public IAsyncExternalEvent DeleteWindowsAsyncEvent => field ??= new AsyncExternalEvent(DeleteWindows);
-}
-```
+DeleteWindowsEvent.Raise();
 
-After you can call a `Raise` method:
-
-```c#
-public partial class MyViewModel
-{
-    private void DeleteCommand()
-    {
-        DeleteWindowsEvent.Raise();
-    }
-}
+// Wait for the handler to finish:
+await DeleteWindowsAsyncEvent.RaiseAsync();
 ```
 
 > [!NOTE]
-> The name of the generated properties is created based on the method name.
-> The generator appends `Event` for the synchronous property and `AsyncEvent` for the asynchronous property.
+> Property names follow the handler name: `Event` for `Raise()` and `AsyncEvent` for `RaiseAsync()`.
+> Changes to the document still require a transaction inside the handler.
 
 **Methods without parameters**
 
@@ -419,17 +413,18 @@ For `void` methods, the generator creates both sync and async properties:
 
 ```c#
 [ExternalEvent]
-private void DeleteWindows()
+private void ShowMessage()
 {
-    _document.Delete(_windowIds);
+    TaskDialog.Show("Toolkit", "The handler runs in Revit.");
 }
 
 // Generates:
-// IExternalEvent DeleteWindowsEvent
-// IAsyncExternalEvent DeleteWindowsAsyncEvent
+// IExternalEvent ShowMessageEvent
+// IAsyncExternalEvent ShowMessageAsyncEvent
 ```
 
-For methods that return a value, only an async property is generated:
+For a method that returns a value, the generator creates an async property.
+Await `RaiseAsync()` to receive the result:
 
 ```c#
 [ExternalEvent]
@@ -442,9 +437,14 @@ private int CountWindows()
 // IAsyncRequestExternalEvent<int> CountWindowsAsyncEvent
 ```
 
+```c#
+var count = await CountWindowsAsyncEvent.RaiseAsync();
+```
+
 **Methods with UIApplication parameter**
 
-When a method accepts a `UIApplication` parameter, the generated events pass the application instance to the handler:
+Place `UIApplication` first when the handler needs access to the application.
+The event supplies it automatically; omit it when calling `Raise()` or `RaiseAsync()`:
 
 ```c#
 [ExternalEvent]
@@ -464,8 +464,7 @@ private void DeleteWindows(UIApplication application)
 
 **Methods with one extra parameter**
 
-When a method has one additional parameter beyond the optional `UIApplication`,
-the generator creates typed event properties:
+For one parameter beyond the optional `UIApplication`, pass its value directly to the generated event:
 
 ```c#
 [ExternalEvent]
@@ -483,6 +482,10 @@ private void DeleteWindow(UIApplication application, ElementId elementId)
 // IAsyncExternalEvent<ElementId> DeleteWindowAsyncEvent
 ```
 
+```c#
+await DeleteWindowAsyncEvent.RaiseAsync(elementId);
+```
+
 For methods with a return value:
 
 ```c#
@@ -498,11 +501,13 @@ private int CountWindows(UIApplication application, BuiltInCategory category)
 
 **Methods with multiple extra parameters**
 
-When a method has two or more extra parameters, the generator creates a `sealed record` to bundle them into a single argument type, along with extension methods to call Raise with individual parameters:
+For multiple parameters, pass the arguments in the same order as the handler declaration.
+The optional first `UIApplication` parameter is still supplied by the event:
 
 ```c#
 public partial class MyViewModel
 {
+    [ExternalEvent]
     private Room CreateRoom(UIApplication application, Level level, UV coordinate)
     {
         var document = application.ActiveUIDocument.Document;
@@ -516,42 +521,104 @@ public partial class MyViewModel
 }
 ```
 
-Will generate:
+```c#
+var room = await CreateRoomAsyncEvent.RaiseAsync(level, coordinate);
+```
+
+The generator provides a `CreateRoomArgs` record and extension methods that accept the individual arguments.
+Import the view model's namespace when calling these extensions from another namespace.
+
+<details>
+<summary>Generated members for this example</summary>
+
+This example uses C# 14 and .NET 9 or later.
+Each event is initialized on first access; concurrent callers receive the same instance.
 
 ```c#
 public partial class MyViewModel
 {
-    public IAsyncRequestExternalEvent<CreateRoomArgs, Room> CreateRoomAsyncEvent => field ??= new IAsyncRequestExternalEvent<CreateRoomArgs, Room>(...);
+    private global::System.Threading.Lock? _CreateRoomAsyncEventLock;
+
+    public IAsyncRequestExternalEvent<CreateRoomArgs, Room> CreateRoomAsyncEvent
+    {
+        get
+        {
+            lock (global::System.Threading.LazyInitializer.EnsureInitialized(ref _CreateRoomAsyncEventLock))
+            {
+                return field ??= new AsyncRequestExternalEvent<CreateRoomArgs, Room>((application, args) =>
+                {
+                    return CreateRoom(application, args.Level, args.Coordinate);
+                });
+            }
+        }
+    }
 
     public sealed record CreateRoomArgs(Level Level, UV Coordinate);
 }
 
 public static partial class MyViewModelExtensions
 {
-    public static Task<Room> RaiseAsync(this IAsyncRequestExternalEvent<CreateRoomArgs, Room> externalEvent, Level level, UV coordinate)
+    public static global::System.Threading.Tasks.Task<Room> RaiseAsync(this IAsyncRequestExternalEvent<MyViewModel.CreateRoomArgs, Room> externalEvent, Level level, UV coordinate)
     {
-        return externalEvent.RaiseAsync(new CreateRoomArgs(level, coordinate));
+        return externalEvent.RaiseAsync(new MyViewModel.CreateRoomArgs(level, coordinate));
     }
 }
 ```
 
-These extensions allow you to call the event with individual arguments instead of creating a new Args:
+Older language versions use an explicit backing field, and targets without C# 13 or `System.Threading.Lock` use an object lock.
+If initialization throws, the next access retries it.
 
-```c#
-var room = await CreateRoomAsyncEvent.RaiseAsync(level, coordinate);
-```
+</details>
 
 **Enabling direct invocation**
 
-Use the `AllowDirectInvocation` property on the attribute to configure the generated events to execute directly when Revit is in API mode:
+Set `AllowDirectInvocation` to execute the handler directly when Revit is already in API mode.
+Calls made outside that context are queued as external events:
 
 ```c#
 [ExternalEvent(AllowDirectInvocation = true)]
 private void DeleteWindows(UIApplication application)
 {
-    //Execution logic
+    var document = application.ActiveUIDocument.Document;
+    using var transaction = new Transaction(document, "Delete windows");
+    transaction.Start();
+    document.Delete(document.GetInstanceIds(BuiltInCategory.OST_Windows));
+    transaction.Commit();
 }
 ```
+
+**Generic and nested types**
+
+The containing type can be generic.
+Its type parameters and constraints remain available to the generated events:
+
+```c#
+public partial class ElementNameReader<TElement> where TElement : Element
+{
+    [ExternalEvent]
+    private string GetName(TElement element)
+    {
+        return element.Name;
+    }
+}
+```
+
+```c#
+var nameReader = new ElementNameReader<Wall>();
+var name = await nameReader.GetNameAsyncEvent.RaiseAsync(wall);
+```
+
+For nested types, mark every containing type as `partial`.
+Private and protected nested types use the generated argument record directly when a handler has multiple parameters: `RunAsyncEvent.RaiseAsync(new RunArgs(first, second))`.
+
+**Handler requirements**
+
+- The handler must be synchronous and non-generic. Use `RaiseAsync()` to await its execution; the handler itself must not return `Task` or use `async void`.
+- Parameters must be passed by value. `ref`, `in`, `out`, and types such as `Span<T>` cannot be stored in an external event.
+- Give each annotated handler a unique name within its type and leave its generated member names available.
+- For instance handlers on structs, the event captures a copy of the struct when first initialized. Later changes to the original struct are not reflected in that event.
+
+The IDE reports unsupported declarations and offers fixes where the correction is unambiguous.
 
 ### Context
 
@@ -592,8 +659,10 @@ However, if you want to cancel the transaction and undo all failed changes, pass
 ```C#
 using (RevitApiContext.BeginFailureSuppressionScope(resolveErrors: false))
 {
-    //User transactions
-    ModifyDocument();
+    using var transaction = new Transaction(document, "Delete elements");
+    transaction.Start();
+    document.Delete(elementIds);
+    transaction.Commit();
 }
 ```
 
@@ -601,173 +670,211 @@ using (RevitApiContext.BeginFailureSuppressionScope(resolveErrors: false))
 
 Provides members for accessing the Revit application context at the UI level.
 
-List of available environment properties:
-
-- RevitContext.UiApplication
-- RevitContext.ActiveDocument
-- RevitContext.ActiveUiDocument
-- RevitContext.ActiveView
-- RevitContext.ActiveGraphicalView
-- RevitContext.IsRevitInApiMode
-
-> [!NOTE]
-> RevitContext data can be accessed from any application execution location.
-
-If your application can run in a separate thread or use API requests in an asynchronous context, use **IsRevitInApiMode** property to verify Revit API context:
+`RevitContext` exposes the current `UI application`, document, and view.
+Use `UiApplication` for UI operations, `ActiveUiDocument` for selection, and `ActiveDocument` for database access.
+`ActiveView` and `ActiveGraphicalView` expose the corresponding views.
+The active document and view properties can be `null` when no document is open:
 
 ```C#
-public void Execute()
+var document = RevitContext.ActiveDocument;
+if (document is null)
 {
-    if (RevitContext.IsRevitInApiMode)
-    {
-        ModifyDocument();
-    }
+    return;
+}
+
+TaskDialog.Show("Active document", document.Title);
+```
+
+These accessors do not make Revit API calls safe on a background thread.
+`IsRevitInApiMode` reports API mode; it does not enter that mode or dispatch work to Revit.
+
+```C#
+if (RevitContext.IsRevitInApiMode)
+{
+    ModifyDocument();
 }
 ```
 
-**RevitContext** provides access to dialog suppression using disposable scopes:
+Use an [external event](#external-events) when calling from a modeless window or background code.
+
+**Suppressing dialogs**
+
+Wrap an operation in `BeginDialogSuppressionScope()` to override dialog results temporarily.
+This example supplies the default result code while loading a family:
 
 ```C#
 using (RevitContext.BeginDialogSuppressionScope())
 {
-    //User operations
-    LoadFamilies();
+    document.LoadFamily(fileName, out var family);
 }
-// Dialogs are restored automatically
 ```
 
-You can specify a result code for the suppressed dialogs:
+Suppression ends when the last active scope is disposed.
+Pass an explicit result when the dialog requires a different response:
 
 ```C#
-using (RevitContext.BeginDialogSuppressionScope(resultCode: 2))
-{
-    LoadFamilies();
-}
-
 using (RevitContext.BeginDialogSuppressionScope(TaskDialogResult.Ok))
 {
-    LoadFamilies();
-}
-
-using (RevitContext.BeginDialogSuppressionScope(MessageBoxResult.Yes))
-{
-    LoadFamilies();
+    document.LoadFamily(fileName, out var family);
 }
 ```
 
-Or use a custom handler for more control:
+The overloads accept `TaskDialogResult`, `MessageBoxResult`, or a numeric result code.
+The result must match a button supported by the dialog.
+For operations that can display different dialogs, use a callback and override only the ones you recognize:
 
 ```C#
 using (RevitContext.BeginDialogSuppressionScope(args =>
 {
-    var result = args.DialogId == "TaskDialog_ModelUpdater" ? TaskDialogResult.Ok : TaskDialogResult.Close;
-    args.OverrideResult((int)result);
+    if (args.DialogId == "TaskDialog_ModelUpdater")
+    {
+        args.OverrideResult((int)TaskDialogResult.Ok);
+    }
 }))
 {
-    LoadFamilies();
+    document.LoadFamily(fileName, out var family);
 }
 ```
 
 ### Options
 
-The Toolkit provides implementation of various Revit interfaces, with the possibility of customization.
+The Toolkit provides implementation of various Revit interfaces.
+Each provides default behavior and constructor arguments or delegates for customization.
 
 #### FamilyLoadOptions
 
-Contains an implementation for **IFamilyLoadOptions**.
-Provides a handler for loading families
+An implementation for **IFamilyLoadOptions**.
+Pass `FamilyLoadOptions` to `Document.LoadFamily` to control how an existing family is updated.
+The default options continue loading, overwrite parameter values of existing types, and use the incoming family for shared-family conflicts:
 
 ```c#
 document.LoadFamily(fileName, new FamilyLoadOptions(), out var family);
-document.LoadFamily(fileName, new FamilyLoadOptions(false, FamilySource.Project), out var family);
-document.LoadFamily(fileName, UIDocument.GetRevitUIFamilyLoadOptions(), out var family);
 ```
+
+To preserve existing parameter values and use the project's shared family:
+
+```c#
+var loadOptions = new FamilyLoadOptions(overwrite: false, familySource: FamilySource.Project);
+document.LoadFamily(fileName, loadOptions, out var family);
+```
+
+Call family-loading operations from the Revit API context with the transaction requirements of the chosen `LoadFamily` overload.
 
 #### DuplicateTypeNamesHandler
 
-Contains an implementation for **IDuplicateTypeNamesHandler**.
-Provides a handler of duplicate type names encountered during a paste operation.
+An implementation for **IDuplicateTypeNamesHandler**.
+Attach `DuplicateTypeNamesHandler` to copy options when copying elements between documents.
+By default, name conflicts use the destination document's types:
 
 ```c#
-var options = new CopyPasteOptions();
+using var options = new CopyPasteOptions();
 options.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler());
-options.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler(args => DuplicateTypeAction.Abort));
-options.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler(DuplicateTypeAction.UseDestinationTypes));
 ElementTransformUtils.CopyElements(source, elementIds, destination, null, options);
 ```
 
-#### SaveSharedCoordinatesCallback
-
-Contains an implementation for **ISaveSharedCoordinatesCallback**.
-Provides a handler for control Revit when trying to unload or reload a Revit link with changes in shared coordinates.
+To cancel the copy when duplicate type names are encountered, configure the options before copying:
 
 ```c#
-var linkType = elementId.ToElement<RevitLinkType>(RevitContext.ActiveDocument);
+options.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler(DuplicateTypeAction.Abort));
+```
+
+For a decision based on the conflicting types, pass a `Func<DuplicateTypeNamesHandlerArgs, DuplicateTypeAction>` callback.
+
+#### SaveSharedCoordinatesCallback
+
+An implementation for **ISaveSharedCoordinatesCallback**.
+Use `SaveSharedCoordinatesCallback` when unloading or reloading a Revit link with modified shared coordinates.
+The default callback saves the changes:
+
+```c#
 linkType.Unload(new SaveSharedCoordinatesCallback());
+```
+
+Pass a fixed option to skip saving:
+
+```c#
 linkType.Unload(new SaveSharedCoordinatesCallback(SaveModifiedLinksOptions.DoNotSaveLinks));
+```
+
+Or choose an option for each link:
+
+```c#
 linkType.Unload(new SaveSharedCoordinatesCallback(type =>
 {
-    if (type.AttachmentType == AttachmentType.Overlay) return SaveModifiedLinksOptions.SaveLinks;
-    return SaveModifiedLinksOptions.DoNotSaveLinks;
+    return type.AttachmentType == AttachmentType.Overlay
+        ? SaveModifiedLinksOptions.SaveLinks
+        : SaveModifiedLinksOptions.DoNotSaveLinks;
 }));
 ```
 
 #### FrameworkElementCreator
 
-Contains an implementation for **IFrameworkElementCreator**.
-Creator of `FrameworkElements` for the dockable pane.
+An implementation for **IFrameworkElementCreator**.
+Use `FrameworkElementCreator<T>` when Revit should create a dockable pane's WPF content on demand.
+Without a service provider, `T` must derive from `FrameworkElement` and have a public parameterless constructor:
 
 ```c#
 DockablePaneProvider.Register(application, guid, title)
     .SetConfiguration(data =>
     {
         data.FrameworkElementCreator = new FrameworkElementCreator<DockPaneView>();
-        data.FrameworkElementCreator = new FrameworkElementCreator<DockPaneView>(serviceProvider);
     });
 ```
 
+To resolve the view through dependency injection, pass an `IServiceProvider` instead:
+
+```c#
+data.FrameworkElementCreator = new FrameworkElementCreator<DockPaneView>(serviceProvider);
+```
+
+Register `DockPaneView` with the provider before Revit requests it.
+
 #### SelectionConfiguration
 
-Contains an implementation for **ISelectionFilter**.
-Creates a configuration for creating Selection Filters.
-
-By default, all elements are allowed for selection:
+An implementation for **ISelectionFilter**.
+Use `SelectionConfiguration` to define selection rules with delegates.
+Pass its `Filter` property to Revit's selection methods.
+With no rules configured, the filter accepts every candidate:
 
 ```c#
 var selectionConfiguration = new SelectionConfiguration();
 uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
 ```
 
-You can also customize the selection of Element or Reference separately:
+To restrict selection to walls:
 
 ```c#
 var selectionConfiguration = new SelectionConfiguration()
-        .Allow.Element(element => element.Category.Id.AreEquals(BuiltInCategory.OST_Walls));
+    .Allow.Element(element => element is Wall);
 
 uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
 ```
 
-Or set rules for everything:
+Use `Allow.Reference` to add a separate rule for geometry references.
+Its callback receives the candidate `Reference` and cursor position as `XYZ`.
 
 ```c#
 var selectionConfiguration = new SelectionConfiguration()
-    .Allow.Element(element => element.Category.Id.AreEquals(BuiltInCategory.OST_Walls))
-    .Allow.Reference((reference, xyz) => false);
+    .Allow.Element(element => element is Wall)
+    .Allow.Reference((reference, xyz) => true);
 
 uiDocument.Selection.PickObject(ObjectType.Element, selectionConfiguration.Filter);
 ```
 
 ### Decorators
 
-Simplified implementation of raw Revit classes
+Use the decorators to configure Revit components without implementing their provider interfaces yourself.
 
 #### DockablePaneProvider
 
-Provides access to create a new dockable pane to the Revit user interface.
+Register a dockable pane during your external application's `OnStartup()`.
+Supply a stable GUID, a title, the WPF content, and its initial docking position:
 
 ```c#
+var paneGuid = new Guid("6b8bd014-f488-4555-925d-e56be2c25b76");
+
 DockablePaneProvider
-    .Register(application, new Guid(), "Dockable pane")
+    .Register(application, paneGuid, "Project tools")
     .SetConfiguration(data =>
     {
         data.FrameworkElement = new RevitAddInView();
@@ -780,23 +887,33 @@ DockablePaneProvider
     });
 ```
 
+Use a GUID unique to your pane and keep it unchanged between runs.
+To display the registered pane from a command:
+
+```c#
+var pane = Application.GetDockablePane(new DockablePaneId(paneGuid));
+pane.Show();
+```
+
 ### Helpers
 
-Provides auxiliary components
+Helpers support loading add-in dependencies.
 
 #### ResolveHelper
 
-Provides handlers to resolve dependencies.
+Use `ResolveHelper.BeginAssemblyResolveScope<T>()` around code that loads dependencies from the directory containing `T`'s assembly:
 
 ```c#
-using (ResolveHelper.BeginAssemblyResolveScope<Application>())
+using (ResolveHelper.BeginAssemblyResolveScope<AddInApplication>())
 {
-    window.Show();
+    window.ShowDialog();
 }
-// Assembly resolution is restored automatically
 ```
 
-You can also pass a type directly:
+The resolution handler remains active for the lifetime of the scope.
+For a modal window, keep the scope open until `ShowDialog()` returns; a scope around `Show()` ends as soon as the modeless window opens.
+
+Pass a `Type` when the assembly is selected at runtime:
 
 ```c#
 using (ResolveHelper.BeginAssemblyResolveScope(typeof(ViewModel)))
@@ -805,7 +922,7 @@ using (ResolveHelper.BeginAssemblyResolveScope(typeof(ViewModel)))
 }
 ```
 
-Or specify a directory path directly:
+Or specify the directory to search:
 
 ```c#
 using (ResolveHelper.BeginAssemblyResolveScope(@"C:\Libraries"))
@@ -814,7 +931,7 @@ using (ResolveHelper.BeginAssemblyResolveScope(@"C:\Libraries"))
 }
 ```
 
-Scopes can be nested. Dependencies are searched from innermost to outermost scope:
+Scopes can be nested. Dependencies are searched from the innermost scope outward:
 
 ```c#
 using (ResolveHelper.BeginAssemblyResolveScope(@"C:\Shared\Common"))
@@ -825,4 +942,5 @@ using (ResolveHelper.BeginAssemblyResolveScope(@"C:\Plugin"))
 }
 ```
 
-Enabled by default for `ExternalCommand`, `AsyncExternalCommand`, `ExternalApplication` and `ExternalDBApplication`.
+The command and application base classes already manage dependency resolution during their callbacks when needed.
+Add a scope for work outside those callbacks that requires the same directory-based resolution.

@@ -15,8 +15,8 @@ This skill covers authoring and extending that tooling; the generator and analyz
 
 ## When to use
 
-- Adding or changing the `ExternalEventGenerator` incremental generator or its `Extractor`/`Writer` partials.
-- Adding a diagnostic to the `DiagnosticDescriptors` catalog or a new analyzer or code fixer.
+- Adding or changing the `ExternalEventGenerator` entry point or its `ExternalEvents/Analysis` and `ExternalEvents/Emission` implementation.
+- Adding a diagnostic to the `ExternalEventDiagnostics` catalog or a new analyzer or code fixer.
 - Wiring a `.Roslyn###` twin project or editing `Directory.Roslyn.props`.
 - Changing how the tooling assemblies pack into the `analyzers/dotnet/roslyn{4.14,5.0}` paths.
 
@@ -24,50 +24,69 @@ This skill covers authoring and extending that tooling; the generator and analyz
 
 - Designing the runtime types the generator emits against (the external-event family, the static contexts). That is the library design contract, not the compiler tooling.
 
+## Architecture layout
+
+Public generator, analyzer, and code-fix entry points live at their project roots.
+Their public namespaces remain stable.
+Capability-specific implementation lives under the same subject name across projects, such as `ExternalEvents`.
+The capability root holds its shared definitions; `Analysis` extracts and validates symbols, and `Emission` renders source.
+The external-event diagnostic catalog lives in `Analyzers/ExternalEvents/ExternalEventDiagnostics.cs` and is linked into the other tooling projects.
+Descriptor declarations follow diagnostic-ID order.
+
+`CSharp` holds language-specific symbol and source operations.
+`Diagnostics` holds generator diagnostic reporting, and `IncrementalGeneration` holds value equality used by incremental pipelines.
+These subjects have no dependency on `ExternalEvents`.
+The public `EquatableArray<T>` retains its existing `SourceGenerators.Models` namespace for compatibility; its file belongs to `IncrementalGeneration`.
+Folders describe subjects rather than class forms; `Helpers`, `Extensions`, and `Models` are not storage categories.
+New capabilities receive sibling subject folders instead of expanding the external-event implementation or a project-wide helper catalog.
+
 ## Workflow
 
 ### Step 1: Emit from the incremental generator
 
 `ExternalEventGenerator` is `[Generator(LanguageNames.CSharp)]` and implements `IIncrementalGenerator`.
 It pipes matched methods with `ForAttributeWithMetadataName`, reports diagnostics, then registers source output.
-Keep the pipeline incremental: extract into an equatable model in `Extractor`, and render text in `Writer`.
+Keep the pipeline incremental: extract into an equatable model in `ExternalEventExtractor`, and render text in `ExternalEventWriter`.
 
 ```csharp
 public void Initialize(IncrementalGeneratorInitializationContext context)
 {
-    var results = context.SyntaxProvider
+    var methodAnalyses = context.SyntaxProvider
         .ForAttributeWithMetadataName(
-            WellKnownFullyQualifiedClassNames.ExternalEventAttribute.WithoutGlobalPrefix,
+            ExternalEventTypeNames.ExternalEventAttribute.WithoutGlobalPrefix,
             predicate: static (node, cancellationToken) => node is MethodDeclarationSyntax,
-            transform: static (syntaxContext, cancellationToken) => Extractor.GetMethodResult(syntaxContext, cancellationToken));
+            transform: static (syntaxContext, cancellationToken) => ExternalEventExtractor.AnalyzeMethod(syntaxContext, cancellationToken));
 
-    context.ReportDiagnostics(results.Select(static (result, cancellationToken) => result.Diagnostics));
+    context.ReportDiagnostics(methodAnalyses.Select(static (methodAnalysis, cancellationToken) => methodAnalysis.Diagnostics));
 
-    var infosWithOptions = results
-        .Where(static result => result.Info is not null)
-        .Select(static (result, cancellationToken) => result.Info!)
+    var eventDefinitionsWithOptions = methodAnalyses
+        .Where(static methodAnalysis => methodAnalysis.Definition is not null)
+        .Select(static (methodAnalysis, cancellationToken) => methodAnalysis.Definition!)
         .Combine(context.ParseOptionsProvider);
 
-    context.RegisterSourceOutput(infosWithOptions, static (sourceProductionContext, pair) =>
+    context.RegisterSourceOutput(eventDefinitionsWithOptions, static (sourceProductionContext, generationInput) =>
     {
-        var (info, parseOptions) = pair;
-        var source = Writer.GenerateSource(info, useFieldKeyword: false);
-        sourceProductionContext.AddSource(info.HintName, SourceText.From(source, Encoding.UTF8));
+        var (eventDefinition, _) = generationInput;
+        var generatedSource = ExternalEventWriter.GenerateSource(eventDefinition, useFieldKeyword: false, useLockType: false);
+        sourceProductionContext.AddSource(eventDefinition.HintName, SourceText.From(generatedSource, Encoding.UTF8));
     });
 }
 ```
 
 Emit into the method's own namespace and a stable hint name derived from the type hierarchy, and treat every generated member name as public surface.
 Never carry a `SyntaxNode`, `ISymbol`, or `Compilation` into the model; carry only equatable data. The pipeline then caches correctly.
+Project consumer capabilities into equatable values before combining them with event definitions.
+The `field` keyword depends on the consumer language version; `System.Threading.Lock` requires C# 13 or later and an accessible type in the consumer compilation.
+Generated multi-parameter handlers use block-bodied lambdas, with a `return` statement for value-returning handlers.
 
 ### Step 2: Register the diagnostic in the RVTTK catalog
 
-Diagnostics live in the internal `DiagnosticDescriptors` catalog under the `ExternalEventGenerator` category, keyed by a `RVTTK####` id.
+Diagnostics live in the internal `ExternalEventDiagnostics` catalog under the `ExternalEventGenerator` category, keyed by a `RVTTK####` id.
 The shipped ids are `RVTTK0001` (returns `Task`), `RVTTK0002` (`async void`), `RVTTK0003` (generic), `RVTTK0004` (duplicate overloads), and `RVTTK0005` (containing type not partial).
 Assign the next unused id, never reuse a retired one, and give it a title, a parameterized `messageFormat`, a category, and a severity.
 
 ```csharp
-public static readonly DiagnosticDescriptor ExternalEventContainingTypeNotPartial = new(
+public static readonly DiagnosticDescriptor ContainingTypeNotPartial = new(
     id: "RVTTK0005",
     title: "Containing type is not partial",
     messageFormat: "The type '{0}' containing method '{1}' marked with [ExternalEvent] must be declared as partial",
@@ -79,8 +98,8 @@ public static readonly DiagnosticDescriptor ExternalEventContainingTypeNotPartia
 ### Step 3: Report from the generator or a dedicated analyzer
 
 Choose the reporter by whether the check needs the full symbol model at edit time.
-The generator's `Extractor.ValidateMethod` reports `RVTTK0001`, `RVTTK0003`, and `RVTTK0004` while building the model, returning `false` to skip emission.
-`RVTTK0002` and `RVTTK0005` also have standalone analyzers (`AsyncVoidMethodAnalyzer`, `ExternalEventContainingTypeNotPartialAnalyzer`); the IDE flags them live and a code fixer can attach.
+The generator's `ExternalEventExtractor.ValidateMethod` reports `RVTTK0001`, `RVTTK0003`, and `RVTTK0004` while building the model, returning `false` to skip emission.
+`RVTTK0002` and `RVTTK0005` also have standalone analyzers (`AsyncVoidMethodAnalyzer`, `ContainingTypeNotPartialAnalyzer`); the IDE flags them live and a code fixer can attach.
 
 An analyzer resolves the attribute symbol once per compilation, then registers a symbol action.
 
@@ -88,7 +107,7 @@ An analyzer resolves the attribute symbol once per compilation, then registers a
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class AsyncVoidMethodAnalyzer : DiagnosticAnalyzer
 {
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [DiagnosticDescriptors.ExternalEventAsyncVoidMethod];
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [ExternalEventDiagnostics.AsyncVoidMethod];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -110,13 +129,13 @@ public sealed class AsyncVoidMethodAnalyzer : DiagnosticAnalyzer
                     return;
                 }
 
-                if (!HasTargetAttribute(methodSymbol, attributeSymbol))
+                if (!methodSymbol.HasAttribute(attributeSymbol))
                 {
                     return;
                 }
 
                 context.ReportDiagnostic(Diagnostic.Create(
-                    descriptor: DiagnosticDescriptors.ExternalEventAsyncVoidMethod,
+                    descriptor: ExternalEventDiagnostics.AsyncVoidMethod,
                     location: methodSymbol.Locations[0],
                     messageArgs: methodSymbol.Name));
             }, SymbolKind.Method);
@@ -139,7 +158,7 @@ public sealed class MakeTypePartialCodeFixer : CodeFixProvider
 {
     private const string Title = "Make type partial";
 
-    public override ImmutableArray<string> FixableDiagnosticIds { get; } = [DiagnosticDescriptors.ExternalEventContainingTypeNotPartial.Id];
+    public override ImmutableArray<string> FixableDiagnosticIds { get; } = [ExternalEventDiagnostics.ContainingTypeNotPartial.Id];
 
     public override FixAllProvider GetFixAllProvider()
     {
@@ -163,7 +182,7 @@ public sealed class MakeTypePartialCodeFixer : CodeFixProvider
 }
 ```
 
-Reference the fixable id through the catalog (`DiagnosticDescriptors.X.Id`), never a string literal; an id can never drift between analyzer and fixer.
+Reference the fixable id through the catalog (`ExternalEventDiagnostics.X.Id`), never a string literal; an id can never drift between analyzer and fixer.
 
 ### Step 5: Compile the same source against both Roslyn versions
 
@@ -219,7 +238,7 @@ dotnet run -c Release
 ## Validation
 
 - [ ] The generator stays incremental: only equatable data crosses into the model, and output goes to a stable hint name and namespace.
-- [ ] A new diagnostic uses the next unused `RVTTK####` id in `DiagnosticDescriptors`, with a title, parameterized message, category, and severity.
+- [ ] A new diagnostic uses the next unused `RVTTK####` id in `ExternalEventDiagnostics`, with a title, parameterized message, category, and severity.
 - [ ] Every analyzer configures generated-code analysis and concurrent execution and bails when the attribute type is absent.
 - [ ] A code fixer is added only for a mechanical fix, is `[Shared]`/`[ExportCodeFixProvider]`, and references the fixable id through the catalog.
 - [ ] Roslyn-version-specific APIs are guarded with `ROSLYN*_OR_GREATER`; no source is duplicated into a `.Roslyn###` twin.
@@ -234,6 +253,6 @@ dotnet run -c Release
 | Renaming a generated property or namespace                 | Generated names are public surface; deprecate, do not rename.            |
 | Capturing a symbol or `Compilation` in the generator model | Carry only equatable data; the incremental pipeline then caches.         |
 | Duplicating source into a `.Roslyn###` twin                | Author once in the base project; the props file links the files.         |
-| A hard-coded diagnostic string in a code fixer             | Reference `DiagnosticDescriptors.X.Id`; analyzer and fixer stay in sync. |
+| A hard-coded diagnostic string in a code fixer             | Reference `ExternalEventDiagnostics.X.Id`; analyzer and fixer stay in sync. |
 | Skipping the `AnalyzerReleases.Unshipped.md` entry         | Add every rule; release tracking fails the build without it.             |
 | Adding a code fixer for a fix that needs a human decision  | Report the diagnostic only; fix mechanically resolvable cases.           |

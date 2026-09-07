@@ -1,0 +1,9 @@
+{
+  "solution": {
+    "path": "..\\Nice3point.Revit.Toolkit.slnx",
+    "projects": [
+      "tests\\Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Tests\\Nice3point.Revit.Toolkit.Analyzers.CodeFixers.Tests.csproj",
+      "tests\\Nice3point.Revit.Toolkit.SourceGenerators.Tests\\Nice3point.Revit.Toolkit.SourceGenerators.Tests.csproj"
+    ]
+  }
+}

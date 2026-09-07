@@ -1,0 +1,23 @@
+﻿{
+  Diagnostics: [
+    {
+      Location: /*
+    [ExternalEvent]
+    private void Run<TValue>(TValue value) { }
+                 ^^^
+}
+*/
+ Input.cs: (7,17)-(7,20),
+      Message: Method 'Run' marked with [ExternalEvent] must not be generic,
+      Severity: Error,
+      Descriptor: {
+        Id: RVTTK0003,
+        Title: Method is generic,
+        MessageFormat: Method '{0}' marked with [ExternalEvent] must not be generic,
+        Category: ExternalEventGenerator,
+        DefaultSeverity: Error,
+        IsEnabledByDefault: true
+      }
+    }
+  ]
+}

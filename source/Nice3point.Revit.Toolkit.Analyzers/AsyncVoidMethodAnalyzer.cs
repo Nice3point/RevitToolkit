@@ -1,7 +1,8 @@
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
+using Nice3point.Revit.Toolkit.Analyzers.CSharp;
+using Nice3point.Revit.Toolkit.Analyzers.ExternalEvents;
 
 namespace Nice3point.Revit.Toolkit.Analyzers;
 
@@ -12,7 +13,10 @@ namespace Nice3point.Revit.Toolkit.Analyzers;
 public sealed class AsyncVoidMethodAnalyzer : DiagnosticAnalyzer
 {
     /// <inheritdoc />
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [DiagnosticDescriptors.ExternalEventAsyncVoidMethod];
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
+    [
+        ExternalEventDiagnostics.AsyncVoidMethod
+    ];
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -35,29 +39,16 @@ public sealed class AsyncVoidMethodAnalyzer : DiagnosticAnalyzer
                     return;
                 }
 
-                if (!HasTargetAttribute(methodSymbol, attributeSymbol))
+                if (!methodSymbol.HasAttribute(attributeSymbol))
                 {
                     return;
                 }
 
                 context.ReportDiagnostic(Diagnostic.Create(
-                    DiagnosticDescriptors.ExternalEventAsyncVoidMethod,
+                    ExternalEventDiagnostics.AsyncVoidMethod,
                     methodSymbol.Locations[0],
                     methodSymbol.Name));
             }, SymbolKind.Method);
         });
-    }
-
-    private static bool HasTargetAttribute(IMethodSymbol methodSymbol, INamedTypeSymbol attributeSymbol)
-    {
-        foreach (var attribute in methodSymbol.GetAttributes())
-        {
-            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeSymbol))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

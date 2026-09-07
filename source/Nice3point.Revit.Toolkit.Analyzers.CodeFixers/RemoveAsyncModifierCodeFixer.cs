@@ -5,7 +5,8 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Nice3point.Revit.Toolkit.Analyzers.Diagnostics;
+using Microsoft.CodeAnalysis.Text;
+using Nice3point.Revit.Toolkit.Analyzers.ExternalEvents;
 
 namespace Nice3point.Revit.Toolkit.Analyzers.CodeFixers.CodeFixes;
 
@@ -13,13 +14,17 @@ namespace Nice3point.Revit.Toolkit.Analyzers.CodeFixers.CodeFixes;
 ///     A code fixer that removes the <see langword="async" /> modifier from an <see langword="async" /> <see langword="void" /> method
 ///     marked with <c>[ExternalEvent]</c>.
 /// </summary>
+/// <remarks>A fix is available only when the method body contains no await operations outside nested functions.</remarks>
 [Shared]
 [ExportCodeFixProvider(LanguageNames.CSharp)]
 public sealed class RemoveAsyncModifierCodeFixer : CodeFixProvider
 {
     private const string Title = "Remove async modifier";
 
-    public override ImmutableArray<string> FixableDiagnosticIds { get; } = [DiagnosticDescriptors.ExternalEventAsyncVoidMethod.Id];
+    public override ImmutableArray<string> FixableDiagnosticIds { get; } =
+    [
+        ExternalEventDiagnostics.AsyncVoidMethod.Id
+    ];
 
     public override FixAllProvider GetFixAllProvider()
     {
@@ -38,10 +43,23 @@ public sealed class RemoveAsyncModifierCodeFixer : CodeFixProvider
             return;
         }
 
+        foreach (var node in methodDeclaration.DescendantNodes(static node => node is not (LocalFunctionStatementSyntax or AnonymousFunctionExpressionSyntax)))
+        {
+            context.CancellationToken.ThrowIfCancellationRequested();
+            if (node is AwaitExpressionSyntax
+                or UsingStatementSyntax { AwaitKeyword.RawKind: not 0 }
+                or LocalDeclarationStatementSyntax { AwaitKeyword.RawKind: not 0 }
+                or CommonForEachStatementSyntax { AwaitKeyword.RawKind: not 0 })
+            {
+                return;
+            }
+        }
+
+        var asyncToken = methodDeclaration.Modifiers.First(static modifier => modifier.IsKind(SyntaxKind.AsyncKeyword));
         context.RegisterCodeFix(
             CodeAction.Create(
                 Title,
-                _ => RemoveAsyncModifier(context.Document, root, methodDeclaration),
+                cancellationToken => RemoveAsyncModifierAsync(context.Document, asyncToken, cancellationToken),
                 Title),
             diagnostic);
     }
@@ -49,12 +67,13 @@ public sealed class RemoveAsyncModifierCodeFixer : CodeFixProvider
     /// <summary>
     ///     Removes the <see langword="async" /> modifier from the method declaration.
     /// </summary>
-    private static Task<Document> RemoveAsyncModifier(Document document, SyntaxNode root, MethodDeclarationSyntax methodDeclaration)
+    private static async Task<Document> RemoveAsyncModifierAsync(Document document, SyntaxToken asyncToken, CancellationToken cancellationToken)
     {
-        var asyncToken = methodDeclaration.Modifiers.First(modifier => modifier.IsKind(SyntaxKind.AsyncKeyword));
-        var newModifiers = methodDeclaration.Modifiers.Remove(asyncToken);
-        var newMethodDeclaration = methodDeclaration.WithModifiers(newModifiers);
+        var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
+        var trailingTrivia = asyncToken.TrailingTrivia.Count > 0 ? asyncToken.TrailingTrivia[0] : default;
+        var end = trailingTrivia.IsKind(SyntaxKind.WhitespaceTrivia) ? trailingTrivia.Span.End : asyncToken.Span.End;
+        var span = TextSpan.FromBounds(asyncToken.SpanStart, end);
 
-        return Task.FromResult(document.WithSyntaxRoot(root.ReplaceNode(methodDeclaration, newMethodDeclaration)));
+        return document.WithText(text.WithChanges(new TextChange(span, string.Empty)));
     }
 }

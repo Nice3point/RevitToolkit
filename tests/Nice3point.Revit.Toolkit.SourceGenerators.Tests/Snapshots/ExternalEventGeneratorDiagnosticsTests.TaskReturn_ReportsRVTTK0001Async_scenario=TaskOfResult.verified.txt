@@ -1,0 +1,23 @@
+﻿{
+  Diagnostics: [
+    {
+      Location: /*
+    [ExternalEvent]
+    private System.Threading.Tasks.Task<int> Run() => System.Threading.Tasks.Task.FromResult(42);
+                                             ^^^
+}
+*/
+ Input.cs: (7,45)-(7,48),
+      Message: Method 'Run' marked with [ExternalEvent] must not return Task or Task<T>; use a void or value-returning signature instead,
+      Severity: Error,
+      Descriptor: {
+        Id: RVTTK0001,
+        Title: Method returns Task,
+        MessageFormat: Method '{0}' marked with [ExternalEvent] must not return Task or Task<T>; use a void or value-returning signature instead,
+        Category: ExternalEventGenerator,
+        DefaultSeverity: Error,
+        IsEnabledByDefault: true
+      }
+    }
+  ]
+}

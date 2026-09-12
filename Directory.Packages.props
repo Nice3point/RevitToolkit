@@ -45,7 +45,7 @@
         <!-- Testing -->
         <PackageVersion Include="BenchmarkDotNet" Version="0.15.8"/>
         <PackageVersion Include="TUnit" Version="1.66.27"/>
-        <PackageVersion Include="Verify.TUnit" Version="32.0.0"/>
+        <PackageVersion Include="Verify.TUnit" Version="32.0.1"/>
         <PackageVersion Include="Verify.SourceGenerators" Version="2.5.0"/>
         <PackageVersion Include="Shouldly" Version="4.3.0"/>
 

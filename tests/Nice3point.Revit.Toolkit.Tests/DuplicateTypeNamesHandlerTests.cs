@@ -1,134 +1,105 @@
 using Nice3point.Revit.Toolkit.Options;
-using Nice3point.Revit.Toolkit.Tests.Abstractions;
+using Nice3point.TUnit.Revit;
+using Nice3point.TUnit.Revit.Executors;
+using TUnit.Core.Executors;
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
-public sealed class DuplicateTypeNamesHandlerTests : RevitModelSampleTest
+public sealed class DuplicateTypeNamesHandlerTests : RevitApiTest
 {
+    private static readonly string[] SeedTypeNames = ["Seed Wall Type 1", "Seed Wall Type 2", "Seed Wall Type 3"];
+
+    private Document _sourceDocument = null!;
+    private Document _targetDocument = null!;
+    private List<ElementId> _sourceTypeIds = null!;
+
+    [Before(Test)]
+    [HookExecutor<RevitThreadExecutor>]
+    public void SeedDocuments()
+    {
+        _sourceDocument = Application.NewProjectDocument(UnitSystem.Metric);
+        _targetDocument = Application.NewProjectDocument(UnitSystem.Metric);
+        _sourceTypeIds = SeedWallTypes(_sourceDocument, WallFunction.Exterior);
+    }
+
+    [After(Test)]
+    [HookExecutor<RevitThreadExecutor>]
+    public void CloseDocuments()
+    {
+        _sourceDocument.Close(false);
+        _targetDocument.Close(false);
+    }
+
     [Test]
-    [MethodDataSource(nameof(RevitModels))]
-    public async Task DuplicateTypeNamesHandler_DefaultConstructor_CopiesElements(string path)
+    public async Task DuplicateTypeNamesHandler_DefaultConstructor_CopiesElements()
     {
         // Arrange
-        var sourceDocument = ModelDocuments[path];
-        var targetDocument = Application.NewProjectDocument(UnitSystem.Metric);
-
-        var elementsToCopy = sourceDocument.CollectElements()
-            .OfClass<FamilySymbol>()
-            .Take(5)
-            .Select(element => element.Id)
-            .ToList();
-
         var handler = new DuplicateTypeNamesHandler();
         var copyOptions = new CopyPasteOptions();
         copyOptions.SetDuplicateTypeNamesHandler(handler);
 
         // Act
-        using var transaction = new Transaction(targetDocument, "Copy elements");
+        using var transaction = new Transaction(_targetDocument, "Copy elements");
         transaction.Start();
-        var copiedIds = ElementTransformUtils.CopyElements(sourceDocument, elementsToCopy, targetDocument, Transform.Identity, copyOptions);
+        var copiedIds = ElementTransformUtils.CopyElements(_sourceDocument, _sourceTypeIds, _targetDocument, Transform.Identity, copyOptions);
         transaction.Commit();
-
-        targetDocument.Close(false);
 
         // Assert
         await Assert.That(copiedIds.Count).IsGreaterThan(0);
     }
 
     [Test]
-    [MethodDataSource(nameof(RevitModels))]
-    public async Task DuplicateTypeNamesHandler_UseDestinationTypes_CopiesElements(string path)
+    public async Task DuplicateTypeNamesHandler_UseDestinationTypes_CopiesElements()
     {
         // Arrange
-        var sourceDocument = ModelDocuments[path];
-        var targetDocument = Application.NewProjectDocument(UnitSystem.Metric);
-
-        var elementsToCopy = sourceDocument.CollectElements()
-            .OfClass<FamilySymbol>()
-            .Take(5)
-            .Select(element => element.Id)
-            .ToList();
-
         var handler = new DuplicateTypeNamesHandler(DuplicateTypeAction.UseDestinationTypes);
         var copyOptions = new CopyPasteOptions();
         copyOptions.SetDuplicateTypeNamesHandler(handler);
 
         // Act
-        using var transaction = new Transaction(targetDocument, "Copy elements");
+        using var transaction = new Transaction(_targetDocument, "Copy elements");
         transaction.Start();
-        var copiedIds = ElementTransformUtils.CopyElements(sourceDocument, elementsToCopy, targetDocument, Transform.Identity, copyOptions);
+        var copiedIds = ElementTransformUtils.CopyElements(_sourceDocument, _sourceTypeIds, _targetDocument, Transform.Identity, copyOptions);
         transaction.Commit();
-
-        targetDocument.Close(false);
 
         // Assert
         await Assert.That(copiedIds.Count).IsGreaterThan(0);
     }
 
     [Test]
-    [MethodDataSource(nameof(RevitModels))]
-    public async Task DuplicateTypeNamesHandler_CopyTwice_SecondCopySucceeds(string path)
+    public async Task DuplicateTypeNamesHandler_CopyTwice_SecondCopySucceeds()
     {
         // Arrange
-        var sourceDocument = ModelDocuments[path];
-        var targetDocument = Application.NewProjectDocument(UnitSystem.Metric);
-
-        var elementsToCopy = sourceDocument.CollectElements()
-            .OfClass<FamilySymbol>()
-            .Take(3)
-            .Select(element => element.Id)
-            .ToList();
-
         var handler = new DuplicateTypeNamesHandler(DuplicateTypeAction.UseDestinationTypes);
         var copyOptions = new CopyPasteOptions();
         copyOptions.SetDuplicateTypeNamesHandler(handler);
 
         // Act
-        using (var transaction = new Transaction(targetDocument, "First copy"))
+        using (var transaction = new Transaction(_targetDocument, "First copy"))
         {
             transaction.Start();
-            ElementTransformUtils.CopyElements(sourceDocument, elementsToCopy, targetDocument, Transform.Identity, copyOptions);
+            ElementTransformUtils.CopyElements(_sourceDocument, _sourceTypeIds, _targetDocument, Transform.Identity, copyOptions);
             transaction.Commit();
         }
 
         ICollection<ElementId> secondCopyIds;
 
-        using (var transaction = new Transaction(targetDocument, "Second copy"))
+        using (var transaction = new Transaction(_targetDocument, "Second copy"))
         {
             transaction.Start();
-            secondCopyIds = ElementTransformUtils.CopyElements(sourceDocument, elementsToCopy, targetDocument, Transform.Identity, copyOptions);
+            secondCopyIds = ElementTransformUtils.CopyElements(_sourceDocument, _sourceTypeIds, _targetDocument, Transform.Identity, copyOptions);
             transaction.Commit();
         }
-
-        targetDocument.Close(false);
 
         // Assert
         await Assert.That(secondCopyIds.Count).IsGreaterThanOrEqualTo(0);
     }
 
     [Test]
-    [MethodDataSource(nameof(RevitModels))]
-    public async Task DuplicateTypeNamesHandler_Abort_RollsBackOnDuplicate(string path)
+    public async Task DuplicateTypeNamesHandler_Abort_RollsBackOnDuplicate()
     {
         // Arrange
-        var sourceDocument = ModelDocuments[path];
-        var targetDocument = Application.NewProjectDocument(UnitSystem.Metric);
-
-        var elementsToCopy = sourceDocument.CollectElements()
-            .OfClass<FamilySymbol>()
-            .Take(3)
-            .Select(element => element.Id)
-            .ToList();
-
-        var firstOptions = new CopyPasteOptions();
-        firstOptions.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler());
-
-        using (var transaction = new Transaction(targetDocument, "First copy"))
-        {
-            transaction.Start();
-            ElementTransformUtils.CopyElements(sourceDocument, elementsToCopy, targetDocument, Transform.Identity, firstOptions);
-            transaction.Commit();
-        }
+        SeedWallTypes(_targetDocument, WallFunction.Interior);
 
         var abortOptions = new CopyPasteOptions();
         abortOptions.SetDuplicateTypeNamesHandler(new DuplicateTypeNamesHandler(DuplicateTypeAction.Abort));
@@ -136,16 +107,35 @@ public sealed class DuplicateTypeNamesHandlerTests : RevitModelSampleTest
         // Act
         TransactionStatus status;
 
-        using (var transaction = new Transaction(targetDocument, "Second copy with abort"))
+        using (var transaction = new Transaction(_targetDocument, "Copy with abort"))
         {
             transaction.Start();
-            ElementTransformUtils.CopyElements(sourceDocument, elementsToCopy, targetDocument, Transform.Identity, abortOptions);
+            ElementTransformUtils.CopyElements(_sourceDocument, _sourceTypeIds, _targetDocument, Transform.Identity, abortOptions);
             status = transaction.Commit();
         }
 
-        targetDocument.Close(false);
-
         // Assert
         await Assert.That(status).IsEqualTo(TransactionStatus.RolledBack);
+    }
+
+    private static List<ElementId> SeedWallTypes(Document document, WallFunction function)
+    {
+        var baseType = document.GetDefaultElementTypeId(ElementTypeGroup.WallType).ToElement<WallType>(document)!;
+
+        using var transaction = new Transaction(document, "Seed wall types");
+        transaction.Start();
+
+        var typeIds = SeedTypeNames
+            .Select(typeName =>
+            {
+                var wallType = (WallType)baseType.Duplicate(typeName);
+                wallType.Function = function;
+                return wallType.Id;
+            })
+            .ToList();
+
+        transaction.Commit();
+
+        return typeIds;
     }
 }

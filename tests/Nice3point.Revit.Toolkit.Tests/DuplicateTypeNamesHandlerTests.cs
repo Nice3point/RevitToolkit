@@ -1,20 +1,22 @@
 using Nice3point.Revit.Toolkit.Options;
 using Nice3point.TUnit.Revit;
-using Nice3point.TUnit.Revit.Executors;
-using TUnit.Core.Executors;
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
 public sealed class DuplicateTypeNamesHandlerTests : RevitApiTest
 {
-    private static readonly string[] SeedTypeNames = ["Seed Wall Type 1", "Seed Wall Type 2", "Seed Wall Type 3"];
+    private static readonly string[] SeedTypeNames =
+    [
+        "Seed Wall Type 1",
+        "Seed Wall Type 2",
+        "Seed Wall Type 3"
+    ];
 
     private Document _sourceDocument = null!;
     private Document _targetDocument = null!;
     private List<ElementId> _sourceTypeIds = null!;
 
     [Before(Test)]
-    [HookExecutor<RevitThreadExecutor>]
     public void SeedDocuments()
     {
         _sourceDocument = Application.NewProjectDocument(UnitSystem.Metric);
@@ -23,7 +25,6 @@ public sealed class DuplicateTypeNamesHandlerTests : RevitApiTest
     }
 
     [After(Test)]
-    [HookExecutor<RevitThreadExecutor>]
     public void CloseDocuments()
     {
         _sourceDocument.Close(false);

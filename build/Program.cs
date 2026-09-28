@@ -21,7 +21,7 @@ if (args.Length == 0)
     builder.Services.AddModule<CompileProjectsModule>();
 }
 
-if (args.Contains("clean-nuget"))
+if (args.Contains("delete"))
 {
     builder.Services.AddModule<DeleteNugetModule>();
 }

@@ -1,0 +1,47 @@
+name: Delete release
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Release tag to delete'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  windows:
+    name: windows-2025
+    runs-on: windows-2025
+    steps:
+
+      - name: Configure git
+        run: git config --global core.longpaths true
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Cache packages
+        uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', 'Directory.Build.props', 'Directory.Packages.props') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Log in to NuGet
+        id: nuget
+        uses: NuGet/login@v1
+        with:
+          user: Nice3point
+
+      - name: Delete release
+        run: dotnet run -c Release -- delete
+        working-directory: "build"
+        env:
+          Delete__Ref: ${{ inputs.ref }}
+          NuGet__ApiKey: ${{ steps.nuget.outputs.NUGET_API_KEY }}

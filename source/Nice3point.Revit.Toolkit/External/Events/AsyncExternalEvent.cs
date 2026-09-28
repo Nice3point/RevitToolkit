@@ -87,7 +87,7 @@ public sealed class AsyncExternalEvent : ExternalEventHandler, IAsyncExternalEve
         {
             try
             {
-                Execute(RevitContext.UiApplication);
+                ExecuteHandler(RevitContext.UiApplication);
                 return Task.CompletedTask;
             }
             catch (Exception exception)
@@ -108,20 +108,24 @@ public sealed class AsyncExternalEvent : ExternalEventHandler, IAsyncExternalEve
     {
         try
         {
-            if (_uiHandler is not null)
-            {
-                _uiHandler.Invoke(uiApplication);
-            }
-            else
-            {
-                _handler!.Invoke();
-            }
-
+            ExecuteHandler(uiApplication);
             _taskCompletionSource?.SetResult();
         }
         catch (Exception exception)
         {
             _taskCompletionSource?.SetException(exception);
+        }
+    }
+
+    private void ExecuteHandler(UIApplication uiApplication)
+    {
+        if (_uiHandler is not null)
+        {
+            _uiHandler.Invoke(uiApplication);
+        }
+        else
+        {
+            _handler!.Invoke();
         }
     }
 }

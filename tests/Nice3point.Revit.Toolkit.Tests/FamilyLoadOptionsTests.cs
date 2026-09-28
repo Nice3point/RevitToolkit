@@ -1,7 +1,6 @@
+using System.IO;
 using Nice3point.Revit.Toolkit.Options;
 using Nice3point.TUnit.Revit;
-using Nice3point.TUnit.Revit.Executors;
-using TUnit.Core.Executors;
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
@@ -17,7 +16,6 @@ public sealed class FamilyLoadOptionsTests : RevitApiTest
     private Document Document => _document!;
 
     [Before(Test)]
-    [HookExecutor<RevitThreadExecutor>]
     public void SeedDocuments()
     {
         var familyTemplatePath = FindFamilyTemplate();
@@ -35,7 +33,6 @@ public sealed class FamilyLoadOptionsTests : RevitApiTest
     }
 
     [After(Test)]
-    [HookExecutor<RevitThreadExecutor>]
     public void CloseDocuments()
     {
         _document?.Close(false);

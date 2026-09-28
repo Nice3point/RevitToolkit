@@ -1,6 +1,4 @@
 using Nice3point.TUnit.Revit;
-using Nice3point.TUnit.Revit.Executors;
-using TUnit.Core.Executors;
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
@@ -10,7 +8,6 @@ public sealed class RevitApiContextTests : RevitApiTest
     private Level _level = null!;
 
     [Before(Test)]
-    [HookExecutor<RevitThreadExecutor>]
     public void CreateDocument()
     {
         _document = Application.NewProjectDocument(UnitSystem.Metric);
@@ -21,7 +18,6 @@ public sealed class RevitApiContextTests : RevitApiTest
     }
 
     [After(Test)]
-    [HookExecutor<RevitThreadExecutor>]
     public void CloseDocument()
     {
         _document.Close(false);

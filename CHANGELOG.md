@@ -1,7 +1,5 @@
 # 2027.0.1
 
-### External Events
-
 - `AsyncExternalEvent.RaiseAsync()` with `ExternalEventOptions.AllowDirectInvocation` returns a faulted task when the handler throws inside the Revit API context. The exception was previously lost and the task completed successfully.
 
 # 2027.0.0

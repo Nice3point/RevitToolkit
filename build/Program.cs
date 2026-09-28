@@ -15,6 +15,7 @@ builder.Configuration.AddCommandLine(args);
 builder.Services.Configure<BuildOptions>(builder.Configuration.GetSection("Build"));
 builder.Services.Configure<NuGetOptions>(builder.Configuration.GetSection("NuGet"));
 builder.Services.Configure<PublishOptions>(builder.Configuration.GetSection("Publish"));
+builder.Services.Configure<DeleteOptions>(builder.Configuration.GetSection("Delete"));
 
 if (args.Length == 0)
 {

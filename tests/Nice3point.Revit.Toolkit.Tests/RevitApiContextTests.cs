@@ -57,7 +57,7 @@ public sealed class RevitApiContextTests : RevitApiTest
     public async Task BeginFailureSuppressionScope_WithResolveErrors_CommitsTransaction()
     {
         // Arrange
-        using (RevitApiContext.BeginFailureSuppressionScope(true))
+        using (RevitApiContext.BeginFailureSuppressionScope())
         {
             // Act
             using var transaction = new Transaction(_document, "Create overlapping walls");

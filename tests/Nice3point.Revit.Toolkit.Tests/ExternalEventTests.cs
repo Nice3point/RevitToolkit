@@ -13,7 +13,7 @@ public sealed class ExternalEventTests : RevitApiUiTest
     {
         // Arrange
         var execution = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var externalEvent = new ExternalEvent(() => execution.SetResult());
+        var externalEvent = new ExternalEvent(execution.SetResult);
 
         // Act
         var request = externalEvent.Raise();
@@ -34,7 +34,7 @@ public sealed class ExternalEventTests : RevitApiUiTest
     {
         // Arrange
         var execution = new TaskCompletionSource<UIApplication>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var externalEvent = new ExternalEvent(uiApplication => execution.SetResult(uiApplication));
+        var externalEvent = new ExternalEvent(execution.SetResult);
 
         // Act
         externalEvent.Raise();
@@ -82,7 +82,7 @@ public sealed class ExternalEventTests : RevitApiUiTest
     {
         // Arrange
         var execution = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var externalEvent = new ExternalEvent<string>(argument => execution.SetResult(argument));
+        var externalEvent = new ExternalEvent<string>(execution.SetResult);
 
         // Act
         externalEvent.Raise("Queued argument");

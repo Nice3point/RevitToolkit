@@ -105,7 +105,7 @@ public sealed class AsyncRequestExternalEventTests : RevitApiUiTest
     public async Task RaiseAsync_ArgumentUiApplicationHandler_ReceivesTheUiApplicationAndArgument(CancellationToken cancellationToken)
     {
         // Arrange
-        var externalEvent = new AsyncRequestExternalEvent<int, (IntPtr MainWindowHandle, int Argument)>((uiApplication, argument) => (uiApplication.MainWindowHandle, argument));
+        var externalEvent = new AsyncRequestExternalEvent<int, (IntPtr MainWindowHandle, int Argument)>((uiApplication, payload) => (uiApplication.MainWindowHandle, payload));
 
         // Act
         var (mainWindowHandle, argument) = await externalEvent.RaiseAsync(42).WaitAsync(cancellationToken);

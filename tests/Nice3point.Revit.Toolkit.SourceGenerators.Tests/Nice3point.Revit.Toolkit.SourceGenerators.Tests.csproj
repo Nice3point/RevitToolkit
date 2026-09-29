@@ -6,6 +6,11 @@
         <EnableTUnitPolyfills>false</EnableTUnitPolyfills>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <Verify_SponsorshipExemption>OpenSource</Verify_SponsorshipExemption>
+        <Verify_SponsorshipExemptionUntil>2027-09</Verify_SponsorshipExemptionUntil>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="TUnit"/>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp"/>

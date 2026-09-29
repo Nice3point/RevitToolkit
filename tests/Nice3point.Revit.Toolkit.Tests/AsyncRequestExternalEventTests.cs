@@ -64,7 +64,7 @@ public sealed class AsyncRequestExternalEventTests : RevitApiUiTest
         // Assert
         using (Assert.Multiple())
         {
-            await Assert.That(raiseTask.IsCompletedSuccessfully).IsTrue();
+            await Assert.That(raiseTask.Status).IsEqualTo(TaskStatus.RanToCompletion);
             await Assert.That(await raiseTask).IsEqualTo(42);
         }
     }
@@ -143,7 +143,7 @@ public sealed class AsyncRequestExternalEventTests : RevitApiUiTest
         // Assert
         using (Assert.Multiple())
         {
-            await Assert.That(raiseTask.IsCompletedSuccessfully).IsTrue();
+            await Assert.That(raiseTask.Status).IsEqualTo(TaskStatus.RanToCompletion);
             await Assert.That(await raiseTask).IsEqualTo(42);
         }
     }

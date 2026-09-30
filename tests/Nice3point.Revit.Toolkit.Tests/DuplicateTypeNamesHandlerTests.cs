@@ -1,5 +1,7 @@
 using Nice3point.Revit.Toolkit.Options;
 using Nice3point.TUnit.Revit;
+using Nice3point.TUnit.Revit.Executors;
+using TUnit.Core.Executors;
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
@@ -12,22 +14,34 @@ public sealed class DuplicateTypeNamesHandlerTests : RevitApiTest
         "Seed Wall Type 3"
     ];
 
-    private Document _sourceDocument = null!;
+    private static Document _sourceDocument = null!;
+    private static List<ElementId> _sourceTypeIds = null!;
     private Document _targetDocument = null!;
-    private List<ElementId> _sourceTypeIds = null!;
 
-    [Before(Test)]
-    public void SeedDocuments()
+    [Before(Class)]
+    [HookExecutor<RevitThreadExecutor>]
+    public static void SeedSourceDocument()
     {
         _sourceDocument = Application.NewProjectDocument(UnitSystem.Metric);
-        _targetDocument = Application.NewProjectDocument(UnitSystem.Metric);
         _sourceTypeIds = SeedWallTypes(_sourceDocument, WallFunction.Exterior);
     }
 
-    [After(Test)]
-    public void CloseDocuments()
+    [After(Class)]
+    [HookExecutor<RevitThreadExecutor>]
+    public static void CloseSourceDocument()
     {
         _sourceDocument.Close(false);
+    }
+
+    [Before(Test)]
+    public void CreateTargetDocument()
+    {
+        _targetDocument = Application.NewProjectDocument(UnitSystem.Metric);
+    }
+
+    [After(Test)]
+    public void CloseTargetDocument()
+    {
         _targetDocument.Close(false);
     }
 

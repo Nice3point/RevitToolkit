@@ -1,6 +1,8 @@
 using System.IO;
 using Autodesk.Revit.UI;
 using Nice3point.TUnit.Revit;
+using Nice3point.TUnit.Revit.Executors;
+using TUnit.Core.Executors;
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
@@ -9,6 +11,7 @@ public sealed class RevitContextTests : RevitApiUiTest
     private static UIDocument _uiDocument = null!;
 
     [Before(Class)]
+    [HookExecutor<RevitUiThreadExecutor>]
     public static void OpenModel()
     {
         var modelPath = Path.Combine(Path.GetTempPath(), $"{Path.GetRandomFileName()}.rvt");

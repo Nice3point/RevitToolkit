@@ -1,16 +1,19 @@
 using Nice3point.Revit.Toolkit.Options;
 using Nice3point.TUnit.Revit;
+using Nice3point.TUnit.Revit.Executors;
+using TUnit.Core.Executors;
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
 public sealed class SelectionConfigurationTests : RevitApiUiTest
 {
-    private Document _document = null!;
-    private Level _level = null!;
-    private View _view = null!;
+    private static Document _document = null!;
+    private static Level _level = null!;
+    private static View _view = null!;
 
-    [Before(Test)]
-    public void CreateDocument()
+    [Before(Class)]
+    [HookExecutor<RevitUiThreadExecutor>]
+    public static void CreateDocument()
     {
         _document = UiApplication.Application.NewProjectDocument(UnitSystem.Metric);
         _level = _document.CollectElements()
@@ -26,8 +29,9 @@ public sealed class SelectionConfigurationTests : RevitApiUiTest
             .First(view => !view.IsTemplate);
     }
 
-    [After(Test)]
-    public void CloseDocument()
+    [After(Class)]
+    [HookExecutor<RevitUiThreadExecutor>]
+    public static void CloseDocument()
     {
         _document.Close(false);
     }

@@ -1,3 +1,7 @@
+# 2027.0.2
+
+- `RevitContext.IsRevitInApiMode` no longer allocates and no longer requires `APIUIAPI`. On Revit 2027 it calls `Application.IsInAPIContext()`; on earlier versions it calls the native `RevitDBAPI` functions directly. A call takes 27 ns instead of 62 ns on Revit 2027.
+
 # 2027.0.1
 
 - `AsyncExternalEvent.RaiseAsync()` with `ExternalEventOptions.AllowDirectInvocation` returns a faulted task when the handler throws inside the Revit API context. The exception was previously lost and the task completed successfully.

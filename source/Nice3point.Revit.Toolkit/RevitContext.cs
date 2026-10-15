@@ -3,6 +3,9 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
+#if REVIT2027_OR_GREATER
+using Nice3point.Revit.Toolkit.Internal;
+#endif
 
 namespace Nice3point.Revit.Toolkit;
 
@@ -12,7 +15,10 @@ namespace Nice3point.Revit.Toolkit;
 [PublicAPI]
 public class RevitContext : RevitApiContext
 {
-    private static readonly Func<bool> GetIsRevitInApiMode;
+#if !REVIT2027_OR_GREATER
+    private static readonly IntPtr ApiCallDepthManagerPointer;
+    private static readonly IntPtr IsRevitInApiModePointer;
+#endif
     private static readonly IntPtr IncrementConstructorPointer;
     private static readonly IntPtr IncrementDestructorPointer;
 
@@ -23,16 +29,24 @@ public class RevitContext : RevitApiContext
 
     static RevitContext()
     {
-        var assemblies = FindAssemblies("APIUIAPI", "RevitAPIUI");
+#if REVIT2027_OR_GREATER
+        var uiAssembly = FindAssemblies("RevitAPIUI")[0];
+#else
+        var assemblies = FindAssemblies("RevitDBAPI", "RevitAPIUI");
+        var uiAssembly = assemblies[1];
 
-        var apiAssemblyMethods = assemblies[0].ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
-        var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(static method => method.Name == "APICallDepthManager.singletonfactory");
+        var dbAssemblyMethods = assemblies[0].ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
+        var apiCallDepthManagerMethod = dbAssemblyMethods.FirstOrDefault(static method => method.Name == "APICallDepthManager.singletonfactory");
         ThrowWhen(apiCallDepthManagerMethod is null);
 
-        var isRevitInApiModeMethod = apiAssemblyMethods.FirstOrDefault(static method => method.Name == "APICallDepthManager.isRevitInAPIMode");
+        var isRevitInApiModeMethod = dbAssemblyMethods.FirstOrDefault(static method => method.Name == "APICallDepthManager.isRevitInAPIMode");
         ThrowWhen(isRevitInApiModeMethod is null);
 
-        var uiAssemblyMethods = assemblies[1].ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
+        ApiCallDepthManagerPointer = apiCallDepthManagerMethod.MethodHandle.GetFunctionPointer();
+        IsRevitInApiModePointer = isRevitInApiModeMethod.MethodHandle.GetFunctionPointer();
+#endif
+
+        var uiAssemblyMethods = uiAssembly.ManifestModule.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
         var incrementConstructor = uiAssemblyMethods.FirstOrDefault(static method => method.Name == "IncrementAPICallDepth.{ctor}");
         ThrowWhen(incrementConstructor is null);
 
@@ -41,12 +55,6 @@ public class RevitContext : RevitApiContext
 
         IncrementConstructorPointer = incrementConstructor.MethodHandle.GetFunctionPointer();
         IncrementDestructorPointer = incrementDestructor.MethodHandle.GetFunctionPointer();
-
-        GetIsRevitInApiMode = () =>
-        {
-            var apiCallDepthManager = apiCallDepthManagerMethod.Invoke(obj: null, parameters: null);
-            return (bool)isRevitInApiModeMethod.Invoke(obj: null, [apiCallDepthManager])!;
-        };
 
         UiApplication = new UIApplication(Application);
     }
@@ -142,7 +150,21 @@ public class RevitContext : RevitApiContext
     ///     IExternalEventHandler enables safely executing commands and operations from external threads
     ///     or the user interface, ensuring they are synchronized with Revit's main thread.
     /// </remarks>
-    public static bool IsRevitInApiMode => GetIsRevitInApiMode();
+#if REVIT2027_OR_GREATER
+    public static bool IsRevitInApiMode => UnsafeAccessors.IsInApiContext(Application);
+#else
+    public static bool IsRevitInApiMode
+    {
+        get
+        {
+            unsafe
+            {
+                var apiCallDepthManager = ((delegate* unmanaged[Cdecl]<IntPtr>)ApiCallDepthManagerPointer)();
+                return ((delegate* unmanaged[Thiscall]<IntPtr, byte>)IsRevitInApiModePointer)(apiCallDepthManager) != 0;
+            }
+        }
+    }
+#endif
 
     /// <summary>
     ///     Begins a scope that suppresses the display of Revit dialogs.

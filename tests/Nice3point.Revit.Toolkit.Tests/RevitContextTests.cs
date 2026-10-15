@@ -43,6 +43,16 @@ public sealed class RevitContextTests : RevitApiUiTest
     }
 
     [Test]
+    public async Task IsRevitInApiMode_OutsideTheRevitThread_ReturnsFalse()
+    {
+        // Act
+        var isRevitInApiMode = await Task.Run(() => RevitContext.IsRevitInApiMode);
+
+        // Assert
+        await Assert.That(isRevitInApiMode).IsFalse();
+    }
+
+    [Test]
     public async Task ActiveDocument_OpenedModel_ReturnsTheActiveDocument()
     {
         // Act

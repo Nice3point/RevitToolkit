@@ -32,17 +32,17 @@ public class RevitApiContext
         ThrowWhen(proxyType is null);
 
         const BindingFlags internalFlags = BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance;
-        var proxyConstructor = proxyType.GetConstructor(internalFlags, null, [getApplicationMethod.ReturnType], null);
+        var proxyConstructor = proxyType.GetConstructor(internalFlags, binder: null, [getApplicationMethod.ReturnType], modifiers: null);
         ThrowWhen(proxyConstructor is null);
 
-        var proxy = proxyConstructor.Invoke([getApplicationMethod.Invoke(null, null)]);
+        var proxy = proxyConstructor.Invoke([getApplicationMethod.Invoke(obj: null, parameters: null)]);
         ThrowWhen(proxy is null);
 
 #if NET8_0_OR_GREATER
         Application = UnsafeAccessors.CreateApplication(proxy);
 #else
         var applicationType = typeof(Application);
-        var applicationConstructor = applicationType.GetConstructor(internalFlags, null, [proxyType], null);
+        var applicationConstructor = applicationType.GetConstructor(internalFlags, binder: null, [proxyType], modifiers: null);
         ThrowWhen(applicationConstructor is null);
 
         var application = (Application)applicationConstructor.Invoke([proxy]);
@@ -155,7 +155,7 @@ public class RevitApiContext
 
         public void Dispose()
         {
-            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            if (Interlocked.Exchange(ref _disposed, value: 1) != 0)
             {
                 return;
             }

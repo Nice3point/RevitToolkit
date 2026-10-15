@@ -133,7 +133,7 @@ public static class ResolveHelper
         var domainType = AppDomain.CurrentDomain.GetType();
         var resolversField = domainType.GetField("_AssemblyResolve", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)!;
         var resolvers = (ResolveEventHandler)resolversField.GetValue(AppDomain.CurrentDomain);
-        resolversField.SetValue(AppDomain.CurrentDomain, null);
+        resolversField.SetValue(AppDomain.CurrentDomain, value: null);
 #endif
 
         _domainResolvers = resolvers;
@@ -262,7 +262,7 @@ public static class ResolveHelper
 
         public void Dispose()
         {
-            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            if (Interlocked.Exchange(ref _disposed, value: 1) != 0)
             {
                 return;
             }

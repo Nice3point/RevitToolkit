@@ -11,8 +11,8 @@ public sealed class EquatableArrayTests
     [Arguments(3)]
     public async Task EqualSequences_HaveEqualValuesAndHashCodesAsync(int length)
     {
-        var first = new EquatableArray<int>(Enumerable.Range(1, length).ToImmutableArray());
-        var second = new EquatableArray<int>(Enumerable.Range(1, length).ToImmutableArray());
+        var first = new EquatableArray<int>(Enumerable.Range(start: 1, length).ToImmutableArray());
+        var second = new EquatableArray<int>(Enumerable.Range(start: 1, length).ToImmutableArray());
 
         await Assert.That(first.Equals(second)).IsTrue();
         await Assert.That(first == second).IsTrue();
@@ -26,7 +26,7 @@ public sealed class EquatableArrayTests
     [Arguments(new[] { 1, 2 })]
     public async Task DifferentSequences_AreNotEqualAsync(int[] values)
     {
-        var first = new EquatableArray<int>(ImmutableArray.Create(1, 2, 3));
+        var first = new EquatableArray<int>(ImmutableArray.Create(item1: 1, item2: 2, item3: 3));
         var second = new EquatableArray<int>(values.ToImmutableArray());
 
         await Assert.That(first.Equals(second)).IsFalse();
@@ -37,7 +37,7 @@ public sealed class EquatableArrayTests
     [Test]
     public async Task ConversionAndEnumeration_PreserveSequenceAsync()
     {
-        var source = ImmutableArray.Create(3, 7, 11);
+        var source = ImmutableArray.Create(item1: 3, item2: 7, item3: 11);
         EquatableArray<int> array = source;
         ImmutableArray<int> converted = array;
 

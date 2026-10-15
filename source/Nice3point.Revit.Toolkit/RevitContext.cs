@@ -44,8 +44,8 @@ public class RevitContext : RevitApiContext
 
         GetIsRevitInApiMode = () =>
         {
-            var apiCallDepthManager = apiCallDepthManagerMethod.Invoke(null, null);
-            return (bool)isRevitInApiModeMethod.Invoke(null, [apiCallDepthManager])!;
+            var apiCallDepthManager = apiCallDepthManagerMethod.Invoke(obj: null, parameters: null);
+            return (bool)isRevitInApiModeMethod.Invoke(obj: null, [apiCallDepthManager])!;
         };
 
         UiApplication = new UIApplication(Application);
@@ -360,7 +360,7 @@ public class RevitContext : RevitApiContext
         {
             _deconstructorPointer = deconstructorPointer;
             _memory = Marshal.AllocHGlobal(8);
-            Marshal.WriteInt64(_memory, 0);
+            Marshal.WriteInt64(_memory, val: 0);
 
             var constructorDelegate = Marshal.GetDelegateForFunctionPointer<IncrementCtor>(constructorPointer);
             constructorDelegate(_memory);
@@ -368,7 +368,7 @@ public class RevitContext : RevitApiContext
 
         public void Dispose()
         {
-            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            if (Interlocked.Exchange(ref _disposed, value: 1) != 0)
             {
                 return;
             }
@@ -386,7 +386,7 @@ public class RevitContext : RevitApiContext
 
         public void Dispose()
         {
-            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            if (Interlocked.Exchange(ref _disposed, value: 1) != 0)
             {
                 return;
             }

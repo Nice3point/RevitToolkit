@@ -11,7 +11,7 @@ namespace Nice3point.Revit.Toolkit.SourceGenerators.ExternalEvents;
 /// </summary>
 internal readonly record struct ExternalEventAnalysis(ExternalEventDefinition? Definition, EquatableArray<DiagnosticInfo> Diagnostics)
 {
-    public ExternalEventAnalysis(ImmutableArray<DiagnosticInfo> diagnostics) : this(null, diagnostics)
+    public ExternalEventAnalysis(ImmutableArray<DiagnosticInfo> diagnostics) : this(Definition: null, diagnostics)
     {
     }
 

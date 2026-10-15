@@ -19,7 +19,7 @@ internal sealed class CodeWriter
     {
         if (!string.IsNullOrEmpty(text))
         {
-            _builder.Append(' ', _indentLevel * 4);
+            _builder.Append(value: ' ', _indentLevel * 4);
         }
 
         _builder.AppendLine(text);

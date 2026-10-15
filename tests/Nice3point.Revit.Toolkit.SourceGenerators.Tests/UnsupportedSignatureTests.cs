@@ -285,7 +285,7 @@ public sealed class UnsupportedSignatureTests
     [Arguments(17)]
     public async Task DelegateArity_ValidatesSupportedBoundaryAsync(int parameterCount)
     {
-        var parameters = string.Join(", ", Enumerable.Range(0, parameterCount).Select(static index => $"int value{index}"));
+        var parameters = string.Join(", ", Enumerable.Range(start: 0, parameterCount).Select(static index => $"int value{index}"));
         var source = $$"""
                        using Nice3point.Revit.Toolkit.External;
                        public partial class Model

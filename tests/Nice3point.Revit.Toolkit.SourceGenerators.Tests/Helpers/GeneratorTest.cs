@@ -36,10 +36,12 @@ internal static class GeneratorTest
 
         var input = CSharpCompilation.Create("Consumer", trees, references,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: allowUnsafe, nullableContextOptions: NullableContextOptions.Enable));
+
         GeneratorDriver driver = CSharpGeneratorDriver.Create(
             [new ExternalEventGenerator().AsSourceGenerator()],
             parseOptions: parseOptions,
             driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps: true));
+
         driver = driver.RunGeneratorsAndUpdateCompilation(input, out var output, out var diagnostics, cancellationToken);
 
         await Assert.That(diagnostics.Select(static diagnostic => diagnostic.Id)).IsEquivalentTo(diagnosticIds ?? []);
@@ -64,12 +66,12 @@ internal static class GeneratorTest
         await Assert.That(result.Diagnostics.Where(static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)).IsEmpty();
         stream.Position = 0;
 
-        var loadContext = new AssemblyLoadContext(null, isCollectible: true);
+        var loadContext = new AssemblyLoadContext(name: null, isCollectible: true);
         try
         {
             var assembly = loadContext.LoadFromStream(stream);
             var run = assembly.GetType("Consumer.Probe", throwOnError: true)!.GetMethod("RunAsync")!;
-            var execution = (Task<T>)run.Invoke(null, null)!;
+            var execution = (Task<T>)run.Invoke(obj: null, parameters: null)!;
             return await execution.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.Execution.CancellationToken);
         }
         finally

@@ -31,7 +31,7 @@ internal sealed record DiagnosticInfo(
             return Diagnostic.Create(Descriptor, Location.Create(SyntaxTree, TextSpan), messageArgs);
         }
 
-        return Diagnostic.Create(Descriptor, null, messageArgs);
+        return Diagnostic.Create(Descriptor, location: null, messageArgs);
     }
 
     /// <summary>

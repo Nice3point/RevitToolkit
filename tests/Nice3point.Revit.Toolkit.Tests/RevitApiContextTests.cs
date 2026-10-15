@@ -139,7 +139,7 @@ public sealed class RevitApiContextTests : RevitApiTest
                 using var transaction = new Transaction(_document, $"Transaction {i}");
                 transaction.Start();
 
-                Wall.Create(_document, Line.CreateBound(new XYZ(0, i * 5, 0), new XYZ(10, i * 5, 0)), _level.Id, false);
+                Wall.Create(_document, Line.CreateBound(new XYZ(x: 0, i * 5, z: 0), new XYZ(x: 10, i * 5, z: 0)), _level.Id, structural: false);
 
                 if (transaction.Commit() == TransactionStatus.Committed)
                 {
@@ -154,7 +154,7 @@ public sealed class RevitApiContextTests : RevitApiTest
 
     private static void CreateOverlappingWalls(Document document, Level level)
     {
-        Wall.Create(document, Line.CreateBound(new XYZ(0, 0, 0), new XYZ(10, 0, 0)), level.Id, false);
-        Wall.Create(document, Line.CreateBound(new XYZ(0, 0, 0), new XYZ(10, 0, 0)), level.Id, false);
+        Wall.Create(document, Line.CreateBound(new XYZ(x: 0, y: 0, z: 0), new XYZ(x: 10, y: 0, z: 0)), level.Id, structural: false);
+        Wall.Create(document, Line.CreateBound(new XYZ(x: 0, y: 0, z: 0), new XYZ(x: 10, y: 0, z: 0)), level.Id, structural: false);
     }
 }

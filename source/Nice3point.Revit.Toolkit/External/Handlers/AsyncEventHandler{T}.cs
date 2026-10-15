@@ -11,7 +11,7 @@ namespace Nice3point.Revit.Toolkit.External.Handlers;
 [Obsolete("Use Nice3point.Revit.Toolkit.External.AsyncExternalEvent class or ExternalEvent source-generator instead")]
 public sealed class AsyncEventHandler<T> : ExternalEventHandler
 {
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
+    private readonly SemaphoreSlim _semaphore = new(initialCount: 1, maxCount: 1);
     private Func<UIApplication, T>? _handler;
     private TaskCompletionSource<T>? _resultTask;
 

@@ -46,9 +46,10 @@ public sealed class ExternalEventGenerator : IIncrementalGenerator
             return (UseFieldKeyword: useFieldKeyword, SupportsLockType: languageVersion >= LanguageVersion.CSharp13);
         });
 
-        var lockTypeAvailability = context.CompilationProvider.Select(static (compilation, _) =>
-            compilation.GetTypeByMetadataName("System.Threading.Lock") is { TypeKind: TypeKind.Class } lockType &&
-            compilation.IsSymbolAccessibleWithin(lockType, compilation.Assembly));
+        var lockTypeAvailability = context.CompilationProvider
+            .Select(static (compilation, _) => compilation.GetTypeByMetadataName("System.Threading.Lock") is { TypeKind: TypeKind.Class } lockType &&
+                                               compilation.IsSymbolAccessibleWithin(lockType, compilation.Assembly));
+
         var generationFeatures = languageFeatures.Combine(lockTypeAvailability)
             .Select(static (features, _) => (features.Left.UseFieldKeyword, UseLockType: features.Left.SupportsLockType && features.Right));
 

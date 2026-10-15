@@ -9,9 +9,9 @@ public sealed class FamilyLoadOptionsTests : RevitApiTest
     private const string FamilyTemplateName = "Metric Generic Model.rft";
 
     private readonly string _seedDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-    private string _familyTemplatePath = null!;
-    private string _familyPath = null!;
     private Document? _document;
+    private string _familyPath = null!;
+    private string _familyTemplatePath = null!;
 
     private Document Document => _document!;
 
@@ -39,7 +39,7 @@ public sealed class FamilyLoadOptionsTests : RevitApiTest
 
         if (Directory.Exists(_seedDirectory))
         {
-            Directory.Delete(_seedDirectory, true);
+            Directory.Delete(_seedDirectory, recursive: true);
         }
     }
 
@@ -115,7 +115,7 @@ public sealed class FamilyLoadOptionsTests : RevitApiTest
     public async Task FamilyLoadOptions_WithFamilySourceProject_LoadsFamily()
     {
         // Arrange
-        var options = new FamilyLoadOptions(true, FamilySource.Project);
+        var options = new FamilyLoadOptions(overwrite: true, FamilySource.Project);
 
         // Act
         using var transaction = new Transaction(Document, "Load Family");
@@ -135,7 +135,7 @@ public sealed class FamilyLoadOptionsTests : RevitApiTest
     public async Task FamilyLoadOptions_WithFamilySourceFamily_LoadsFamily()
     {
         // Arrange
-        var options = new FamilyLoadOptions(true, FamilySource.Family);
+        var options = new FamilyLoadOptions(overwrite: true, FamilySource.Family);
 
         // Act
         using var transaction = new Transaction(Document, "Load Family");

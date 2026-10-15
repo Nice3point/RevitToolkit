@@ -15,10 +15,16 @@ public sealed class UpdateReadmeModule : Module<string>
         const string endSymbol = "</p>";
 
         var logoStartIndex = readme.IndexOf(startSymbol, StringComparison.Ordinal);
-        if (logoStartIndex < 0) throw new InvalidOperationException("The README logo block is not found.");
+        if (logoStartIndex < 0)
+        {
+            throw new InvalidOperationException("The README logo block is not found.");
+        }
 
         var logoEndIndex = readme.IndexOf(endSymbol, logoStartIndex, StringComparison.Ordinal);
-        if (logoEndIndex < 0) throw new InvalidOperationException("The README logo block is not closed.");
+        if (logoEndIndex < 0)
+        {
+            throw new InvalidOperationException("The README logo block is not closed.");
+        }
 
         logoEndIndex += endSymbol.Length;
         while (logoEndIndex < readme.Length && readme[logoEndIndex] is '\r' or '\n')

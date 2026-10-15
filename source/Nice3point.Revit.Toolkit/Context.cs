@@ -44,10 +44,10 @@ public static class Context
         ThrowWhen(proxyType is null);
 
         const BindingFlags internalFlags = BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance;
-        var proxyConstructor = proxyType.GetConstructor(internalFlags, null, [getApplicationMethod.ReturnType], null);
+        var proxyConstructor = proxyType.GetConstructor(internalFlags, binder: null, [getApplicationMethod.ReturnType], modifiers: null);
         ThrowWhen(proxyConstructor is null);
 
-        var proxy = proxyConstructor.Invoke([getApplicationMethod.Invoke(null, null)]);
+        var proxy = proxyConstructor.Invoke([getApplicationMethod.Invoke(obj: null, parameters: null)]);
         ThrowWhen(proxy is null);
 
         var apiCallDepthManagerMethod = apiAssemblyMethods.FirstOrDefault(static info => info.Name == "APICallDepthManager.singletonfactory");
@@ -58,15 +58,15 @@ public static class Context
 
         GetIsRevitInApiMode = () =>
         {
-            var apiCallDepthManager = apiCallDepthManagerMethod.Invoke(null, null);
-            return (bool)isRevitInApiModeMethod.Invoke(null, [apiCallDepthManager])!;
+            var apiCallDepthManager = apiCallDepthManagerMethod.Invoke(obj: null, parameters: null);
+            return (bool)isRevitInApiModeMethod.Invoke(obj: null, [apiCallDepthManager])!;
         };
 
 #if NET8_0_OR_GREATER
         Application = UnsafeAccessors.CreateApplication(proxy);
 #else
         var applicationType = typeof(Application);
-        var applicationConstructor = applicationType.GetConstructor(internalFlags, null, [proxyType], null);
+        var applicationConstructor = applicationType.GetConstructor(internalFlags, binder: null, [proxyType], modifiers: null);
         ThrowWhen(applicationConstructor is null);
 
         var application = (Application)applicationConstructor.Invoke([proxy]);
@@ -105,9 +105,9 @@ public static class Context
         (UIControlledApplication)Activator.CreateInstance(
             typeof(UIControlledApplication),
             BindingFlags.Instance | BindingFlags.NonPublic,
-            null,
+            binder: null,
             [UiApplication],
-            null)!;
+            culture: null)!;
 #endif
 
     /// <summary>

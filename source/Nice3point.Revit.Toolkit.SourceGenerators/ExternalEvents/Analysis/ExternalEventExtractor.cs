@@ -121,6 +121,7 @@ internal static class ExternalEventExtractor
     {
         var hasUiApplicationParameter = method.Parameters.Length > 0 &&
                                         method.Parameters[0].Type.ToDisplayString(NullableFlowFormat) == ExternalEventTypeNames.UiApplication.WithoutGlobalPrefix;
+
         var generatedMemberNames = new List<string> { $"{method.Name}AsyncEvent" };
         if (method.ReturnsVoid)
         {
@@ -137,7 +138,7 @@ internal static class ExternalEventExtractor
 
     private static ExternalEventDefinition CreateEventDefinition(IMethodSymbol methodSymbol, AttributeData attribute, CancellationToken cancellationToken)
     {
-        var allowDirectInvocation = attribute.GetNamedArgument("AllowDirectInvocation", false);
+        var allowDirectInvocation = attribute.GetNamedArgument("AllowDirectInvocation", fallback: false);
 
         var (hasUiApplicationParameter, extraParameters) = ClassifyParameters(methodSymbol);
         var (returnsVoid, returnType) = ExtractReturnType(methodSymbol);
@@ -199,7 +200,7 @@ internal static class ExternalEventExtractor
         while (currentType is not null)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            typeDeclarations.Insert(0, CreateTypeDeclaration(currentType));
+            typeDeclarations.Insert(index: 0, CreateTypeDeclaration(currentType));
             currentType = currentType.ContainingType;
         }
 
@@ -350,14 +351,14 @@ internal static class ExternalEventExtractor
 
         while (currentType is not null)
         {
-            nameParts.Insert(0, currentType.MetadataName);
+            nameParts.Insert(index: 0, currentType.MetadataName);
             currentType = currentType.ContainingType;
         }
 
         var containingNamespace = GetNamespace(method.ContainingType);
         if (!string.IsNullOrEmpty(containingNamespace))
         {
-            nameParts.Insert(0, containingNamespace);
+            nameParts.Insert(index: 0, containingNamespace);
         }
 
         nameParts.Add(method.Name);
@@ -366,6 +367,6 @@ internal static class ExternalEventExtractor
         using var algorithm = SHA256.Create();
         var hash = algorithm.ComputeHash(Encoding.UTF8.GetBytes(qualifiedName));
 
-        return $"{qualifiedName}.{BitConverter.ToString(hash, 0, 8).Replace("-", string.Empty)}";
+        return $"{qualifiedName}.{BitConverter.ToString(hash, startIndex: 0, length: 8).Replace("-", string.Empty)}";
     }
 }

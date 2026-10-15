@@ -11,5 +11,10 @@ internal static class UnsafeAccessors
 {
     [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
     internal static extern Application CreateApplication(object proxy);
+#if REVIT2027_OR_GREATER
+
+    [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "IsInAPIContext")]
+    internal static extern bool IsInApiContext(Application application);
+#endif
 }
 #endif

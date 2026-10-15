@@ -13,5 +13,10 @@ internal static class UnsafeUiAccessors
 {
     [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
     internal static extern UIControlledApplication CreateUiControlledApplication(UIApplication uiApplication);
+#if REVIT2027_OR_GREATER
+
+    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_Instance")]
+    internal static extern UIApplication GetUiApplicationInstance(UIApplication? target);
+#endif
 }
 #endif

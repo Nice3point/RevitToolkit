@@ -55,15 +55,21 @@ public class RevitContext : RevitApiContext
 
         IncrementConstructorPointer = incrementConstructor.MethodHandle.GetFunctionPointer();
         IncrementDestructorPointer = incrementDestructor.MethodHandle.GetFunctionPointer();
+#if !REVIT2027_OR_GREATER
 
         UiApplication = new UIApplication(Application);
+#endif
     }
 
     /// <summary>
     ///     Represents an active session of the Autodesk Revit user interface, providing access to
     ///     UI customization methods, events, the main window, and the active document.
     /// </summary>
+#if REVIT2027_OR_GREATER
+    public static UIApplication UiApplication { get; } = UnsafeUiAccessors.GetUiApplicationInstance(null);
+#else
     public static UIApplication UiApplication { get; }
+#endif
 
     /// <summary>Represents a currently active Autodesk Revit project at the UI level.</summary>
     /// <remarks>

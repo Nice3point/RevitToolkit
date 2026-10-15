@@ -102,11 +102,11 @@ internal static class ExternalEventWriter
         {
             if (eventDefinition.ReturnsVoid)
             {
-                WriteRaiseExtensionMethod(writer, eventDefinition, qualifiedRecordType, false);
+                WriteRaiseExtensionMethod(writer, eventDefinition, qualifiedRecordType, isAsync: false);
                 writer.AppendLine();
             }
 
-            WriteRaiseExtensionMethod(writer, eventDefinition, qualifiedRecordType, true);
+            WriteRaiseExtensionMethod(writer, eventDefinition, qualifiedRecordType, isAsync: true);
         }
     }
 
@@ -296,7 +296,7 @@ internal static class ExternalEventWriter
     {
         if (eventDefinition.ExtraParameters.Length < 2)
         {
-            return new EventInitializer($"new {eventType}(new {eventDefinition.FullyQualifiedDelegateType}({handlerName})", null, optionsArgument);
+            return new EventInitializer($"new {eventType}(new {eventDefinition.FullyQualifiedDelegateType}({handlerName})", LambdaBody: null, optionsArgument);
         }
 
         var handlerInvocation = BuildHandlerInvocation(eventDefinition, argumentsName, handlerName, applicationName);

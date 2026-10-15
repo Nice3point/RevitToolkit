@@ -74,6 +74,7 @@ public sealed class ExternalEventGeneratorExecutionTests
 
         var (driver, input) = await GeneratorTest.RunAsync(source, languageVersion: languageVersion,
             referenceAssemblies: useLockType ? ReferenceAssemblies.Net.Net90 : ReferenceAssemblies.Net.Net80);
+
         var result = await GeneratorTest.ExecuteAsync<int[]>(driver, input);
 
         await Assert.That(result).IsEquivalentTo([1, 1, 1, 1]);
@@ -127,6 +128,7 @@ public sealed class ExternalEventGeneratorExecutionTests
 
         var (driver, input) = await GeneratorTest.RunAsync(source, languageVersion: languageVersion,
             referenceAssemblies: useLockType ? ReferenceAssemblies.Net.Net90 : ReferenceAssemblies.Net.Net80);
+
         var result = await GeneratorTest.ExecuteAsync<int[]>(driver, input);
 
         await Assert.That(result[0]).IsEqualTo(1);

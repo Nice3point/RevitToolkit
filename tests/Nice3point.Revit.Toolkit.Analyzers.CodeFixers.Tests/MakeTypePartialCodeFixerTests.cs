@@ -37,7 +37,7 @@ public sealed class MakeTypePartialCodeFixerTests
                           """
         };
 
-        test.ExpectedDiagnostics.Add(PartialDiagnostic(0, "Model"));
+        test.ExpectedDiagnostics.Add(PartialDiagnostic(location: 0, "Model"));
         await test.RunAsync();
     }
 
@@ -66,7 +66,7 @@ public sealed class MakeTypePartialCodeFixerTests
                         """
         };
 
-        test.ExpectedDiagnostics.Add(PartialDiagnostic(0, "Model"));
+        test.ExpectedDiagnostics.Add(PartialDiagnostic(location: 0, "Model"));
         await test.RunAsync();
     }
 
@@ -101,7 +101,7 @@ public sealed class MakeTypePartialCodeFixerTests
                         """
         };
 
-        test.ExpectedDiagnostics.Add(PartialDiagnostic(0, "Outer"));
+        test.ExpectedDiagnostics.Add(PartialDiagnostic(location: 0, "Outer"));
         await test.RunAsync();
     }
 
@@ -135,7 +135,7 @@ public sealed class MakeTypePartialCodeFixerTests
                           """
         };
 
-        test.ExpectedDiagnostics.Add(PartialDiagnostic(0, "Model"));
+        test.ExpectedDiagnostics.Add(PartialDiagnostic(location: 0, "Model"));
         await test.RunAsync();
     }
 
@@ -173,8 +173,8 @@ public sealed class MakeTypePartialCodeFixerTests
         };
 
         test.ExpectedDiagnostics.AddRange([
-            PartialDiagnostic(0, "Outer"),
-            PartialDiagnostic(1, "Inner")
+            PartialDiagnostic(location: 0, "Outer"),
+            PartialDiagnostic(location: 1, "Inner")
         ]);
 
         await test.RunAsync();

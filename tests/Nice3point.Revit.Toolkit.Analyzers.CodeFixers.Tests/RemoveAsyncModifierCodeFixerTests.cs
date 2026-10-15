@@ -34,7 +34,7 @@ public sealed class RemoveAsyncModifierCodeFixerTests
                         """
         };
 
-        test.ExpectedDiagnostics.Add(AsyncVoidDiagnostic(0, "Run"));
+        test.ExpectedDiagnostics.Add(AsyncVoidDiagnostic(location: 0, "Run"));
         await test.RunAsync();
     }
 
@@ -72,7 +72,7 @@ public sealed class RemoveAsyncModifierCodeFixerTests
                           """
         };
 
-        test.ExpectedDiagnostics.Add(AsyncVoidDiagnostic(0, "Run"));
+        test.ExpectedDiagnostics.Add(AsyncVoidDiagnostic(location: 0, "Run"));
         await test.RunAsync();
     }
 
@@ -105,8 +105,8 @@ public sealed class RemoveAsyncModifierCodeFixerTests
             NumberOfFixAllIterations = 0
         };
 
-        test.FixedState.ExpectedDiagnostics.Add(AsyncVoidDiagnostic(0, "Run"));
-        test.ExpectedDiagnostics.Add(AsyncVoidDiagnostic(0, "Run"));
+        test.FixedState.ExpectedDiagnostics.Add(AsyncVoidDiagnostic(location: 0, "Run"));
+        test.ExpectedDiagnostics.Add(AsyncVoidDiagnostic(location: 0, "Run"));
         await test.RunAsync();
     }
 
@@ -136,7 +136,7 @@ public sealed class RemoveAsyncModifierCodeFixerTests
                         """
         };
 
-        test.ExpectedDiagnostics.Add(AsyncVoidDiagnostic(0, "Run"));
+        test.ExpectedDiagnostics.Add(AsyncVoidDiagnostic(location: 0, "Run"));
         await test.RunAsync();
     }
 
@@ -174,8 +174,8 @@ public sealed class RemoveAsyncModifierCodeFixerTests
         };
 
         test.ExpectedDiagnostics.AddRange([
-            AsyncVoidDiagnostic(0, "First"),
-            AsyncVoidDiagnostic(1, "Second")
+            AsyncVoidDiagnostic(location: 0, "First"),
+            AsyncVoidDiagnostic(location: 1, "Second")
         ]);
 
         await test.RunAsync();
@@ -215,11 +215,11 @@ public sealed class RemoveAsyncModifierCodeFixerTests
         };
 
         test.ExpectedDiagnostics.AddRange([
-            AsyncVoidDiagnostic(0, "First"),
-            AsyncVoidDiagnostic(1, "Second")
+            AsyncVoidDiagnostic(location: 0, "First"),
+            AsyncVoidDiagnostic(location: 1, "Second")
         ]);
 
-        test.FixedState.ExpectedDiagnostics.Add(AsyncVoidDiagnostic(1, "Second"));
+        test.FixedState.ExpectedDiagnostics.Add(AsyncVoidDiagnostic(location: 1, "Second"));
         await test.RunAsync();
     }
 

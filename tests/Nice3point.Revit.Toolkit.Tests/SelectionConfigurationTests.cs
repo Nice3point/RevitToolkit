@@ -94,7 +94,7 @@ public sealed class SelectionConfigurationTests : RevitApiUiTest
         Reference? receivedReference = null;
         XYZ? receivedPosition = null;
         var reference = new Reference(_level);
-        var position = new XYZ(1, 2, 3);
+        var position = new XYZ(x: 1, y: 2, z: 3);
 
         var configuration = new SelectionConfiguration()
             .Allow.Reference((candidate, candidatePosition) =>

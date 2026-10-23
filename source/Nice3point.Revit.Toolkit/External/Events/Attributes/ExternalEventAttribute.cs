@@ -74,7 +74,8 @@ namespace Nice3point.Revit.Toolkit.External;
 /// 
 ///     // Extension methods:
 ///     public static ExternalEventRequest Raise(this IExternalEvent&lt;DeleteInstancesArgs&gt; externalEvent, BuiltInCategory category, int count);
-///     public static Task RaiseAsync(this IAsyncExternalEvent&lt;DeleteInstancesArgs&gt; externalEvent, BuiltInCategory category, int count, CancellationToken cancellationToken = default);
+///     public static Task RaiseAsync(this IAsyncExternalEvent&lt;DeleteInstancesArgs&gt; externalEvent, BuiltInCategory category, int count);
+///     public static Task RaiseAsync(this IAsyncExternalEvent&lt;DeleteInstancesArgs&gt; externalEvent, BuiltInCategory category, int count, CancellationToken cancellationToken);
 ///     </code>
 ///     </para>
 ///     <para>

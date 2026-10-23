@@ -364,7 +364,7 @@ private async Task<ElementId, bool> DeleteWindowAsync(ElementId elementId)
 
 #### Cancellation
 
-`RaiseAsync()` accepts a `CancellationToken`.
+Every `RaiseAsync()` method has an overload that accepts a `CancellationToken`.
 A modal dialog or a running command keeps Revit from executing external events, and the token lets the caller stop waiting:
 
 ```c#
@@ -615,7 +615,12 @@ public partial class MyViewModel
 
 public static partial class MyViewModelExtensions
 {
-    public static global::System.Threading.Tasks.Task<Room> RaiseAsync(this IAsyncRequestExternalEvent<MyViewModel.CreateRoomArgs, Room> externalEvent, Level level, UV coordinate, global::System.Threading.CancellationToken cancellationToken = default)
+    public static global::System.Threading.Tasks.Task<Room> RaiseAsync(this IAsyncRequestExternalEvent<MyViewModel.CreateRoomArgs, Room> externalEvent, Level level, UV coordinate)
+    {
+        return externalEvent.RaiseAsync(new MyViewModel.CreateRoomArgs(level, coordinate));
+    }
+
+    public static global::System.Threading.Tasks.Task<Room> RaiseAsync(this IAsyncRequestExternalEvent<MyViewModel.CreateRoomArgs, Room> externalEvent, Level level, UV coordinate, global::System.Threading.CancellationToken cancellationToken)
     {
         return externalEvent.RaiseAsync(new MyViewModel.CreateRoomArgs(level, coordinate), cancellationToken);
     }
@@ -629,7 +634,7 @@ If initialization throws, the next access retries it.
 
 **Methods with CancellationToken parameter**
 
-Every generated `RaiseAsync()` accepts a `CancellationToken`, as described in [Cancellation](#cancellation).
+Every generated `RaiseAsync()` method has an overload that accepts a `CancellationToken`, as described in [Cancellation](#cancellation).
 Place `CancellationToken` last when the handler needs that token.
 The event supplies it, the same way as `UIApplication`, and the token isn't one of the event arguments:
 

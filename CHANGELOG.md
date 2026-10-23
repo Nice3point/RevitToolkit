@@ -5,7 +5,7 @@
 - `ExternalEvent<T>` and the asynchronous external events run the handler once for every raise, with the argument of that raise, in the order of the raises. Each `RaiseAsync()` task completes with the result or the exception of its own run. A raise that arrived before Revit ran the previous one used to overwrite its argument, and the earlier `RaiseAsync()` task never completed.
 - `ExternalEvent` without an argument runs once for all raises that wait, as Revit runs a raised event.
 - A raise that Revit refuses with `ExternalEventRequest.Denied` or `ExternalEventRequest.TimedOut` never runs. `Raise(argument)` returns that result, and the `RaiseAsync()` task fails with an `InvalidOperationException`. A refused raise used to stay queued and run with the next raise of the event.
-- `RaiseAsync()` of the asynchronous external events and their interfaces accepts an optional `CancellationToken`. A token canceled before Revit executes the handler withdraws the raise, and the task is canceled at once. A running handler is never interrupted. With `ExternalEventOptions.AllowDirectInvocation` in API mode, the token is checked once before the handler runs.
+- `RaiseAsync()` of the asynchronous external events and their interfaces has an overload that accepts a `CancellationToken`. A token canceled before Revit executes the handler withdraws the raise, and the task is canceled at once. A running handler is never interrupted. With `ExternalEventOptions.AllowDirectInvocation` in API mode, the token is checked once before the handler runs.
 - New constructors of `AsyncExternalEvent`, `AsyncExternalEvent<T>`, `AsyncRequestExternalEvent<TResult>`, and `AsyncRequestExternalEvent<T, TResult>` accept a handler that receives the `UIApplication`, the argument, and the `CancellationToken` of the raise. An `OperationCanceledException` thrown for that token cancels the task.
 
 ```c#
@@ -25,7 +25,7 @@ await _deleteWindowsAsyncEvent.RaiseAsync(elementIds, cancellationSource.Token);
 ### ExternalEvent Source Generator
 
 - A handler can declare a `CancellationToken` as its last parameter, after the optional `UIApplication` and the arguments. The asynchronous event passes it the token of `RaiseAsync()`, and the synchronous event passes `CancellationToken.None`. A `CancellationToken` in any other position remains an argument.
-- The generated `RaiseAsync()` extension methods for several arguments accept an optional `CancellationToken`.
+- The generated `RaiseAsync()` extension methods for several arguments have an overload that accepts a `CancellationToken`.
 
 ```c#
 [ExternalEvent]
@@ -47,7 +47,7 @@ await DeleteWindowsAsyncEvent.RaiseAsync(elementIds, cancellationToken);
 
 ### Breaking Changes
 
-- The `RaiseAsync` methods of `IAsyncExternalEvent`, `IAsyncExternalEvent<T>`, `IAsyncRequestExternalEvent<TResult>`, and `IAsyncRequestExternalEvent<T, TResult>` take an optional `CancellationToken` parameter. Source code that calls them compiles unchanged. Add-ins compiled against an earlier version are rebuilt, and custom implementations of the interfaces add the parameter.
+- `IAsyncExternalEvent`, `IAsyncExternalEvent<T>`, `IAsyncRequestExternalEvent<TResult>`, and `IAsyncRequestExternalEvent<T, TResult>` declare a `RaiseAsync` overload with a `CancellationToken`. Code that calls these interfaces runs unchanged, and custom implementations of the interfaces implement the overload.
 
 # 2027.0.2
 

@@ -59,7 +59,14 @@ namespace Consumer
 
         [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         [global::System.CodeDom.Compiler.GeneratedCode("Nice3point.Revit.Toolkit.SourceGenerators.ExternalEventGenerator", "1.0.0.0")]
-        internal static global::System.Threading.Tasks.Task RaiseAsync<TValue>(this global::Nice3point.Revit.Toolkit.External.IAsyncExternalEvent<global::Consumer.Model<TValue>.RunArgs> externalEvent, TValue value, int count, global::System.Threading.CancellationToken cancellationToken = default)
+        internal static global::System.Threading.Tasks.Task RaiseAsync<TValue>(this global::Nice3point.Revit.Toolkit.External.IAsyncExternalEvent<global::Consumer.Model<TValue>.RunArgs> externalEvent, TValue value, int count)
+        {
+            return externalEvent.RaiseAsync(new global::Consumer.Model<TValue>.RunArgs(value, count));
+        }
+
+        [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        [global::System.CodeDom.Compiler.GeneratedCode("Nice3point.Revit.Toolkit.SourceGenerators.ExternalEventGenerator", "1.0.0.0")]
+        internal static global::System.Threading.Tasks.Task RaiseAsync<TValue>(this global::Nice3point.Revit.Toolkit.External.IAsyncExternalEvent<global::Consumer.Model<TValue>.RunArgs> externalEvent, TValue value, int count, global::System.Threading.CancellationToken cancellationToken)
         {
             return externalEvent.RaiseAsync(new global::Consumer.Model<TValue>.RunArgs(value, count), cancellationToken);
         }

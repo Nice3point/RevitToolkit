@@ -32,10 +32,10 @@ namespace Nice3point.Revit.Toolkit.External
 
     public interface IExternalEvent { Autodesk.Revit.UI.ExternalEventRequest Raise(); }
     public interface IExternalEvent<in T> { Autodesk.Revit.UI.ExternalEventRequest Raise(T args); }
-    public interface IAsyncExternalEvent { Task RaiseAsync(CancellationToken cancellationToken = default); }
-    public interface IAsyncExternalEvent<in T> { Task RaiseAsync(T args, CancellationToken cancellationToken = default); }
-    public interface IAsyncRequestExternalEvent<TResult> { Task<TResult> RaiseAsync(CancellationToken cancellationToken = default); }
-    public interface IAsyncRequestExternalEvent<in T, TResult> { Task<TResult> RaiseAsync(T args, CancellationToken cancellationToken = default); }
+    public interface IAsyncExternalEvent { Task RaiseAsync(); Task RaiseAsync(CancellationToken cancellationToken); }
+    public interface IAsyncExternalEvent<in T> { Task RaiseAsync(T args); Task RaiseAsync(T args, CancellationToken cancellationToken); }
+    public interface IAsyncRequestExternalEvent<TResult> { Task<TResult> RaiseAsync(); Task<TResult> RaiseAsync(CancellationToken cancellationToken); }
+    public interface IAsyncRequestExternalEvent<in T, TResult> { Task<TResult> RaiseAsync(T args); Task<TResult> RaiseAsync(T args, CancellationToken cancellationToken); }
 
     public class ExternalEvent : IExternalEvent
     {
@@ -67,7 +67,8 @@ namespace Nice3point.Revit.Toolkit.External
             _handler = cancellationToken => handler(new Autodesk.Revit.UI.UIApplication(), cancellationToken);
             EventConstruction.Observer?.Invoke();
         }
-        public Task RaiseAsync(CancellationToken cancellationToken = default) { _handler(cancellationToken); return Task.CompletedTask; }
+        public Task RaiseAsync() => RaiseAsync(CancellationToken.None);
+        public Task RaiseAsync(CancellationToken cancellationToken) { _handler(cancellationToken); return Task.CompletedTask; }
     }
 
     public class AsyncExternalEvent<T> : IAsyncExternalEvent<T>
@@ -82,7 +83,8 @@ namespace Nice3point.Revit.Toolkit.External
             _handler = (args, cancellationToken) => handler(new Autodesk.Revit.UI.UIApplication(), args, cancellationToken);
             EventConstruction.Observer?.Invoke();
         }
-        public Task RaiseAsync(T args, CancellationToken cancellationToken = default) { _handler(args, cancellationToken); return Task.CompletedTask; }
+        public Task RaiseAsync(T args) => RaiseAsync(args, CancellationToken.None);
+        public Task RaiseAsync(T args, CancellationToken cancellationToken) { _handler(args, cancellationToken); return Task.CompletedTask; }
     }
 
     public class AsyncRequestExternalEvent<TResult> : IAsyncRequestExternalEvent<TResult>
@@ -97,7 +99,8 @@ namespace Nice3point.Revit.Toolkit.External
             _handler = cancellationToken => handler(new Autodesk.Revit.UI.UIApplication(), cancellationToken);
             EventConstruction.Observer?.Invoke();
         }
-        public Task<TResult> RaiseAsync(CancellationToken cancellationToken = default) => Task.FromResult(_handler(cancellationToken));
+        public Task<TResult> RaiseAsync() => RaiseAsync(CancellationToken.None);
+        public Task<TResult> RaiseAsync(CancellationToken cancellationToken) => Task.FromResult(_handler(cancellationToken));
     }
 
     public class AsyncRequestExternalEvent<T, TResult> : IAsyncRequestExternalEvent<T, TResult>
@@ -112,6 +115,7 @@ namespace Nice3point.Revit.Toolkit.External
             _handler = (args, cancellationToken) => handler(new Autodesk.Revit.UI.UIApplication(), args, cancellationToken);
             EventConstruction.Observer?.Invoke();
         }
-        public Task<TResult> RaiseAsync(T args, CancellationToken cancellationToken = default) => Task.FromResult(_handler(args, cancellationToken));
+        public Task<TResult> RaiseAsync(T args) => RaiseAsync(args, CancellationToken.None);
+        public Task<TResult> RaiseAsync(T args, CancellationToken cancellationToken) => Task.FromResult(_handler(args, cancellationToken));
     }
 }

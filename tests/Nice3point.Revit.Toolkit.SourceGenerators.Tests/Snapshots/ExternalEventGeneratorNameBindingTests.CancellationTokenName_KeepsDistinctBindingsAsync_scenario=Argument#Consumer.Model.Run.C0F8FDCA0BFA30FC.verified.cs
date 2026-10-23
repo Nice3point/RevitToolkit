@@ -59,7 +59,14 @@ namespace Consumer
 
         [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         [global::System.CodeDom.Compiler.GeneratedCode("Nice3point.Revit.Toolkit.SourceGenerators.ExternalEventGenerator", "1.0.0.0")]
-        public static global::System.Threading.Tasks.Task RaiseAsync(this global::Nice3point.Revit.Toolkit.External.IAsyncExternalEvent<global::Consumer.Model.RunArgs> externalEvent, int cancellationToken, int count, global::System.Threading.CancellationToken cancellationToken1 = default)
+        public static global::System.Threading.Tasks.Task RaiseAsync(this global::Nice3point.Revit.Toolkit.External.IAsyncExternalEvent<global::Consumer.Model.RunArgs> externalEvent, int cancellationToken, int count)
+        {
+            return externalEvent.RaiseAsync(new global::Consumer.Model.RunArgs(cancellationToken, count));
+        }
+
+        [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        [global::System.CodeDom.Compiler.GeneratedCode("Nice3point.Revit.Toolkit.SourceGenerators.ExternalEventGenerator", "1.0.0.0")]
+        public static global::System.Threading.Tasks.Task RaiseAsync(this global::Nice3point.Revit.Toolkit.External.IAsyncExternalEvent<global::Consumer.Model.RunArgs> externalEvent, int cancellationToken, int count, global::System.Threading.CancellationToken cancellationToken1)
         {
             return externalEvent.RaiseAsync(new global::Consumer.Model.RunArgs(cancellationToken, count), cancellationToken1);
         }

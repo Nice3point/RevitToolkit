@@ -58,7 +58,7 @@ public sealed class ExtensionContainerTests
         var generatedContainer = output.GetTypeByMetadataName("Consumer.ModelExtensions")!;
         await Assert.That(generatedContainer.DeclaredAccessibility).IsEqualTo(containerAccessibility == "public" ? Accessibility.Public : Accessibility.Internal);
         await Assert.That(generatedContainer.GetMembers("Raise")).Count().IsEqualTo(1);
-        await Assert.That(generatedContainer.GetMembers("RaiseAsync")).Count().IsEqualTo(1);
+        await Assert.That(generatedContainer.GetMembers("RaiseAsync")).Count().IsEqualTo(2);
     }
 
     [Test]

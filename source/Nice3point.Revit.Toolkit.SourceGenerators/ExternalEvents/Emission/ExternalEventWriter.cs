@@ -102,11 +102,13 @@ internal static class ExternalEventWriter
         {
             if (eventDefinition.ReturnsVoid)
             {
-                WriteRaiseExtensionMethod(writer, eventDefinition, qualifiedRecordType, isAsync: false);
+                WriteRaiseExtensionMethod(writer, eventDefinition, qualifiedRecordType, RaiseMethodKind.Raise);
                 writer.AppendLine();
             }
 
-            WriteRaiseExtensionMethod(writer, eventDefinition, qualifiedRecordType, isAsync: true);
+            WriteRaiseExtensionMethod(writer, eventDefinition, qualifiedRecordType, RaiseMethodKind.RaiseAsync);
+            writer.AppendLine();
+            WriteRaiseExtensionMethod(writer, eventDefinition, qualifiedRecordType, RaiseMethodKind.CancellableRaiseAsync);
         }
     }
 
@@ -201,13 +203,13 @@ internal static class ExternalEventWriter
         }
     }
 
-    private static void WriteRaiseExtensionMethod(CodeWriter writer, ExternalEventDefinition eventDefinition, string qualifiedRecordType, bool isAsync)
+    private static void WriteRaiseExtensionMethod(CodeWriter writer, ExternalEventDefinition eventDefinition, string qualifiedRecordType, RaiseMethodKind methodKind)
     {
         string interfaceType;
         string returnType;
         string methodName;
 
-        if (!isAsync)
+        if (methodKind == RaiseMethodKind.Raise)
         {
             interfaceType = $"{ExternalEventTypeNames.ExternalEventInterface.WithGlobalPrefix}<{qualifiedRecordType}>";
             returnType = ExternalEventTypeNames.ExternalEventRequest.WithGlobalPrefix;
@@ -239,10 +241,10 @@ internal static class ExternalEventWriter
         var receiverName = CSharpIdentifier.Reserve("externalEvent", parameterNames);
         var accessibility = GetMostRestrictiveAccessibility(eventDefinition.TypeHierarchy);
 
-        if (isAsync)
+        if (methodKind == RaiseMethodKind.CancellableRaiseAsync)
         {
             var cancellationTokenName = CSharpIdentifier.Reserve("cancellationToken", parameterNames);
-            parameters = $"{parameters}, {ExternalEventTypeNames.CancellationToken.WithGlobalPrefix} {cancellationTokenName} = default";
+            parameters = $"{parameters}, {ExternalEventTypeNames.CancellationToken.WithGlobalPrefix} {cancellationTokenName}";
             raiseArguments = $"{raiseArguments}, {cancellationTokenName}";
         }
 
@@ -458,6 +460,13 @@ internal static class ExternalEventWriter
         public required string Application { get; init; }
         public required string Arguments { get; init; }
         public required string CancellationToken { get; init; }
+    }
+
+    private enum RaiseMethodKind
+    {
+        Raise,
+        RaiseAsync,
+        CancellableRaiseAsync
     }
 
     private enum EventPropertyKind

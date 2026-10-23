@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using Autodesk.Revit.UI;
 
@@ -13,10 +14,10 @@ namespace Nice3point.Revit.Toolkit.External;
 [PublicAPI]
 public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
 {
+    private readonly ConcurrentQueue<T> _arguments = new();
     private readonly Action<T>? _handler;
     private readonly ExternalEventOptions _options;
     private readonly Action<UIApplication, T>? _uiHandler;
-    private T _argument = default!;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ExternalEvent{T}" /> class.
@@ -86,19 +87,19 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
     ///     Revit will wait until it is ready to process the event and then it will execute its event handler.
     ///     Revit processes external events only when no other commands or edit modes are currently active in Revit,
     ///     which is the same policy like the one that applies to evoking external commands.<br /><br />
+    ///     Each call executes the handler once with its own argument, in the order of the calls.<br /><br />
     ///     When <see cref="ExternalEventOptions.AllowDirectInvocation" /> is specified and Revit is in API mode,
     ///     the handler is executed directly on the calling thread instead of being queued.
     /// </remarks>
     public ExternalEventRequest Raise(T argument)
     {
-        _argument = argument;
-
         if ((_options & ExternalEventOptions.AllowDirectInvocation) != 0 && RevitContext.IsRevitInApiMode)
         {
-            Execute(RevitContext.UiApplication);
+            Invoke(RevitContext.UiApplication, argument);
             return ExternalEventRequest.Accepted;
         }
 
+        _arguments.Enqueue(argument);
         return base.Raise();
     }
 
@@ -106,13 +107,33 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override void Execute(UIApplication uiApplication)
     {
+        if (!_arguments.TryDequeue(out var argument))
+        {
+            return;
+        }
+
+        try
+        {
+            Invoke(uiApplication, argument);
+        }
+        finally
+        {
+            if (!_arguments.IsEmpty)
+            {
+                base.Raise();
+            }
+        }
+    }
+
+    private void Invoke(UIApplication uiApplication, T argument)
+    {
         if (_uiHandler is not null)
         {
-            _uiHandler.Invoke(uiApplication, _argument);
+            _uiHandler.Invoke(uiApplication, argument);
         }
         else
         {
-            _handler!.Invoke(_argument);
+            _handler!.Invoke(argument);
         }
     }
 }

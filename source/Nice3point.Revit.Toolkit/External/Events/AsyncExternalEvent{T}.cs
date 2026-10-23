@@ -12,22 +12,16 @@ namespace Nice3point.Revit.Toolkit.External;
 [PublicAPI]
 public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternalEvent<T>
 {
-    private readonly Action<T>? _handler;
+    private readonly AsyncExternalEventCore<T, VoidResult> _core;
     private readonly ExternalEventOptions _options;
-    private readonly Action<UIApplication, T>? _uiHandler;
-    private T _argument = default!;
-    private TaskCompletionSource? _taskCompletionSource;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="AsyncExternalEvent{T}" /> class.
     /// </summary>
     /// <param name="handler">The execution logic that receives an argument of type <typeparamref name="T" />.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public AsyncExternalEvent(Action<T> handler)
+    public AsyncExternalEvent(Action<T> handler) : this(handler, ExternalEventOptions.None)
     {
-        ArgumentNullException.ThrowIfNull(handler);
-
-        _handler = handler;
     }
 
     /// <summary>
@@ -40,7 +34,11 @@ public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternal
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _handler = handler;
+        _core = new((_, argument) =>
+        {
+            handler(argument);
+            return default;
+        });
         _options = options;
     }
 
@@ -50,11 +48,8 @@ public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternal
     /// </summary>
     /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" /> and an argument of type <typeparamref name="T" />.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public AsyncExternalEvent(Action<UIApplication, T> handler)
+    public AsyncExternalEvent(Action<UIApplication, T> handler) : this(handler, ExternalEventOptions.None)
     {
-        ArgumentNullException.ThrowIfNull(handler);
-
-        _uiHandler = handler;
     }
 
     /// <summary>
@@ -68,7 +63,11 @@ public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternal
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _uiHandler = handler;
+        _core = new((uiApplication, argument) =>
+        {
+            handler(uiApplication, argument);
+            return default;
+        });
         _options = options;
     }
 
@@ -82,56 +81,32 @@ public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternal
     ///     Revit will wait until it is ready to process the event and then it will execute its event handler.
     ///     Revit processes external events only when no other commands or edit modes are currently active in Revit,
     ///     which is the same policy like the one that applies to evoking external commands.<br /><br />
+    ///     Each call executes the handler once with its own argument, in the order of the calls, and the returned task completes with the outcome of that execution.<br /><br />
     ///     When <see cref="ExternalEventOptions.AllowDirectInvocation" /> is specified and Revit is in API mode,
     ///     the handler is executed directly on the calling thread instead of being queued.
     /// </remarks>
     public Task RaiseAsync(T argument)
     {
-        _argument = argument;
-
         if ((_options & ExternalEventOptions.AllowDirectInvocation) != 0 && RevitContext.IsRevitInApiMode)
         {
-            try
-            {
-                ExecuteHandler(RevitContext.UiApplication);
-                return Task.CompletedTask;
-            }
-            catch (Exception exception)
-            {
-                return Task.FromException(exception);
-            }
+            return _core.Invoke(RevitContext.UiApplication, argument);
         }
 
-        _taskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var task = _core.Enqueue(argument);
         Raise();
 
-        return _taskCompletionSource.Task;
+        return task;
     }
 
     /// <summary>Callback invoked by Revit. Not intended to be called in user code.</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override void Execute(UIApplication uiApplication)
     {
-        try
-        {
-            ExecuteHandler(uiApplication);
-            _taskCompletionSource?.SetResult();
-        }
-        catch (Exception exception)
-        {
-            _taskCompletionSource?.SetException(exception);
-        }
-    }
+        _core.InvokeNext(uiApplication);
 
-    private void ExecuteHandler(UIApplication uiApplication)
-    {
-        if (_uiHandler is not null)
+        if (_core.HasPendingOperations)
         {
-            _uiHandler.Invoke(uiApplication, _argument);
-        }
-        else
-        {
-            _handler!.Invoke(_argument);
+            Raise();
         }
     }
 }

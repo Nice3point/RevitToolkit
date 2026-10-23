@@ -200,6 +200,11 @@ so you can create them anywhere in your code and on any thread.
 Use `Raise()` when the caller does not need to wait, or `RaiseAsync()` when it needs completion or a return value.
 For generated event properties, see the [ExternalEvent attribute](#externalevent-attribute).
 
+One event can serve several callers, such as two modeless windows or a background service and a window.
+Every `Raise(argument)` and every `RaiseAsync()` call runs the handler once, with its own argument, in the order of the calls.
+Each `RaiseAsync()` task completes with the result or the exception of its own run.
+`ExternalEvent` without an argument runs once for all raises that are still waiting, the same way Revit runs a raised event.
+
 #### ExternalEvent
 
 A synchronous external event that queues the handler via the Revit external event mechanism.

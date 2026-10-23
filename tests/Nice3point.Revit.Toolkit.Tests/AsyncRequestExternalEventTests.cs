@@ -1,5 +1,6 @@
 using Nice3point.Revit.Toolkit.External;
 using Nice3point.TUnit.Revit;
+using TUnit.Assertions.Enums;
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
@@ -145,6 +146,68 @@ public sealed class AsyncRequestExternalEventTests : RevitApiUiTest
         {
             await Assert.That(raiseTask.Status).IsEqualTo(TaskStatus.RanToCompletion);
             await Assert.That(await raiseTask).IsEqualTo(42);
+        }
+    }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task RaiseAsync_RaisesBeforeTheEventCycle_CompletesEachTaskWithItsOwnResult(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var executionCount = 0;
+        var externalEvent = new AsyncRequestExternalEvent<int>(() => ++executionCount);
+
+        // Act
+        var firstTask = externalEvent.RaiseAsync();
+        var secondTask = externalEvent.RaiseAsync();
+        var results = await Task.WhenAll(firstTask, secondTask).WaitAsync(cancellationToken);
+
+        // Assert
+        await Assert.That(results).IsEquivalentTo([1, 2], CollectionOrdering.Matching);
+    }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task RaiseAsync_ArgumentRaisesBeforeTheEventCycle_CompletesEachTaskWithTheResultOfItsArgument(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var receivedArguments = new List<int>();
+        var externalEvent = new AsyncRequestExternalEvent<int, int>(argument =>
+        {
+            receivedArguments.Add(argument);
+            return argument;
+        });
+
+        // Act
+        var firstTask = externalEvent.RaiseAsync(1);
+        var secondTask = externalEvent.RaiseAsync(2);
+        var results = await Task.WhenAll(firstTask, secondTask).WaitAsync(cancellationToken);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            await Assert.That(results).IsEquivalentTo([1, 2], CollectionOrdering.Matching);
+            await Assert.That(receivedArguments).IsEquivalentTo([1, 2], CollectionOrdering.Matching);
+        }
+    }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task RaiseAsync_ArgumentFirstRaiseThrows_CompletesTheFollowingRaiseWithItsResult(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var externalEvent = new AsyncRequestExternalEvent<int, int>(argument => argument == 1 ? throw new InvalidOperationException("Handler failure") : argument);
+
+        // Act
+        var failingTask = externalEvent.RaiseAsync(1);
+        var followingTask = externalEvent.RaiseAsync(2);
+        var followingResult = await followingTask.WaitAsync(cancellationToken);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            await Assert.That(() => failingTask.WaitAsync(cancellationToken)).Throws<InvalidOperationException>();
+            await Assert.That(followingResult).IsEqualTo(2);
         }
     }
 }

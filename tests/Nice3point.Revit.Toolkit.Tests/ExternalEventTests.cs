@@ -1,6 +1,7 @@
 using Autodesk.Revit.UI;
 using Nice3point.Revit.Toolkit.External;
 using Nice3point.TUnit.Revit;
+using TUnit.Assertions.Enums;
 using ExternalEvent = Nice3point.Revit.Toolkit.External.ExternalEvent;
 
 namespace Nice3point.Revit.Toolkit.Tests;
@@ -125,6 +126,51 @@ public sealed class ExternalEventTests : RevitApiUiTest
 
         // Assert
         await Assert.That(receivedArguments).IsEquivalentTo([1, 2]);
+    }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task Raise_RaisesBeforeTheEventCycle_ExecutesTheHandlerOnce(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var executionCount = 0;
+        var externalEvent = new ExternalEvent(() => executionCount++);
+        var eventCycle = new AsyncExternalEvent(() => { });
+
+        // Act
+        externalEvent.Raise();
+        externalEvent.Raise();
+        await eventCycle.RaiseAsync().WaitAsync(cancellationToken);
+        await eventCycle.RaiseAsync().WaitAsync(cancellationToken);
+
+        // Assert
+        await Assert.That(executionCount).IsEqualTo(1);
+    }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task Raise_GenericRaisesBeforeTheEventCycle_ExecutesTheHandlerForEachArgumentInOrder(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var receivedArguments = new List<int>();
+        var execution = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var externalEvent = new ExternalEvent<int>(argument =>
+        {
+            receivedArguments.Add(argument);
+            if (receivedArguments.Count == 3)
+            {
+                execution.SetResult();
+            }
+        });
+
+        // Act
+        externalEvent.Raise(1);
+        externalEvent.Raise(2);
+        externalEvent.Raise(3);
+        await execution.Task.WaitAsync(cancellationToken);
+
+        // Assert
+        await Assert.That(receivedArguments).IsEquivalentTo([1, 2, 3], CollectionOrdering.Matching);
     }
 
     [Test]

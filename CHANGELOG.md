@@ -1,3 +1,10 @@
+# 2027.1.0
+
+### External Events
+
+- `ExternalEvent<T>` and the asynchronous external events run the handler once for every raise, with the argument of that raise, in the order of the raises. Each `RaiseAsync()` task completes with the result or the exception of its own run. A raise that arrived before Revit ran the previous one used to overwrite its argument, and the earlier `RaiseAsync()` task never completed.
+- `ExternalEvent` without an argument runs once for all raises that wait, as Revit runs a raised event.
+
 # 2027.0.2
 
 Performance optimizations for Revit 2027:

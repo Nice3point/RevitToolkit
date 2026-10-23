@@ -1,9 +1,10 @@
-# 2027.1.0
+# 2027.0.3
 
 ### External Events
 
 - `ExternalEvent<T>` and the asynchronous external events run the handler once for every raise, with the argument of that raise, in the order of the raises. Each `RaiseAsync()` task completes with the result or the exception of its own run. A raise that arrived before Revit ran the previous one used to overwrite its argument, and the earlier `RaiseAsync()` task never completed.
 - `ExternalEvent` without an argument runs once for all raises that wait, as Revit runs a raised event.
+- A raise that Revit refuses with `ExternalEventRequest.Denied` or `ExternalEventRequest.TimedOut` never runs. `Raise(argument)` returns that result, and the `RaiseAsync()` task fails with an `InvalidOperationException`. A refused raise used to stay queued and run with the next raise of the event.
 - `RaiseAsync()` of the asynchronous external events and their interfaces accepts an optional `CancellationToken`. A token canceled before Revit executes the handler withdraws the raise, and the task is canceled at once. A running handler is never interrupted. With `ExternalEventOptions.AllowDirectInvocation` in API mode, the token is checked once before the handler runs.
 - New constructors of `AsyncExternalEvent`, `AsyncExternalEvent<T>`, `AsyncRequestExternalEvent<TResult>`, and `AsyncRequestExternalEvent<T, TResult>` accept a handler that receives the `UIApplication`, the argument, and the `CancellationToken` of the raise. An `OperationCanceledException` thrown for that token cancels the task.
 

@@ -205,6 +205,7 @@ One event can serve several callers, such as two modeless windows or a backgroun
 Every `Raise(argument)` and every `RaiseAsync()` call runs the handler once, with its own argument, in the order of the calls.
 Each `RaiseAsync()` task completes with the result or the exception of its own run.
 `ExternalEvent` without an argument runs once for all raises that are still waiting, the same way Revit runs a raised event.
+A raise that Revit refuses with `Denied` or `TimedOut` never runs: `Raise(argument)` returns that result, and the `RaiseAsync()` task fails with an `InvalidOperationException`.
 
 #### ExternalEvent
 

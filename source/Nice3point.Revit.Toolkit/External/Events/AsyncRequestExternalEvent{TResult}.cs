@@ -34,7 +34,7 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _core = new((_, _, _) => handler());
+        _core = new((_, _, _) => handler(), base.Raise);
         _options = options;
     }
 
@@ -59,7 +59,7 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _core = new((uiApplication, _, _) => handler(uiApplication));
+        _core = new((uiApplication, _, _) => handler(uiApplication), base.Raise);
         _options = options;
     }
 
@@ -84,7 +84,7 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _core = new((uiApplication, _, cancellationToken) => handler(uiApplication, cancellationToken));
+        _core = new((uiApplication, _, cancellationToken) => handler(uiApplication, cancellationToken), base.Raise);
         _options = options;
     }
 
@@ -97,7 +97,8 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
     ///     Revit will wait until it is ready to process the event and then it will execute its event handler.
     ///     Revit processes external events only when no other commands or edit modes are currently active in Revit,
     ///     which is the same policy like the one that applies to evoking external commands.<br /><br />
-    ///     Each call executes the handler once, in the order of the calls, and the returned task completes with the outcome of that execution.<br /><br />
+    ///     Each call executes the handler once, in the order of the calls, and the returned task completes with the outcome of that execution.
+    ///     A call that Revit refuses with <see cref="ExternalEventRequest.Denied" /> or <see cref="ExternalEventRequest.TimedOut" /> never executes the handler, and the task fails with an <see cref="System.InvalidOperationException" />.<br /><br />
     ///     A cancellation requested before Revit executes the handler withdraws the call: the handler doesn't execute, and the task is canceled at once.
     ///     A cancellation requested while the handler executes doesn't interrupt it, and the task completes with its result.
     ///     A handler that receives the token can throw an <see cref="System.OperationCanceledException" /> for it, and the task is then canceled.<br /><br />
@@ -106,31 +107,18 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
     /// </remarks>
     public Task<TResult> RaiseAsync(CancellationToken cancellationToken = default)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return Task.FromCanceled<TResult>(cancellationToken);
-        }
-
         if ((_options & ExternalEventOptions.AllowDirectInvocation) != 0 && RevitContext.IsRevitInApiMode)
         {
             return _core.Invoke(RevitContext.UiApplication, default, cancellationToken);
         }
 
-        var task = _core.Enqueue(default, cancellationToken);
-        Raise();
-
-        return task;
+        return _core.RaiseAsync(default, cancellationToken);
     }
 
     /// <summary>Callback invoked by Revit. Not intended to be called in user code.</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override void Execute(UIApplication uiApplication)
     {
-        _core.InvokeNext(uiApplication);
-
-        if (_core.HasPendingOperations)
-        {
-            Raise();
-        }
+        _core.Execute(uiApplication);
     }
 }

@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.ComponentModel;
 using Autodesk.Revit.UI;
 
@@ -14,21 +13,16 @@ namespace Nice3point.Revit.Toolkit.External;
 [PublicAPI]
 public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
 {
-    private readonly ConcurrentQueue<T> _arguments = new();
-    private readonly Action<T>? _handler;
+    private readonly ExternalEventCore<T> _core;
     private readonly ExternalEventOptions _options;
-    private readonly Action<UIApplication, T>? _uiHandler;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ExternalEvent{T}" /> class.
     /// </summary>
     /// <param name="handler">The execution logic that receives an argument of type <typeparamref name="T" />.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public ExternalEvent(Action<T> handler)
+    public ExternalEvent(Action<T> handler) : this(handler, ExternalEventOptions.None)
     {
-        ArgumentNullException.ThrowIfNull(handler);
-
-        _handler = handler;
     }
 
     /// <summary>
@@ -41,7 +35,7 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _handler = handler;
+        _core = new((_, argument) => handler(argument), base.Raise);
         _options = options;
     }
 
@@ -51,11 +45,8 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
     /// </summary>
     /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" /> and an argument of type <typeparamref name="T" />.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public ExternalEvent(Action<UIApplication, T> handler)
+    public ExternalEvent(Action<UIApplication, T> handler) : this(handler, ExternalEventOptions.None)
     {
-        ArgumentNullException.ThrowIfNull(handler);
-
-        _uiHandler = handler;
     }
 
     /// <summary>
@@ -69,7 +60,7 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _uiHandler = handler;
+        _core = new(handler, base.Raise);
         _options = options;
     }
 
@@ -87,7 +78,8 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
     ///     Revit will wait until it is ready to process the event and then it will execute its event handler.
     ///     Revit processes external events only when no other commands or edit modes are currently active in Revit,
     ///     which is the same policy like the one that applies to evoking external commands.<br /><br />
-    ///     Each call executes the handler once with its own argument, in the order of the calls.<br /><br />
+    ///     Each call executes the handler once with its own argument, in the order of the calls.
+    ///     A call that returns <see cref="ExternalEventRequest.Denied" /> or <see cref="ExternalEventRequest.TimedOut" /> never executes the handler.<br /><br />
     ///     When <see cref="ExternalEventOptions.AllowDirectInvocation" /> is specified and Revit is in API mode,
     ///     the handler is executed directly on the calling thread instead of being queued.
     /// </remarks>
@@ -95,45 +87,17 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
     {
         if ((_options & ExternalEventOptions.AllowDirectInvocation) != 0 && RevitContext.IsRevitInApiMode)
         {
-            Invoke(RevitContext.UiApplication, argument);
+            _core.Invoke(RevitContext.UiApplication, argument);
             return ExternalEventRequest.Accepted;
         }
 
-        _arguments.Enqueue(argument);
-        return base.Raise();
+        return _core.Raise(argument);
     }
 
     /// <summary>Callback invoked by Revit. Not intended to be called in user code.</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override void Execute(UIApplication uiApplication)
     {
-        if (!_arguments.TryDequeue(out var argument))
-        {
-            return;
-        }
-
-        try
-        {
-            Invoke(uiApplication, argument);
-        }
-        finally
-        {
-            if (!_arguments.IsEmpty)
-            {
-                base.Raise();
-            }
-        }
-    }
-
-    private void Invoke(UIApplication uiApplication, T argument)
-    {
-        if (_uiHandler is not null)
-        {
-            _uiHandler.Invoke(uiApplication, argument);
-        }
-        else
-        {
-            _handler!.Invoke(argument);
-        }
+        _core.Execute(uiApplication);
     }
 }

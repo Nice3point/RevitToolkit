@@ -11,20 +11,15 @@ namespace Nice3point.Revit.Toolkit.External;
 /// <typeparam name="TArgument">The type of the argument passed to the handler.</typeparam>
 /// <typeparam name="TResult">The type of the result produced by the handler.</typeparam>
 /// <param name="handler">The execution logic of the external event.</param>
+/// <param name="raise">The function that raises the Revit external event.</param>
 /// <remarks>
 ///     Revit runs a pending external event once however often it is raised.
-///     The owning event raises itself again while <see cref="HasPendingOperations" /> is <see langword="true" />, and each raise executes in its own event cycle.<br />
-///     A raise whose token is canceled before its execution starts is canceled at once and never executes.
-///     Once the execution starts, the cancellation of the token no longer affects the raise.
+///     Each execution runs the oldest raise and raises the event again for the rest, and a refused raise runs the rest in the same execution.<br />
+///     The execution, the cancellation, and the refusal of a raise compete for the reservation of its completion, and only the one that reserves it completes the task.
 /// </remarks>
-internal sealed class AsyncExternalEventCore<TArgument, TResult>(Func<UIApplication, TArgument, CancellationToken, TResult> handler)
+internal sealed class AsyncExternalEventCore<TArgument, TResult>(Func<UIApplication, TArgument, CancellationToken, TResult> handler, Func<ExternalEventRequest> raise)
 {
     private readonly ConcurrentQueue<Operation> _operations = new();
-
-    /// <summary>
-    ///     Gets a value indicating whether a raise waits for its execution.
-    /// </summary>
-    public bool HasPendingOperations => !_operations.IsEmpty;
 
     /// <summary>
     ///     Executes the handler on the calling thread.
@@ -32,9 +27,14 @@ internal sealed class AsyncExternalEventCore<TArgument, TResult>(Func<UIApplicat
     /// <param name="uiApplication">The current <see cref="UIApplication" /> instance.</param>
     /// <param name="argument">The argument to pass to the handler.</param>
     /// <param name="cancellationToken">The token to pass to the handler.</param>
-    /// <returns>A completed task that contains the result or the exception of the handler, or a canceled task when the handler throws an <see cref="System.OperationCanceledException" /> for <paramref name="cancellationToken" />.</returns>
+    /// <returns>A completed task that contains the outcome of the handler, or a canceled task when <paramref name="cancellationToken" /> is canceled before the handler executes.</returns>
     public Task<TResult> Invoke(UIApplication uiApplication, TArgument argument, CancellationToken cancellationToken)
     {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return Task.FromCanceled<TResult>(cancellationToken);
+        }
+
         try
         {
             return Task.FromResult(handler(uiApplication, argument, cancellationToken));
@@ -50,46 +50,62 @@ internal sealed class AsyncExternalEventCore<TArgument, TResult>(Func<UIApplicat
     }
 
     /// <summary>
-    ///     Adds a raise to the end of the queue.
+    ///     Adds a raise to the end of the queue and raises the Revit external event.
     /// </summary>
     /// <param name="argument">The argument to pass to the handler.</param>
     /// <param name="cancellationToken">The token that withdraws the raise before its execution, passed to the handler.</param>
-    /// <returns>A task that completes with the outcome of the handler once <see cref="InvokeNext" /> executes the raise, or a task canceled at the cancellation of <paramref name="cancellationToken" /> before the execution.</returns>
-    public Task<TResult> Enqueue(TArgument argument, CancellationToken cancellationToken)
+    /// <returns>A task that completes with the outcome of the handler, or a task canceled at the cancellation of <paramref name="cancellationToken" /> before the execution.</returns>
+    /// <remarks>A raise that Revit refuses leaves the queue unexecuted, and its task fails with an <see cref="System.InvalidOperationException" />.</remarks>
+    public Task<TResult> RaiseAsync(TArgument argument, CancellationToken cancellationToken)
     {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return Task.FromCanceled<TResult>(cancellationToken);
+        }
+
         var operation = new Operation(argument, cancellationToken);
         _operations.Enqueue(operation);
+
+        var request = raise();
+        if (request.IsRefused)
+        {
+            operation.TrySetException(new InvalidOperationException($"Revit did not accept the external event request and returned the {request} result. Raise the external event again."));
+        }
 
         return operation.Task;
     }
 
     /// <summary>
-    ///     Executes the handler for the oldest raise in the queue that is not canceled and completes its task.
+    ///     Executes the oldest raise in the queue that is not canceled and raises the Revit external event again for the rest.
     /// </summary>
     /// <param name="uiApplication">The current <see cref="UIApplication" /> instance.</param>
-    /// <remarks>A queue without a raise to execute executes nothing.</remarks>
-    public void InvokeNext(UIApplication uiApplication)
+    public void Execute(UIApplication uiApplication)
     {
-        if (!TryStartNext(out var operation))
+        while (TryDequeueAndReserveCompletion(out var operation))
         {
-            return;
-        }
+            var executesNextRaise = !_operations.IsEmpty && raise().IsRefused;
 
-        try
-        {
-            operation.SetResult(handler(uiApplication, operation.Argument, operation.CancellationToken));
-        }
-        catch (Exception exception)
-        {
-            operation.SetException(exception);
+            try
+            {
+                operation.DangerousSetResult(handler(uiApplication, operation.Argument, operation.CancellationToken));
+            }
+            catch (Exception exception)
+            {
+                operation.DangerousSetException(exception);
+            }
+
+            if (!executesNextRaise)
+            {
+                return;
+            }
         }
     }
 
-    private bool TryStartNext([NotNullWhen(true)] out Operation? operation)
+    private bool TryDequeueAndReserveCompletion([NotNullWhen(true)] out Operation? operation)
     {
         while (_operations.TryDequeue(out operation))
         {
-            if (operation.TryStart())
+            if (operation.TryReserveCompletion())
             {
                 return true;
             }
@@ -105,28 +121,24 @@ internal sealed class AsyncExternalEventCore<TArgument, TResult>(Func<UIApplicat
 
     private sealed class Operation
     {
-        private const int Pending = 0;
-        private const int Started = 1;
-        private const int Canceled = 2;
-
         private readonly TaskCompletionSource<TResult> _completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private CancellationTokenRegistration _cancellationRegistration;
-        private int _state;
+        private int _completionReserved;
 
         public Operation(TArgument argument, CancellationToken cancellationToken)
         {
             Argument = argument;
             CancellationToken = cancellationToken;
-            _cancellationRegistration = cancellationToken.Register(static state => ((Operation)state!).Cancel(), this);
+            _cancellationRegistration = cancellationToken.Register(static state => ((Operation)state!).TrySetCanceled(), this);
         }
 
         public TArgument Argument { get; private set; }
         public CancellationToken CancellationToken { get; }
         public Task<TResult> Task => _completionSource.Task;
 
-        public bool TryStart()
+        public bool TryReserveCompletion()
         {
-            if (Interlocked.CompareExchange(ref _state, Started, Pending) != Pending)
+            if (Interlocked.Exchange(ref _completionReserved, 1) != 0)
             {
                 return false;
             }
@@ -135,12 +147,24 @@ internal sealed class AsyncExternalEventCore<TArgument, TResult>(Func<UIApplicat
             return true;
         }
 
-        public void SetResult(TResult result)
+        public bool TrySetException(Exception exception)
+        {
+            if (!TryReserveCompletion())
+            {
+                return false;
+            }
+
+            Argument = default!;
+            _completionSource.TrySetException(exception);
+            return true;
+        }
+
+        public void DangerousSetResult(TResult result)
         {
             _completionSource.TrySetResult(result);
         }
 
-        public void SetException(Exception exception)
+        public void DangerousSetException(Exception exception)
         {
             if (exception is OperationCanceledException canceledException && IsCanceledBy(canceledException, CancellationToken))
             {
@@ -151,9 +175,9 @@ internal sealed class AsyncExternalEventCore<TArgument, TResult>(Func<UIApplicat
             _completionSource.TrySetException(exception);
         }
 
-        private void Cancel()
+        private void TrySetCanceled()
         {
-            if (Interlocked.CompareExchange(ref _state, Canceled, Pending) != Pending)
+            if (!TryReserveCompletion())
             {
                 return;
             }

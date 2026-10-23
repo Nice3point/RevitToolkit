@@ -123,13 +123,15 @@ public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternal
     ///     Revit will wait until it is ready to process the event and then it will execute its event handler.
     ///     Revit processes external events only when no other commands or edit modes are currently active in Revit,
     ///     which is the same policy like the one that applies to evoking external commands.<br /><br />
-    ///     Each call executes the handler once with its own argument, in the order of the calls, and the returned task completes with the outcome of that execution.
-    ///     A call that Revit refuses with <see cref="ExternalEventRequest.Denied" /> or <see cref="ExternalEventRequest.TimedOut" /> never executes the handler, and the task fails with an <see cref="System.InvalidOperationException" />.<br /><br />
-    ///     A cancellation requested before Revit executes the handler withdraws the call: the handler doesn't execute, and the task is canceled at once.
+    ///     Each call executes the handler once with its own argument, in the order of the calls.
+    ///     The returned task completes with the outcome of that execution.
+    ///     A call that Revit refuses with <see cref="ExternalEventRequest.Denied" /> or <see cref="ExternalEventRequest.TimedOut" /> fails its task with an <see cref="System.InvalidOperationException" /> without executing the handler.<br /><br />
+    ///     A cancellation requested before Revit executes the handler cancels the task at once without executing the handler.
     ///     A cancellation requested while the handler executes doesn't interrupt it.
-    ///     A handler that receives the token can throw an <see cref="System.OperationCanceledException" /> for it, and the task is then canceled.<br /><br />
+    ///     An <see cref="System.OperationCanceledException" /> that the handler throws for the token cancels the task.<br /><br />
     ///     When <see cref="ExternalEventOptions.AllowDirectInvocation" /> is specified and Revit is in API mode,
-    ///     the handler is executed directly on the calling thread instead of being queued, and the token is checked once before the handler executes.
+    ///     the handler is executed directly on the calling thread instead of being queued.
+    ///     The token is checked once, before the handler executes.
     /// </remarks>
     public Task RaiseAsync(T argument, CancellationToken cancellationToken)
     {

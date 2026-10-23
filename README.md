@@ -201,11 +201,14 @@ so you can create them anywhere in your code and on any thread.
 Use `Raise()` when the caller does not need to wait, or `RaiseAsync()` when it needs completion or a return value.
 For generated event properties, see the [ExternalEvent attribute](#externalevent-attribute).
 
-One event can serve several callers, such as two modeless windows or a background service and a window.
-Every `Raise(argument)` and every `RaiseAsync()` call runs the handler once, with its own argument, in the order of the calls.
+Several callers can share one event, such as two modeless windows, or a background service and a window.
+Each `Raise(argument)` and `RaiseAsync()` call runs the handler once with its own argument, in the order of the calls.
 Each `RaiseAsync()` task completes with the result or the exception of its own run.
-`ExternalEvent` without an argument runs once for all raises that are still waiting, the same way Revit runs a raised event.
-A raise that Revit refuses with `Denied` or `TimedOut` never runs: `Raise(argument)` returns that result, and the `RaiseAsync()` task fails with an `InvalidOperationException`.
+`ExternalEvent` without an argument runs once for all waiting raises, the same way Revit runs a raised event.
+
+A raise that Revit refuses with `Denied` or `TimedOut` never runs.
+`Raise(argument)` returns that result to the caller.
+The `RaiseAsync()` task fails with an `InvalidOperationException`.
 
 #### ExternalEvent
 
@@ -365,7 +368,8 @@ private async Task<ElementId, bool> DeleteWindowAsync(ElementId elementId)
 #### Cancellation
 
 Every `RaiseAsync()` method has an overload that accepts a `CancellationToken`.
-A modal dialog or a running command keeps Revit from executing external events, and the token lets the caller stop waiting:
+A modal dialog or a running command keeps Revit from executing external events.
+The token lets the caller stop waiting for such an event:
 
 ```c#
 private async Task DeleteWindowAsync(ElementId elementId)
@@ -383,13 +387,16 @@ private async Task DeleteWindowAsync(ElementId elementId)
 }
 ```
 
-The token affects the raise as follows:
+The moment of the cancellation decides what happens to the raise:
 
-- A token canceled before Revit executes the delegate withdraws the raise: the delegate doesn't run, and the task is canceled at once.
-- A token canceled while the delegate runs doesn't interrupt it, and the task completes with the outcome of the delegate.
-- The other raises of the same event run as if the canceled raise didn't exist.
+| Token canceled                  | Delegate        | Task                                       |
+|---------------------------------|-----------------|--------------------------------------------|
+| Before Revit executes the raise | Doesn't run     | Canceled at once                           |
+| While the delegate runs         | Runs to its end | Completes with the outcome of the delegate |
 
-To stop a long-running delegate, accept the token as the last parameter of the delegate:
+The other raises of the same event run as usual.
+
+To stop a long-running delegate, accept the token as its last parameter:
 
 ```c#
 private readonly AsyncExternalEvent<ICollection<ElementId>> _deleteWindowsAsyncEvent = new((application, elementIds, cancellationToken) =>
@@ -408,9 +415,12 @@ private readonly AsyncExternalEvent<ICollection<ElementId>> _deleteWindowsAsyncE
 });
 ```
 
-An `OperationCanceledException` thrown for the token rolls back the transaction and cancels the task.
+An `OperationCanceledException` thrown for the token cancels the task.
+The `using` statement rolls back the transaction that the delegate didn't commit.
+
 The delegate observes a cancellation requested from another thread, such as a timeout or a remote client.
-A cancel button of a modeless window runs on the Revit thread and takes effect only after the delegate returns.
+A cancel button of a modeless window runs on the Revit thread.
+Its cancellation takes effect only after the delegate returns.
 
 #### ExternalEventOptions
 
@@ -634,9 +644,8 @@ If initialization throws, the next access retries it.
 
 **Methods with CancellationToken parameter**
 
-Every generated `RaiseAsync()` method has an overload that accepts a `CancellationToken`, as described in [Cancellation](#cancellation).
-Place `CancellationToken` last when the handler needs that token.
-The event supplies it, the same way as `UIApplication`, and the token isn't one of the event arguments:
+Declare a `CancellationToken` as the last parameter when the handler needs the token of `RaiseAsync()`.
+The token isn't one of the event arguments:
 
 ```c#
 [ExternalEvent]
@@ -660,13 +669,26 @@ private void DeleteWindows(UIApplication application, ICollection<ElementId> ele
 // IAsyncExternalEvent<ICollection<ElementId>> DeleteWindowsAsyncEvent
 ```
 
+Every generated `RaiseAsync()` method has an overload that accepts a `CancellationToken`.
+A canceled raise throws an `OperationCanceledException` from `await`:
+
 ```c#
 using var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-await DeleteWindowsAsyncEvent.RaiseAsync(elementIds, cancellationSource.Token);
+
+try
+{
+    await DeleteWindowsAsyncEvent.RaiseAsync(elementIds, cancellationSource.Token);
+}
+catch (OperationCanceledException)
+{
+    //Revit was busy for 10 seconds, or the handler stopped on the token
+}
 ```
 
-`DeleteWindowsAsyncEvent` passes the token of `RaiseAsync()` to the handler, and `DeleteWindowsEvent` passes `CancellationToken.None`.
+`DeleteWindowsAsyncEvent` passes the token of `RaiseAsync()` to the handler.
+`DeleteWindowsEvent` passes `CancellationToken.None`.
 A `CancellationToken` in any other position is a regular argument.
+[Cancellation](#cancellation) describes when the token takes effect.
 
 **Enabling direct invocation**
 

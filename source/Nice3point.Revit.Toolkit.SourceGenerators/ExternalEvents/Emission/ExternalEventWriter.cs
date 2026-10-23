@@ -358,7 +358,8 @@ internal static class ExternalEventWriter
     ///     Determines whether the handler delegate matches a constructor of the event as declared.
     /// </summary>
     /// <remarks>
-    ///     Several arguments arrive as one generated record, and a handler that receives a cancellation token matches only the asynchronous constructors that pass the <c>UIApplication</c> too.
+    ///     Several arguments arrive as one generated record.
+    ///     A handler that receives a cancellation token matches only the asynchronous constructors that pass the <c>UIApplication</c> too.
     ///     Every other handler is adapted with a lambda.
     /// </remarks>
     private static bool UsesHandlerDelegate(ExternalEventDefinition eventDefinition, EventPropertyKind propertyKind)

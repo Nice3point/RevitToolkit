@@ -13,8 +13,10 @@ namespace Nice3point.Revit.Toolkit.External;
 /// <param name="raise">The function that raises the Revit external event.</param>
 /// <remarks>
 ///     Revit runs a pending external event once however often it is raised.
-///     Each execution runs the oldest raise and raises the event again for the rest, and a refused raise runs the rest in the same execution.<br />
-///     The execution and the refusal of a raise compete for its reservation, and a raise that Revit refuses never executes.
+///     Each execution runs the oldest raise and raises the event again for the rest.
+///     When Revit refuses that raise, the rest runs in the same execution.<br />
+///     The execution and the refusal of a raise compete for its reservation.
+///     A raise that Revit refuses never executes.
 /// </remarks>
 internal sealed class ExternalEventCore<TArgument>(Action<UIApplication, TArgument> handler, Func<ExternalEventRequest> raise)
 {

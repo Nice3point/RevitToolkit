@@ -15,7 +15,7 @@ internal static class ExternalEventRequestExtensions
     extension(ExternalEventRequest request)
     {
         /// <summary>
-        ///     Gets a value indicating whether Revit refused to raise the external event, leaving no execution scheduled for the request.
+        ///     Gets a value indicating whether Revit refused to raise the external event.
         /// </summary>
         public bool IsRefused => request is ExternalEventRequest.Denied or ExternalEventRequest.TimedOut;
     }

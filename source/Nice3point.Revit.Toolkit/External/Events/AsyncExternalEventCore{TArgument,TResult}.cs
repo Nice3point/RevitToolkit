@@ -14,8 +14,10 @@ namespace Nice3point.Revit.Toolkit.External;
 /// <param name="raise">The function that raises the Revit external event.</param>
 /// <remarks>
 ///     Revit runs a pending external event once however often it is raised.
-///     Each execution runs the oldest raise and raises the event again for the rest, and a refused raise runs the rest in the same execution.<br />
-///     The execution, the cancellation, and the refusal of a raise compete for the reservation of its completion, and only the one that reserves it completes the task.
+///     Each execution runs the oldest raise and raises the event again for the rest.
+///     When Revit refuses that raise, the rest runs in the same execution.<br />
+///     The execution, the cancellation, and the refusal of a raise compete for the reservation of its completion.
+///     Only the one that reserves it completes the task.
 /// </remarks>
 internal sealed class AsyncExternalEventCore<TArgument, TResult>(Func<UIApplication, TArgument, CancellationToken, TResult> handler, Func<ExternalEventRequest> raise)
 {
@@ -55,7 +57,7 @@ internal sealed class AsyncExternalEventCore<TArgument, TResult>(Func<UIApplicat
     /// <param name="argument">The argument to pass to the handler.</param>
     /// <param name="cancellationToken">The token that withdraws the raise before its execution, passed to the handler.</param>
     /// <returns>A task that completes with the outcome of the handler, or a task canceled at the cancellation of <paramref name="cancellationToken" /> before the execution.</returns>
-    /// <remarks>A raise that Revit refuses leaves the queue unexecuted, and its task fails with an <see cref="System.InvalidOperationException" />.</remarks>
+    /// <remarks>A raise that Revit refuses fails its task with an <see cref="System.InvalidOperationException" /> without executing.</remarks>
     public Task<TResult> RaiseAsync(TArgument argument, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)

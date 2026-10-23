@@ -14,6 +14,8 @@ public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternal
 {
     private readonly AsyncExternalEventCore<T, VoidResult> _core;
     private readonly ExternalEventOptions _options;
+    private readonly Lock _argumentLock = new();
+    private T _argument = default!;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="AsyncExternalEvent{T}" /> class.
@@ -39,6 +41,7 @@ public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternal
             handler(argument);
             return default;
         }, base.Raise);
+
         _options = options;
     }
 
@@ -68,6 +71,7 @@ public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternal
             handler(uiApplication, argument);
             return default;
         }, base.Raise);
+
         _options = options;
     }
 
@@ -97,6 +101,7 @@ public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternal
             handler(uiApplication, argument, cancellationToken);
             return default;
         }, base.Raise);
+
         _options = options;
     }
 
@@ -106,7 +111,17 @@ public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternal
     /// </summary>
     /// <param name="argument">The argument to pass to the handler.</param>
     /// <returns>The <see cref="Task" /> representing the async operation being executed.</returns>
-    /// <remarks>This overload passes <see cref="CancellationToken.None" /> to <see cref="RaiseAsync(T, CancellationToken)" />.</remarks>
+    /// <remarks>
+    ///     Revit will wait until it is ready to process the event and then it will execute its event handler.
+    ///     Revit processes external events only when no other commands or edit modes are currently active in Revit,
+    ///     which is the same policy like the one that applies to evoking external commands.<br /><br />
+    ///     Each call executes the handler once with its own argument, in the order of the calls.
+    ///     The returned task completes with the outcome of that execution.
+    ///     A call that Revit refuses with <see cref="ExternalEventRequest.Denied" /> or <see cref="ExternalEventRequest.TimedOut" /> fails its task with an <see cref="System.InvalidOperationException" /> without executing the handler.<br /><br />
+    ///     When <see cref="ExternalEventOptions.AllowDirectInvocation" /> is specified and Revit is in API mode,
+    ///     the handler is executed directly on the calling thread instead of being queued.
+    ///     This overload passes <see cref="CancellationToken.None" /> to <see cref="RaiseAsync(T, CancellationToken)" />.
+    /// </remarks>
     public Task RaiseAsync(T argument)
     {
         return RaiseAsync(argument, CancellationToken.None);
@@ -135,12 +150,34 @@ public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternal
     /// </remarks>
     public Task RaiseAsync(T argument, CancellationToken cancellationToken)
     {
+        lock (_argumentLock)
+        {
+            _argument = argument;
+        }
+
         if ((_options & ExternalEventOptions.AllowDirectInvocation) != 0 && RevitContext.IsRevitInApiMode)
         {
             return _core.Invoke(RevitContext.UiApplication, argument, cancellationToken);
         }
 
         return _core.RaiseAsync(argument, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     Each call queues a separate execution with the last argument passed to <see cref="RaiseAsync(T, CancellationToken)" />,
+    ///     or the default value of <typeparamref name="T" /> before the first call.
+    ///     The handler receives <see cref="CancellationToken.None" />. An exception propagates to Revit.
+    /// </remarks>
+    public override ExternalEventRequest Raise()
+    {
+        T argument;
+        lock (_argumentLock)
+        {
+            argument = _argument;
+        }
+
+        return _core.Raise(argument);
     }
 
     /// <summary>Callback invoked by Revit. Not intended to be called in user code.</summary>

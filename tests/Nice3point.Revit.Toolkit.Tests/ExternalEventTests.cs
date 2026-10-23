@@ -192,4 +192,40 @@ public sealed class ExternalEventTests : RevitApiUiTest
         // Act & Assert
         await Assert.That(() => new ExternalEvent((Action)null!)).Throws<ArgumentNullException>();
     }
+
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    [Timeout(10_000)]
+    public async Task Raise_GenericWithoutArgument_QueuesTheLastArgument(bool allowDirectInvocation, CancellationToken cancellationToken)
+    {
+        // Arrange
+        var receivedArguments = new List<int>();
+        var execution = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var options = allowDirectInvocation ? ExternalEventOptions.AllowDirectInvocation : ExternalEventOptions.None;
+        int[] expectedArguments = allowDirectInvocation ? [42, 0, 42] : [0, 42, 42];
+        var externalEvent = new ExternalEvent<int>(argument =>
+        {
+            receivedArguments.Add(argument);
+            if (receivedArguments.Count == 3)
+            {
+                execution.SetResult();
+            }
+        }, options);
+
+        // Act
+        var firstRequest = externalEvent.Raise();
+        externalEvent.Raise(42);
+        externalEvent.Raise();
+        var executionCountOnRaise = receivedArguments.Count;
+        await execution.Task.WaitAsync(cancellationToken);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            await Assert.That(firstRequest).IsEqualTo(ExternalEventRequest.Accepted);
+            await Assert.That(executionCountOnRaise).IsEqualTo(allowDirectInvocation ? 1 : 0);
+            await Assert.That(receivedArguments).IsEquivalentTo(expectedArguments, CollectionOrdering.Matching);
+        }
+    }
 }

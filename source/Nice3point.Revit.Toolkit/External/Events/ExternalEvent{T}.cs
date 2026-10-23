@@ -15,6 +15,8 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
 {
     private readonly ExternalEventCore<T> _core;
     private readonly ExternalEventOptions _options;
+    private readonly Lock _argumentLock = new();
+    private T _argument = default!;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ExternalEvent{T}" /> class.
@@ -85,10 +87,31 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
     /// </remarks>
     public ExternalEventRequest Raise(T argument)
     {
+        lock (_argumentLock)
+        {
+            _argument = argument;
+        }
+
         if ((_options & ExternalEventOptions.AllowDirectInvocation) != 0 && RevitContext.IsRevitInApiMode)
         {
             _core.Invoke(RevitContext.UiApplication, argument);
             return ExternalEventRequest.Accepted;
+        }
+
+        return _core.Raise(argument);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     Each call queues a separate execution with the last argument passed to <see cref="Raise(T)" />,
+    ///     or the default value of <typeparamref name="T" /> before the first call.
+    /// </remarks>
+    public override ExternalEventRequest Raise()
+    {
+        T argument;
+        lock (_argumentLock)
+        {
+            argument = _argument;
         }
 
         return _core.Raise(argument);

@@ -460,4 +460,103 @@ public sealed class AsyncRequestExternalEventTests : RevitApiUiTest
             await Assert.That(followingResult).IsEqualTo(1);
         }
     }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task Raise_AllowDirectInvocation_QueuesEveryCallWithoutWaiting(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var receivedTokens = new List<CancellationToken>();
+        var execution = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        ExternalEventHandler externalEvent = new AsyncRequestExternalEvent<int>((_, token) =>
+        {
+            receivedTokens.Add(token);
+            if (receivedTokens.Count == 2)
+            {
+                execution.SetResult();
+            }
+
+            return receivedTokens.Count;
+        }, ExternalEventOptions.AllowDirectInvocation);
+
+        // Act
+        var firstRequest = externalEvent.Raise();
+        var secondRequest = externalEvent.Raise();
+        var executionCountOnRaise = receivedTokens.Count;
+        await execution.Task.WaitAsync(cancellationToken);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            await Assert.That(firstRequest).IsEqualTo(Autodesk.Revit.UI.ExternalEventRequest.Accepted);
+            await Assert.That(secondRequest).IsEqualTo(Autodesk.Revit.UI.ExternalEventRequest.Pending);
+            await Assert.That(executionCountOnRaise).IsZero();
+            await Assert.That(receivedTokens).IsEquivalentTo([CancellationToken.None, CancellationToken.None], CollectionOrdering.Matching);
+        }
+    }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task Raise_GenericMixedRaises_QueuesTheLastArgumentWithoutChangingAsyncCompletion(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var receivedArguments = new List<int>();
+        var externalEvent = new AsyncRequestExternalEvent<int, int>(argument =>
+        {
+            receivedArguments.Add(argument);
+            return argument;
+        });
+
+        // Act
+        var firstRequest = externalEvent.Raise();
+        var firstTask = externalEvent.RaiseAsync(1);
+        externalEvent.Raise();
+        var secondTask = externalEvent.RaiseAsync(2);
+        externalEvent.Raise();
+        var lastTask = externalEvent.RaiseAsync(3);
+        await Task.WhenAll(firstTask, secondTask, lastTask).WaitAsync(cancellationToken);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            await Assert.That(firstRequest).IsEqualTo(Autodesk.Revit.UI.ExternalEventRequest.Accepted);
+            await Assert.That(await firstTask).IsEqualTo(1);
+            await Assert.That(await secondTask).IsEqualTo(2);
+            await Assert.That(await lastTask).IsEqualTo(3);
+            await Assert.That(receivedArguments).IsEquivalentTo([0, 1, 1, 2, 2, 3], CollectionOrdering.Matching);
+        }
+    }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task Raise_GenericAfterDirectInvocation_QueuesTheLastArgument(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var receivedArguments = new List<int>();
+        var execution = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var externalEvent = new AsyncRequestExternalEvent<int, int>(argument =>
+        {
+            receivedArguments.Add(argument);
+            if (receivedArguments.Count == 2)
+            {
+                execution.SetResult();
+            }
+
+            return argument;
+        }, ExternalEventOptions.AllowDirectInvocation);
+
+        await externalEvent.RaiseAsync(42).WaitAsync(cancellationToken);
+
+        // Act
+        externalEvent.Raise();
+        var executionCountOnRaise = receivedArguments.Count;
+        await execution.Task.WaitAsync(cancellationToken);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            await Assert.That(executionCountOnRaise).IsEqualTo(1);
+            await Assert.That(receivedArguments).IsEquivalentTo([42, 42], CollectionOrdering.Matching);
+        }
+    }
 }

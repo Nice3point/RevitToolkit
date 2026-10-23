@@ -354,4 +354,92 @@ public sealed class AsyncExternalEventTests : RevitApiUiTest
             await Assert.That(receivedToken).IsEqualTo(cancellationSource.Token);
         }
     }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task Raise_AllowDirectInvocation_QueuesEveryCallWithoutWaiting(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var receivedTokens = new List<CancellationToken>();
+        var execution = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        ExternalEventHandler externalEvent = new AsyncExternalEvent((_, token) =>
+        {
+            receivedTokens.Add(token);
+            if (receivedTokens.Count == 2)
+            {
+                execution.SetResult();
+            }
+        }, ExternalEventOptions.AllowDirectInvocation);
+
+        // Act
+        var firstRequest = externalEvent.Raise();
+        var secondRequest = externalEvent.Raise();
+        var executionCountOnRaise = receivedTokens.Count;
+        await execution.Task.WaitAsync(cancellationToken);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            await Assert.That(firstRequest).IsEqualTo(ExternalEventRequest.Accepted);
+            await Assert.That(secondRequest).IsEqualTo(ExternalEventRequest.Pending);
+            await Assert.That(executionCountOnRaise).IsZero();
+            await Assert.That(receivedTokens).IsEquivalentTo([CancellationToken.None, CancellationToken.None], CollectionOrdering.Matching);
+        }
+    }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task Raise_GenericMixedRaises_QueuesTheLastArgumentWithoutChangingAsyncCompletion(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var receivedArguments = new List<int>();
+        var externalEvent = new AsyncExternalEvent<int>(receivedArguments.Add);
+
+        // Act
+        var firstRequest = externalEvent.Raise();
+        var firstTask = externalEvent.RaiseAsync(1);
+        externalEvent.Raise();
+        var secondTask = externalEvent.RaiseAsync(2);
+        externalEvent.Raise();
+        var lastTask = externalEvent.RaiseAsync(3);
+        await Task.WhenAll(firstTask, secondTask, lastTask).WaitAsync(cancellationToken);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            await Assert.That(firstRequest).IsEqualTo(ExternalEventRequest.Accepted);
+            await Assert.That(receivedArguments).IsEquivalentTo([0, 1, 1, 2, 2, 3], CollectionOrdering.Matching);
+        }
+    }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task Raise_GenericAfterDirectInvocation_QueuesTheLastArgument(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var receivedArguments = new List<int>();
+        var execution = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var externalEvent = new AsyncExternalEvent<int>(argument =>
+        {
+            receivedArguments.Add(argument);
+            if (receivedArguments.Count == 2)
+            {
+                execution.SetResult();
+            }
+        }, ExternalEventOptions.AllowDirectInvocation);
+
+        await externalEvent.RaiseAsync(42).WaitAsync(cancellationToken);
+
+        // Act
+        externalEvent.Raise();
+        var executionCountOnRaise = receivedArguments.Count;
+        await execution.Task.WaitAsync(cancellationToken);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            await Assert.That(executionCountOnRaise).IsEqualTo(1);
+            await Assert.That(receivedArguments).IsEquivalentTo([42, 42], CollectionOrdering.Matching);
+        }
+    }
 }

@@ -22,6 +22,7 @@ internal static class ExternalEventTypeNames
     public static readonly FullyQualifiedTypeName ExternalEventRequest = "Autodesk.Revit.UI.ExternalEventRequest";
 
     // System types
+    public static readonly FullyQualifiedTypeName CancellationToken = "System.Threading.CancellationToken";
     public static readonly FullyQualifiedTypeName Task = "System.Threading.Tasks.Task";
     public static readonly FullyQualifiedTypeName TaskGeneric = "System.Threading.Tasks.Task`1";
 }

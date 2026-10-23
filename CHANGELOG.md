@@ -21,6 +21,29 @@ using var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(
 await _deleteWindowsAsyncEvent.RaiseAsync(elementIds, cancellationSource.Token);
 ```
 
+### ExternalEvent Source Generator
+
+- A handler can declare a `CancellationToken` as its last parameter, after the optional `UIApplication` and the arguments. The asynchronous event passes it the token of `RaiseAsync()`, and the synchronous event passes `CancellationToken.None`. A `CancellationToken` in any other position remains an argument.
+- The generated `RaiseAsync()` extension methods for several arguments accept an optional `CancellationToken`.
+
+```c#
+[ExternalEvent]
+private void DeleteWindows(UIApplication application, ICollection<ElementId> elementIds, CancellationToken cancellationToken)
+{
+    foreach (var elementId in elementIds)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        application.ActiveUIDocument.Document.Delete(elementId);
+    }
+}
+
+// Generates:
+// IExternalEvent<ICollection<ElementId>> DeleteWindowsEvent
+// IAsyncExternalEvent<ICollection<ElementId>> DeleteWindowsAsyncEvent
+
+await DeleteWindowsAsyncEvent.RaiseAsync(elementIds, cancellationToken);
+```
+
 ### Breaking Changes
 
 - The `RaiseAsync` methods of `IAsyncExternalEvent`, `IAsyncExternalEvent<T>`, `IAsyncRequestExternalEvent<TResult>`, and `IAsyncRequestExternalEvent<T, TResult>` take an optional `CancellationToken` parameter. Source code that calls them compiles unchanged. Add-ins compiled against an earlier version are rebuilt, and custom implementations of the interfaces add the parameter.

@@ -74,8 +74,18 @@ namespace Nice3point.Revit.Toolkit.External;
 /// 
 ///     // Extension methods:
 ///     public static ExternalEventRequest Raise(this IExternalEvent&lt;DeleteInstancesArgs&gt; externalEvent, BuiltInCategory category, int count);
-///     public static Task RaiseAsync(this IAsyncExternalEvent&lt;DeleteInstancesArgs&gt; externalEvent, BuiltInCategory category, int count);
+///     public static Task RaiseAsync(this IAsyncExternalEvent&lt;DeleteInstancesArgs&gt; externalEvent, BuiltInCategory category, int count, CancellationToken cancellationToken = default);
 ///     </code>
+///     </para>
+///     <para>
+///         <b>Methods with a cancellation token.</b> A method can declare a <see cref="System.Threading.CancellationToken" /> as its last parameter,
+///         after the optional <c>UIApplication</c> and the extra parameters. The token is not an extra parameter:
+///         <code>
+///     void Method(UIApplication, ElementId, CancellationToken);
+///     </code>
+///         Will generate an <see cref="IExternalEvent{T}" /> property and an <see cref="IAsyncExternalEvent{T}" /> property with an <c>ElementId</c> argument.
+///         The asynchronous property passes the token of <c>RaiseAsync</c> to the method, and the synchronous property passes <see cref="System.Threading.CancellationToken.None" />.
+///         A <see cref="System.Threading.CancellationToken" /> in any other position is an extra parameter.
 ///     </para>
 /// </summary>
 [PublicAPI]

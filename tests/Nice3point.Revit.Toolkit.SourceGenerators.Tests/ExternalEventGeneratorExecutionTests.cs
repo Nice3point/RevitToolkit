@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Testing;
 using Nice3point.Revit.Toolkit.SourceGenerators.Tests.Helpers;
+using TUnit.Assertions.Enums;
 
 namespace Nice3point.Revit.Toolkit.SourceGenerators.Tests;
 
@@ -174,5 +175,49 @@ public sealed class ExternalEventGeneratorExecutionTests
         await Assert.That(result[0]).IsEqualTo(11);
         await Assert.That(result[1]).IsEqualTo(22);
         await Assert.That(result[2]).IsZero();
+    }
+
+    [Test]
+    public async Task CancellationTokenHandler_ReceivesTheTokenOfTheRaiseAsync()
+    {
+        const string source = """
+                              using System.Threading;
+                              using System.Threading.Tasks;
+                              using Nice3point.Revit.Toolkit.External;
+
+                              namespace Consumer;
+
+                              public partial class Model
+                              {
+                                  public CancellationToken ReceivedToken;
+
+                                  [ExternalEvent]
+                                  private bool Run(int quantity, string label, CancellationToken cancellationToken) => cancellationToken.CanBeCanceled;
+
+                                  [ExternalEvent]
+                                  private void Notify(CancellationToken cancellationToken) => ReceivedToken = cancellationToken;
+                              }
+
+                              public static class Probe
+                              {
+                                  public static async Task<bool[]> RunAsync()
+                                  {
+                                      using var cancellationSource = new CancellationTokenSource();
+                                      var model = new Model();
+                                      var extensionToken = await model.RunAsyncEvent.RaiseAsync(42, "Walls", cancellationSource.Token);
+                                      var recordToken = await model.RunAsyncEvent.RaiseAsync(new Model.RunArgs(42, "Walls"), cancellationSource.Token);
+                                      var omittedToken = await model.RunAsyncEvent.RaiseAsync(42, "Walls");
+                                      model.NotifyEvent.Raise();
+                                      var synchronousToken = model.ReceivedToken.CanBeCanceled;
+                                      await model.NotifyAsyncEvent.RaiseAsync(cancellationSource.Token);
+                                      return new[] { extensionToken, recordToken, omittedToken, synchronousToken, model.ReceivedToken == cancellationSource.Token };
+                                  }
+                              }
+                              """;
+
+        var (driver, input) = await GeneratorTest.RunAsync(source);
+        var result = await GeneratorTest.ExecuteAsync<bool[]>(driver, input);
+
+        await Assert.That(result).IsEquivalentTo([true, true, false, false, true], CollectionOrdering.Matching);
     }
 }

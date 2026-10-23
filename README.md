@@ -614,9 +614,9 @@ public partial class MyViewModel
 
 public static partial class MyViewModelExtensions
 {
-    public static global::System.Threading.Tasks.Task<Room> RaiseAsync(this IAsyncRequestExternalEvent<MyViewModel.CreateRoomArgs, Room> externalEvent, Level level, UV coordinate)
+    public static global::System.Threading.Tasks.Task<Room> RaiseAsync(this IAsyncRequestExternalEvent<MyViewModel.CreateRoomArgs, Room> externalEvent, Level level, UV coordinate, global::System.Threading.CancellationToken cancellationToken = default)
     {
-        return externalEvent.RaiseAsync(new MyViewModel.CreateRoomArgs(level, coordinate));
+        return externalEvent.RaiseAsync(new MyViewModel.CreateRoomArgs(level, coordinate), cancellationToken);
     }
 }
 ```
@@ -625,6 +625,42 @@ Older language versions use an explicit backing field, and targets without C# 13
 If initialization throws, the next access retries it.
 
 </details>
+
+**Methods with CancellationToken parameter**
+
+Every generated `RaiseAsync()` accepts a `CancellationToken`, as described in [Cancellation](#cancellation).
+Place `CancellationToken` last when the handler needs that token.
+The event supplies it, the same way as `UIApplication`, and the token isn't one of the event arguments:
+
+```c#
+[ExternalEvent]
+private void DeleteWindows(UIApplication application, ICollection<ElementId> elementIds, CancellationToken cancellationToken)
+{
+    var document = application.ActiveUIDocument.Document;
+    using var transaction = new Transaction(document, "Delete windows");
+    transaction.Start();
+
+    foreach (var elementId in elementIds)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        document.Delete(elementId);
+    }
+
+    transaction.Commit();
+}
+
+// Generates:
+// IExternalEvent<ICollection<ElementId>> DeleteWindowsEvent
+// IAsyncExternalEvent<ICollection<ElementId>> DeleteWindowsAsyncEvent
+```
+
+```c#
+using var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+await DeleteWindowsAsyncEvent.RaiseAsync(elementIds, cancellationSource.Token);
+```
+
+`DeleteWindowsAsyncEvent` passes the token of `RaiseAsync()` to the handler, and `DeleteWindowsEvent` passes `CancellationToken.None`.
+A `CancellationToken` in any other position is a regular argument.
 
 **Enabling direct invocation**
 

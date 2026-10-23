@@ -123,17 +123,22 @@ internal static class ExternalEventWriter
         var eventType = FormatGenericType(eventTypeName.WithGlobalPrefix, typeArguments);
         var interfaceType = FormatGenericType(interfaceTypeName.WithGlobalPrefix, typeArguments);
 
-        var captureHandler = eventDefinition is { IsStatic: false, ExtraParameters.Length: > 1 } && eventDefinition.TypeHierarchy[^1].Keyword is "struct" or "record struct";
+        var usesHandlerDelegate = UsesHandlerDelegate(eventDefinition, propertyKind);
+        var captureHandler = !usesHandlerDelegate && !eventDefinition.IsStatic && eventDefinition.TypeHierarchy[^1].Keyword is "struct" or "record struct";
         var reservedLocalNames = new HashSet<string>(eventDefinition.TypeHierarchy.SelectMany(type => type.TypeParameters), StringComparer.Ordinal)
         {
             eventDefinition.MethodName
         };
 
         var handlerName = captureHandler ? CSharpIdentifier.Reserve("handler", reservedLocalNames) : CSharpIdentifier.Escape(eventDefinition.MethodName);
-        var applicationName = CSharpIdentifier.Reserve("application", reservedLocalNames);
-        var argumentsName = CSharpIdentifier.Reserve("args", reservedLocalNames);
+        var lambdaParameterNames = new LambdaParameterNames
+        {
+            Application = CSharpIdentifier.Reserve("application", reservedLocalNames),
+            Arguments = CSharpIdentifier.Reserve("args", reservedLocalNames),
+            CancellationToken = CSharpIdentifier.Reserve("cancellationToken", reservedLocalNames)
+        };
 
-        var initializer = BuildPropertyInitializer(eventDefinition, eventType, optionsArgument, handlerName, applicationName, argumentsName);
+        var initializer = BuildPropertyInitializer(eventDefinition, propertyKind, eventType, optionsArgument, handlerName, lambdaParameterNames);
         var eventProperty = new EventPropertyDefinition(staticModifier, interfaceType, propertySuffix, initializer, captureHandler ? handlerName : null);
 
         WritePropertyWithBackingField(writer, eventDefinition, useFieldKeyword, useLockType, eventProperty);
@@ -223,7 +228,7 @@ internal static class ExternalEventWriter
         }
 
         var parameters = BuildExtensionMethodParameters(eventDefinition);
-        var recordArguments = BuildRecordConstructorArguments(eventDefinition);
+        var raiseArguments = $"new {qualifiedRecordType}({BuildRecordConstructorArguments(eventDefinition)})";
 
         var typeParameters = FormatTypeParameters(eventDefinition.Extension.TypeParameters);
         var genericMethodName = FormatGenericType(methodName, typeParameters);
@@ -234,11 +239,18 @@ internal static class ExternalEventWriter
         var receiverName = CSharpIdentifier.Reserve("externalEvent", parameterNames);
         var accessibility = GetMostRestrictiveAccessibility(eventDefinition.TypeHierarchy);
 
+        if (isAsync)
+        {
+            var cancellationTokenName = CSharpIdentifier.Reserve("cancellationToken", parameterNames);
+            parameters = $"{parameters}, {ExternalEventTypeNames.CancellationToken.WithGlobalPrefix} {cancellationTokenName} = default";
+            raiseArguments = $"{raiseArguments}, {cancellationTokenName}";
+        }
+
         WriteExcludeFromCodeCoverageAttributes(writer);
         WriteGeneratedCodeAttributes(writer);
         using (writer.BeginBlock($"{accessibility} static {returnType} {genericMethodName}(this {interfaceType} {receiverName}, {parameters}){constraints}"))
         {
-            writer.AppendLine($"return {receiverName}.{methodName}(new {qualifiedRecordType}({recordArguments}));");
+            writer.AppendLine($"return {receiverName}.{methodName}({raiseArguments});");
         }
     }
 
@@ -270,39 +282,96 @@ internal static class ExternalEventWriter
         return argType ?? returnType;
     }
 
-    private static string BuildHandlerInvocation(ExternalEventDefinition eventDefinition, string argumentsName, string handlerName, string applicationName)
+    private static string BuildHandlerInvocation(ExternalEventDefinition eventDefinition, EventPropertyKind propertyKind, string handlerName, LambdaParameterNames parameterNames)
     {
         var arguments = new List<string>();
         if (eventDefinition.HasUiApplicationParameter)
         {
-            arguments.Add(applicationName);
+            arguments.Add(parameterNames.Application);
         }
 
-        foreach (var parameter in eventDefinition.ExtraParameters)
+        if (eventDefinition.ExtraParameters.Length == 1)
         {
-            arguments.Add($"{argumentsName}.{CSharpIdentifier.Escape(parameter.RecordPropertyName)}");
+            arguments.Add(parameterNames.Arguments);
+        }
+        else
+        {
+            foreach (var parameter in eventDefinition.ExtraParameters)
+            {
+                arguments.Add($"{parameterNames.Arguments}.{CSharpIdentifier.Escape(parameter.RecordPropertyName)}");
+            }
+        }
+
+        if (eventDefinition.HasCancellationTokenParameter)
+        {
+            arguments.Add(propertyKind == EventPropertyKind.Sync ? $"{ExternalEventTypeNames.CancellationToken.WithGlobalPrefix}.None" : parameterNames.CancellationToken);
         }
 
         return $"{handlerName}({string.Join(", ", arguments)})";
     }
 
+    private static string BuildLambdaParameters(ExternalEventDefinition eventDefinition, EventPropertyKind propertyKind, LambdaParameterNames parameterNames)
+    {
+        var receivesCancellationToken = eventDefinition.HasCancellationTokenParameter && propertyKind != EventPropertyKind.Sync;
+
+        var parameters = new List<string>();
+        if (eventDefinition.HasUiApplicationParameter || receivesCancellationToken)
+        {
+            parameters.Add(parameterNames.Application);
+        }
+
+        if (eventDefinition.ExtraParameters.Length > 0)
+        {
+            parameters.Add(parameterNames.Arguments);
+        }
+
+        if (receivesCancellationToken)
+        {
+            parameters.Add(parameterNames.CancellationToken);
+        }
+
+        return string.Join(", ", parameters);
+    }
+
     private static EventInitializer BuildPropertyInitializer(
         ExternalEventDefinition eventDefinition,
+        EventPropertyKind propertyKind,
         string eventType,
         string optionsArgument,
         string handlerName,
-        string applicationName,
-        string argumentsName)
+        LambdaParameterNames parameterNames)
     {
-        if (eventDefinition.ExtraParameters.Length < 2)
+        if (UsesHandlerDelegate(eventDefinition, propertyKind))
         {
             return new EventInitializer($"new {eventType}(new {eventDefinition.FullyQualifiedDelegateType}({handlerName})", LambdaBody: null, optionsArgument);
         }
 
-        var handlerInvocation = BuildHandlerInvocation(eventDefinition, argumentsName, handlerName, applicationName);
-        var lambdaParameters = eventDefinition.HasUiApplicationParameter ? $"{applicationName}, {argumentsName}" : argumentsName;
+        var handlerInvocation = BuildHandlerInvocation(eventDefinition, propertyKind, handlerName, parameterNames);
+        var lambdaParameters = BuildLambdaParameters(eventDefinition, propertyKind, parameterNames);
         var returnKeyword = eventDefinition.ReturnsVoid ? string.Empty : "return ";
         return new EventInitializer($"new {eventType}(({lambdaParameters}) =>", $"{returnKeyword}{handlerInvocation};", optionsArgument);
+    }
+
+    /// <summary>
+    ///     Determines whether the handler delegate matches a constructor of the event as declared.
+    /// </summary>
+    /// <remarks>
+    ///     Several arguments arrive as one generated record, and a handler that receives a cancellation token matches only the asynchronous constructors that pass the <c>UIApplication</c> too.
+    ///     Every other handler is adapted with a lambda.
+    /// </remarks>
+    private static bool UsesHandlerDelegate(ExternalEventDefinition eventDefinition, EventPropertyKind propertyKind)
+    {
+        if (eventDefinition.ExtraParameters.Length > 1)
+        {
+            return false;
+        }
+
+        if (!eventDefinition.HasCancellationTokenParameter)
+        {
+            return true;
+        }
+
+        return propertyKind != EventPropertyKind.Sync && eventDefinition.HasUiApplicationParameter;
     }
 
     private static string BuildExtensionMethodParameters(ExternalEventDefinition eventDefinition)
@@ -383,6 +452,13 @@ internal static class ExternalEventWriter
     private readonly record struct EventPropertyDefinition(string StaticModifier, string Type, string Suffix, EventInitializer Initializer, string? CapturedHandlerName);
 
     private readonly record struct EventInitializer(string Expression, string? LambdaBody, string OptionsArgument);
+
+    private readonly record struct LambdaParameterNames
+    {
+        public required string Application { get; init; }
+        public required string Arguments { get; init; }
+        public required string CancellationToken { get; init; }
+    }
 
     private enum EventPropertyKind
     {

@@ -62,9 +62,9 @@ namespace Consumer
 
         [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         [global::System.CodeDom.Compiler.GeneratedCode("Nice3point.Revit.Toolkit.SourceGenerators.ExternalEventGenerator", "1.0.0.0")]
-        public static global::System.Threading.Tasks.Task RaiseAsync<TValue, TValue1>(this global::Nice3point.Revit.Toolkit.External.IAsyncExternalEvent<global::Consumer.Outer<TValue>.Inner<TValue1>.RunArgs> externalEvent, TValue1 value, int count) where TValue : class where TValue1 : struct
+        public static global::System.Threading.Tasks.Task RaiseAsync<TValue, TValue1>(this global::Nice3point.Revit.Toolkit.External.IAsyncExternalEvent<global::Consumer.Outer<TValue>.Inner<TValue1>.RunArgs> externalEvent, TValue1 value, int count, global::System.Threading.CancellationToken cancellationToken = default) where TValue : class where TValue1 : struct
         {
-            return externalEvent.RaiseAsync(new global::Consumer.Outer<TValue>.Inner<TValue1>.RunArgs(value, count));
+            return externalEvent.RaiseAsync(new global::Consumer.Outer<TValue>.Inner<TValue1>.RunArgs(value, count), cancellationToken);
         }
     }
 }

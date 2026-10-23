@@ -8,19 +8,31 @@ namespace Nice3point.Revit.Toolkit.SourceGenerators.Tests;
 public sealed class ExternalEventGeneratorTests
 {
     [Test]
-    [Arguments("Void", false, false, 0)]
-    [Arguments("VoidApplication", false, true, 0)]
-    [Arguments("VoidArgument", false, false, 1)]
-    [Arguments("VoidApplicationArgument", false, true, 1)]
-    [Arguments("VoidArguments", false, false, 2)]
-    [Arguments("VoidApplicationArguments", false, true, 2)]
-    [Arguments("Result", true, false, 0)]
-    [Arguments("ResultApplication", true, true, 0)]
-    [Arguments("ResultArgument", true, false, 1)]
-    [Arguments("ResultApplicationArgument", true, true, 1)]
-    [Arguments("ResultArguments", true, false, 2)]
-    [Arguments("ResultApplicationArguments", true, true, 2)]
-    public async Task MethodSignature_GeneratesCompilableEventsAsync(string scenario, bool returnsValue, bool hasApplication, int argumentCount)
+    [Arguments("Void", false, false, 0, false)]
+    [Arguments("VoidApplication", false, true, 0, false)]
+    [Arguments("VoidArgument", false, false, 1, false)]
+    [Arguments("VoidApplicationArgument", false, true, 1, false)]
+    [Arguments("VoidArguments", false, false, 2, false)]
+    [Arguments("VoidApplicationArguments", false, true, 2, false)]
+    [Arguments("Result", true, false, 0, false)]
+    [Arguments("ResultApplication", true, true, 0, false)]
+    [Arguments("ResultArgument", true, false, 1, false)]
+    [Arguments("ResultApplicationArgument", true, true, 1, false)]
+    [Arguments("ResultArguments", true, false, 2, false)]
+    [Arguments("ResultApplicationArguments", true, true, 2, false)]
+    [Arguments("VoidToken", false, false, 0, true)]
+    [Arguments("VoidApplicationToken", false, true, 0, true)]
+    [Arguments("VoidArgumentToken", false, false, 1, true)]
+    [Arguments("VoidApplicationArgumentToken", false, true, 1, true)]
+    [Arguments("VoidArgumentsToken", false, false, 2, true)]
+    [Arguments("VoidApplicationArgumentsToken", false, true, 2, true)]
+    [Arguments("ResultToken", true, false, 0, true)]
+    [Arguments("ResultApplicationToken", true, true, 0, true)]
+    [Arguments("ResultArgumentToken", true, false, 1, true)]
+    [Arguments("ResultApplicationArgumentToken", true, true, 1, true)]
+    [Arguments("ResultArgumentsToken", true, false, 2, true)]
+    [Arguments("ResultApplicationArgumentsToken", true, true, 2, true)]
+    public async Task MethodSignature_GeneratesCompilableEventsAsync(string scenario, bool returnsValue, bool hasApplication, int argumentCount, bool hasCancellationToken)
     {
         var parameters = new List<string>();
         if (hasApplication)
@@ -38,6 +50,11 @@ public sealed class ExternalEventGeneratorTests
             parameters.Add("string label");
         }
 
+        if (hasCancellationToken)
+        {
+            parameters.Add("System.Threading.CancellationToken cancellationToken");
+        }
+
         var arguments = argumentCount switch
         {
             0 => string.Empty,
@@ -45,6 +62,7 @@ public sealed class ExternalEventGeneratorTests
             _ => "42, \"Walls\""
         };
 
+        var cancellableArguments = argumentCount == 0 ? "System.Threading.CancellationToken.None" : $"{arguments}, System.Threading.CancellationToken.None";
         var returnType = returnsValue ? "int" : "void";
         var body = returnsValue ? "=> 42;" : "{ }";
         var synchronousCall = returnsValue ? string.Empty : $"_ = RunEvent.Raise({arguments});";
@@ -62,6 +80,7 @@ public sealed class ExternalEventGeneratorTests
                            {
                                {{synchronousCall}}
                                _ = RunAsyncEvent.RaiseAsync({{arguments}});
+                               _ = RunAsyncEvent.RaiseAsync({{cancellableArguments}});
                            }
                        }
                        """;
@@ -355,6 +374,35 @@ public sealed class ExternalEventGeneratorTests
 
         await Assert.That(driver.GetRunResult().GeneratedTrees).Count().IsEqualTo(1);
         await Verify(driver.GetRunResult());
+    }
+
+    [Test]
+    [Arguments("BeforeLastParameter", "System.Threading.CancellationToken token, int quantity", "System.Threading.CancellationToken.None, 42")]
+    [Arguments("NullableLastParameter", "int quantity, System.Threading.CancellationToken? token", "42, null")]
+    public async Task CancellationTokenOutsideTheLastParameter_RemainsUserArgumentAsync(string scenario, string parameters, string arguments)
+    {
+        var source = $$"""
+                       using Nice3point.Revit.Toolkit.External;
+
+                       namespace Consumer;
+
+                       public partial class Model
+                       {
+                           [ExternalEvent]
+                           private void Run({{parameters}}) { }
+
+                           public void UseGeneratedMembers()
+                           {
+                               _ = RunEvent.Raise({{arguments}});
+                               _ = RunAsyncEvent.RaiseAsync({{arguments}}, System.Threading.CancellationToken.None);
+                           }
+                       }
+                       """;
+
+        var (driver, _) = await GeneratorTest.RunAsync(source);
+
+        await Assert.That(driver.GetRunResult().GeneratedTrees).Count().IsEqualTo(1);
+        await Verify(driver.GetRunResult()).UseParameters(scenario);
     }
 
     [Test]

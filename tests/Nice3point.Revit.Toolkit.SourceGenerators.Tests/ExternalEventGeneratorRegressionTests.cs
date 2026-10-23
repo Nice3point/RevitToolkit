@@ -202,6 +202,37 @@ public sealed class ExternalEventGeneratorRegressionTests
     }
 
     [Test]
+    [Arguments("struct", LanguageVersion.CSharp13)]
+    [Arguments("struct", LanguageVersion.CSharp14)]
+    [Arguments("record struct", LanguageVersion.CSharp14)]
+    public async Task StructInstanceMethod_WithCancellationTokenGeneratesCompilableEventsAsync(string declaration, LanguageVersion languageVersion)
+    {
+        var source = $$"""
+                       using System.Threading;
+                       using Nice3point.Revit.Toolkit.External;
+
+                       namespace Consumer;
+
+                       public partial {{declaration}} Model
+                       {
+                           [ExternalEvent]
+                           private void Run(int quantity, CancellationToken cancellationToken) { }
+
+                           public void UseGeneratedMembers()
+                           {
+                               _ = RunEvent.Raise(42);
+                               _ = RunAsyncEvent.RaiseAsync(42, CancellationToken.None);
+                           }
+                       }
+                       """;
+
+        var (driver, _) = await GeneratorTest.RunAsync(source, languageVersion: languageVersion);
+
+        await Assert.That(driver.GetRunResult().GeneratedTrees).Count().IsEqualTo(1);
+        await Verify(driver.GetRunResult()).UseParameters(declaration, languageVersion);
+    }
+
+    [Test]
     [Arguments("Capitalization", "int value, int Value")]
     [Arguments("ExtensionReceiver", "int externalEvent, int quantity")]
     public async Task ParameterNames_PreserveDistinctBindingsAsync(string scenario, string parameters)

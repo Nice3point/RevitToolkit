@@ -4,6 +4,26 @@
 
 - `ExternalEvent<T>` and the asynchronous external events run the handler once for every raise, with the argument of that raise, in the order of the raises. Each `RaiseAsync()` task completes with the result or the exception of its own run. A raise that arrived before Revit ran the previous one used to overwrite its argument, and the earlier `RaiseAsync()` task never completed.
 - `ExternalEvent` without an argument runs once for all raises that wait, as Revit runs a raised event.
+- `RaiseAsync()` of the asynchronous external events and their interfaces accepts an optional `CancellationToken`. A token canceled before Revit executes the handler withdraws the raise, and the task is canceled at once. A running handler is never interrupted. With `ExternalEventOptions.AllowDirectInvocation` in API mode, the token is checked once before the handler runs.
+- New constructors of `AsyncExternalEvent`, `AsyncExternalEvent<T>`, `AsyncRequestExternalEvent<TResult>`, and `AsyncRequestExternalEvent<T, TResult>` accept a handler that receives the `UIApplication`, the argument, and the `CancellationToken` of the raise. An `OperationCanceledException` thrown for that token cancels the task.
+
+```c#
+private readonly AsyncExternalEvent<ICollection<ElementId>> _deleteWindowsAsyncEvent = new((application, elementIds, cancellationToken) =>
+{
+    foreach (var elementId in elementIds)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        application.ActiveUIDocument.Document.Delete(elementId);
+    }
+});
+
+using var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+await _deleteWindowsAsyncEvent.RaiseAsync(elementIds, cancellationSource.Token);
+```
+
+### Breaking Changes
+
+- The `RaiseAsync` methods of `IAsyncExternalEvent`, `IAsyncExternalEvent<T>`, `IAsyncRequestExternalEvent<TResult>`, and `IAsyncRequestExternalEvent<T, TResult>` take an optional `CancellationToken` parameter. Source code that calls them compiles unchanged. Add-ins compiled against an earlier version are rebuilt, and custom implementations of the interfaces add the parameter.
 
 # 2027.0.2
 

@@ -243,4 +243,115 @@ public sealed class AsyncExternalEventTests : RevitApiUiTest
             await Assert.That(receivedArguments).IsEquivalentTo([1, 2], CollectionOrdering.Matching);
         }
     }
+
+    [Test]
+    public async Task RaiseAsync_CanceledToken_ReturnsCanceledTask()
+    {
+        // Arrange
+        var externalEvent = new AsyncExternalEvent(() => { });
+        using var cancellationSource = new CancellationTokenSource();
+        cancellationSource.Cancel();
+
+        // Act
+        var raiseTask = externalEvent.RaiseAsync(cancellationSource.Token);
+
+        // Assert
+        await Assert.That(raiseTask.IsCanceled).IsTrue();
+    }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task RaiseAsync_TokenCanceledBeforeTheEventCycle_CancelsTheTaskWithoutExecution(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var executionCount = 0;
+        var externalEvent = new AsyncExternalEvent(() => executionCount++);
+        using var cancellationSource = new CancellationTokenSource();
+
+        // Act
+        var canceledTask = externalEvent.RaiseAsync(cancellationSource.Token);
+        var followingTask = externalEvent.RaiseAsync();
+        cancellationSource.Cancel();
+        await followingTask.WaitAsync(cancellationToken);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            await Assert.That(canceledTask.IsCanceled).IsTrue();
+            await Assert.That(executionCount).IsEqualTo(1);
+        }
+    }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task RaiseAsync_TokenUiApplicationHandler_ReceivesTheUiApplicationAndToken(CancellationToken cancellationToken)
+    {
+        // Arrange
+        UIApplication? receivedApplication = null;
+        CancellationToken receivedToken = default;
+        using var cancellationSource = new CancellationTokenSource();
+        var externalEvent = new AsyncExternalEvent((uiApplication, raiseToken) =>
+        {
+            receivedApplication = uiApplication;
+            receivedToken = raiseToken;
+        });
+
+        // Act
+        await externalEvent.RaiseAsync(cancellationSource.Token).WaitAsync(cancellationToken);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            await Assert.That(receivedApplication!.MainWindowHandle).IsEqualTo(UiApplication.MainWindowHandle);
+            await Assert.That(receivedToken).IsEqualTo(cancellationSource.Token);
+        }
+    }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task RaiseAsync_GenericTokenCanceledBeforeTheEventCycle_ExecutesOnlyTheFollowingRaise(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var receivedArguments = new List<int>();
+        var externalEvent = new AsyncExternalEvent<int>(receivedArguments.Add);
+        using var cancellationSource = new CancellationTokenSource();
+
+        // Act
+        var canceledTask = externalEvent.RaiseAsync(1, cancellationSource.Token);
+        var followingTask = externalEvent.RaiseAsync(2);
+        cancellationSource.Cancel();
+        await followingTask.WaitAsync(cancellationToken);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            await Assert.That(canceledTask.IsCanceled).IsTrue();
+            await Assert.That(receivedArguments).IsEquivalentTo([2]);
+        }
+    }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task RaiseAsync_GenericTokenHandler_ReceivesTheArgumentAndToken(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var receivedArgument = 0;
+        CancellationToken receivedToken = default;
+        using var cancellationSource = new CancellationTokenSource();
+        var externalEvent = new AsyncExternalEvent<int>((_, argument, raiseToken) =>
+        {
+            receivedArgument = argument;
+            receivedToken = raiseToken;
+        });
+
+        // Act
+        await externalEvent.RaiseAsync(42, cancellationSource.Token).WaitAsync(cancellationToken);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            await Assert.That(receivedArgument).IsEqualTo(42);
+            await Assert.That(receivedToken).IsEqualTo(cancellationSource.Token);
+        }
+    }
 }

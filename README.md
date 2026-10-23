@@ -44,6 +44,7 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
     * [AsyncExternalEvent\<T>](#asyncexternaleventt)
     * [AsyncRequestExternalEvent\<TResult>](#asyncrequestexternaleventtresult)
     * [AsyncRequestExternalEvent\<T, TResult>](#asyncrequestexternaleventt-tresult)
+    * [Cancellation](#cancellation)
     * [ExternalEventOptions](#externaleventoptions)
     * [ExternalEvent attribute](#externalevent-attribute)
 * [Context](#context)
@@ -359,6 +360,56 @@ private async Task<ElementId, bool> DeleteWindowAsync(ElementId elementId)
 > [!IMPORTANT]
 > Await asynchronous events. Blocking a pending event with `.Wait()`, `.Result`, or `.GetAwaiter().GetResult()` on the Revit main thread prevents Revit from processing it and can deadlock.
 > The event handler itself remains synchronous; perform asynchronous I/O before or after raising the event.
+
+#### Cancellation
+
+`RaiseAsync()` accepts a `CancellationToken`.
+A modal dialog or a running command keeps Revit from executing external events, and the token lets the caller stop waiting:
+
+```c#
+private async Task DeleteWindowAsync(ElementId elementId)
+{
+    using var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+    try
+    {
+        await _deleteWindowAsyncEvent.RaiseAsync(elementId, cancellationSource.Token);
+    }
+    catch (OperationCanceledException)
+    {
+        //Revit was busy for 10 seconds, the delegate never executes
+    }
+}
+```
+
+The token affects the raise as follows:
+
+- A token canceled before Revit executes the delegate withdraws the raise: the delegate doesn't run, and the task is canceled at once.
+- A token canceled while the delegate runs doesn't interrupt it, and the task completes with the outcome of the delegate.
+- The other raises of the same event run as if the canceled raise didn't exist.
+
+To stop a long-running delegate, accept the token as the last parameter of the delegate:
+
+```c#
+private readonly AsyncExternalEvent<ICollection<ElementId>> _deleteWindowsAsyncEvent = new((application, elementIds, cancellationToken) =>
+{
+    var document = application.ActiveUIDocument.Document;
+    using var transaction = new Transaction(document, "Delete windows");
+    transaction.Start();
+
+    foreach (var elementId in elementIds)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        document.Delete(elementId);
+    }
+
+    transaction.Commit();
+});
+```
+
+An `OperationCanceledException` thrown for the token rolls back the transaction and cancels the task.
+The delegate observes a cancellation requested from another thread, such as a timeout or a remote client.
+A cancel button of a modeless window runs on the Revit thread and takes effect only after the delegate returns.
 
 #### ExternalEventOptions
 

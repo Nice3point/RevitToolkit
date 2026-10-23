@@ -33,7 +33,7 @@ public sealed class AsyncExternalEvent : ExternalEventHandler, IAsyncExternalEve
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _core = new((_, _) =>
+        _core = new((_, _, _) =>
         {
             handler();
             return default;
@@ -62,7 +62,7 @@ public sealed class AsyncExternalEvent : ExternalEventHandler, IAsyncExternalEve
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _core = new((uiApplication, _) =>
+        _core = new((uiApplication, _, _) =>
         {
             handler(uiApplication);
             return default;
@@ -71,25 +71,63 @@ public sealed class AsyncExternalEvent : ExternalEventHandler, IAsyncExternalEve
     }
 
     /// <summary>
+    ///     Initializes a new instance of the <see cref="AsyncExternalEvent" /> class
+    ///     with access to the <see cref="UIApplication" /> instance and the cancellation token of the raise.
+    /// </summary>
+    /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" /> and the token passed to <see cref="RaiseAsync" />.</param>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
+    public AsyncExternalEvent(Action<UIApplication, CancellationToken> handler) : this(handler, ExternalEventOptions.None)
+    {
+    }
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="AsyncExternalEvent" /> class
+    ///     with access to the <see cref="UIApplication" /> instance and the cancellation token of the raise.
+    /// </summary>
+    /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" /> and the token passed to <see cref="RaiseAsync" />.</param>
+    /// <param name="options">The options to use to configure the external event.</param>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
+    public AsyncExternalEvent(Action<UIApplication, CancellationToken> handler, ExternalEventOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+
+        _core = new((uiApplication, _, cancellationToken) =>
+        {
+            handler(uiApplication, cancellationToken);
+            return default;
+        });
+        _options = options;
+    }
+
+    /// <summary>
     ///     Raises the external event asynchronously, instructing Revit to execute the handler within the Revit API context.
     /// </summary>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The <see cref="Task" /> representing the async operation being executed.</returns>
     /// <remarks>
     ///     Revit will wait until it is ready to process the event and then it will execute its event handler.
     ///     Revit processes external events only when no other commands or edit modes are currently active in Revit,
     ///     which is the same policy like the one that applies to evoking external commands.<br /><br />
     ///     Each call executes the handler once, in the order of the calls, and the returned task completes with the outcome of that execution.<br /><br />
+    ///     A cancellation requested before Revit executes the handler withdraws the call: the handler doesn't execute, and the task is canceled at once.
+    ///     A cancellation requested while the handler executes doesn't interrupt it.
+    ///     A handler that receives the token can throw an <see cref="System.OperationCanceledException" /> for it, and the task is then canceled.<br /><br />
     ///     When <see cref="ExternalEventOptions.AllowDirectInvocation" /> is specified and Revit is in API mode,
-    ///     the handler is executed directly on the calling thread instead of being queued.
+    ///     the handler is executed directly on the calling thread instead of being queued, and the token is checked once before the handler executes.
     /// </remarks>
-    public Task RaiseAsync()
+    public Task RaiseAsync(CancellationToken cancellationToken = default)
     {
-        if ((_options & ExternalEventOptions.AllowDirectInvocation) != 0 && RevitContext.IsRevitInApiMode)
+        if (cancellationToken.IsCancellationRequested)
         {
-            return _core.Invoke(RevitContext.UiApplication, default);
+            return Task.FromCanceled(cancellationToken);
         }
 
-        var task = _core.Enqueue(default);
+        if ((_options & ExternalEventOptions.AllowDirectInvocation) != 0 && RevitContext.IsRevitInApiMode)
+        {
+            return _core.Invoke(RevitContext.UiApplication, default, cancellationToken);
+        }
+
+        var task = _core.Enqueue(default, cancellationToken);
         Raise();
 
         return task;

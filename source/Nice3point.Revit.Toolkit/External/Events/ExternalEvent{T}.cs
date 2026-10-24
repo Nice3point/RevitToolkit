@@ -5,9 +5,7 @@ using Autodesk.Revit.UI;
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
-///     A generic synchronous external event expanding <see cref="ExternalEvent" />
-///     that accepts an argument of type <typeparamref name="T" />
-///     and relays its functionality by invoking delegates within the Revit API context.
+///     A generic synchronous external event expanding <see cref="ExternalEvent" /> that accepts an argument of type <typeparamref name="T" /> and relays its functionality by invoking delegates within the Revit API context.
 /// </summary>
 /// <typeparam name="T">The type of the argument passed to the handler.</typeparam>
 [PublicAPI]
@@ -42,8 +40,7 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ExternalEvent{T}" /> class
-    ///     with access to the <see cref="UIApplication" /> instance.
+    ///     Initializes a new instance of the <see cref="ExternalEvent{T}" /> class with access to the <see cref="UIApplication" /> instance.
     /// </summary>
     /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" /> and an argument of type <typeparamref name="T" />.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
@@ -52,8 +49,7 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ExternalEvent{T}" /> class
-    ///     with access to the <see cref="UIApplication" /> instance.
+    ///     Initializes a new instance of the <see cref="ExternalEvent{T}" /> class with access to the <see cref="UIApplication" /> instance.
     /// </summary>
     /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" /> and an argument of type <typeparamref name="T" />.</param>
     /// <param name="options">The options to use to configure the external event.</param>
@@ -67,23 +63,19 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
     }
 
     /// <summary>
-    ///     Raises (signals) the external event with the specified argument,
-    ///     instructing Revit to execute the handler within the Revit API context.
+    ///     Raises (signals) the external event with the specified argument, instructing Revit to execute the handler within the Revit API context.
     /// </summary>
     /// <param name="argument">The argument to pass to the handler.</param>
     /// <returns>
-    ///     The result of event raising request. If the request is 'Accepted',
-    ///     the event would be added to the event queue and its handler will
-    ///     be executed in the next event-processing cycle.
+    ///     The result of event raising request.
+    ///     If the request is 'Accepted', the event would be added to the event queue and its handler will be executed in the next event-processing cycle.
     /// </returns>
     /// <remarks>
     ///     Revit will wait until it is ready to process the event and then it will execute its event handler.
-    ///     Revit processes external events only when no other commands or edit modes are currently active in Revit,
-    ///     which is the same policy like the one that applies to evoking external commands.<br /><br />
+    ///     Revit processes external events only when no other commands or edit modes are currently active in Revit, which is the same policy like the one that applies to evoking external commands.<br />
     ///     Each call executes the handler once with its own argument, in the order of the calls.
-    ///     A call that returns <see cref="ExternalEventRequest.Denied" /> or <see cref="ExternalEventRequest.TimedOut" /> never executes the handler.<br /><br />
-    ///     When <see cref="ExternalEventOptions.AllowDirectInvocation" /> is specified and Revit is in API mode,
-    ///     the handler is executed directly on the calling thread instead of being queued.
+    ///     A call that returns <see cref="ExternalEventRequest.Denied" /> or <see cref="ExternalEventRequest.TimedOut" /> never executes the handler.<br />
+    ///     When <see cref="ExternalEventOptions.AllowDirectInvocation" /> is specified and Revit is in API mode, the handler is executed directly on the calling thread instead of being queued.
     /// </remarks>
     public ExternalEventRequest Raise(T argument)
     {
@@ -103,8 +95,7 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
 
     /// <inheritdoc />
     /// <remarks>
-    ///     Each call queues a separate execution with the last argument passed to <see cref="Raise(T)" />,
-    ///     or the default value of <typeparamref name="T" /> before the first call.
+    ///     Each call queues a separate execution with the last argument passed to <see cref="Raise(T)" />, or the default value of <typeparamref name="T" /> before the first call.
     /// </remarks>
     public override ExternalEventRequest Raise()
     {
@@ -117,7 +108,8 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
         return _core.Raise(argument);
     }
 
-    /// <summary>Callback invoked by Revit. Not intended to be called in user code.</summary>
+    /// <summary>Callback invoked by Revit.</summary>
+    /// <remarks>Not intended to be called in user code.</remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override void Execute(UIApplication uiApplication)
     {

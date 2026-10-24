@@ -12,10 +12,42 @@
 - A trailing `CancellationToken` parameter receives the token of `RaiseAsync()` and is excluded from the event arguments. Synchronous events pass `CancellationToken.None`.
 - Generated `RaiseAsync()` extension methods include an overload with a `CancellationToken`.
 
-### Breaking Changes
+Pass a cancellation token to the generated event to cancel a pending execution or stop the handler cooperatively:
 
-- Custom implementations of the asynchronous event interfaces must implement the overload with a `CancellationToken`.
-- Recompiling a handler with a trailing `CancellationToken` changes its generated argument types. For `void Run(CancellationToken token)`, replace `RunEvent.Raise(token)` with `RunEvent.Raise()`. `RunAsyncEvent.RaiseAsync(token)` passes the cancellation token to the handler.
+```c#
+public partial class MyViewModel
+{
+    [ExternalEvent]
+    private void DeleteWindows(UIApplication application, ICollection<ElementId> elementIds, CancellationToken cancellationToken)
+    {
+        var document = application.ActiveUIDocument.Document;
+        using var transaction = new Transaction(document, "Delete windows");
+        transaction.Start();
+
+        foreach (var elementId in elementIds)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            document.Delete(elementId);
+        }
+
+        transaction.Commit();
+    }
+
+    private async Task DeleteWindowsAsync(ICollection<ElementId> elementIds)
+    {
+        using var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+        try
+        {
+            await DeleteWindowsAsyncEvent.RaiseAsync(elementIds, cancellationSource.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            //The execution was canceled; uncommitted changes are rolled back
+        }
+    }
+}
+```
 
 # 2027.0.2
 

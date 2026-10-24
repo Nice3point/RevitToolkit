@@ -58,9 +58,9 @@ Performance optimizations for Revit 2027:
 
 # 2027.0.1
 
-- `AsyncExternalEvent.RaiseAsync()` with `ExternalEventOptions.AllowDirectInvocation` returns a faulted task when the handler throws inside the Revit API context. The exception was previously lost and the task completed successfully.
+### External Events
 
-# 2027.0.0
+- `AsyncExternalEvent.RaiseAsync()` with `ExternalEventOptions.AllowDirectInvocation` returns a faulted task when the handler throws inside the Revit API context. The exception was previously lost and the task completed successfully.
 
 ### Compiler Tooling Fixes
 
@@ -75,6 +75,8 @@ Performance optimizations for Revit 2027:
 - Concurrent first access initializes each generated event property once; failed initialization remains retryable.
 - Generated event properties use `System.Threading.Lock` when the consumer supports C# 13 and provides the type; other targets use an object lock.
 - Unsupported signatures report `RVTTK0006`; conflicting generated member names report `RVTTK0007`.
+
+# 2027.0.0
 
 ### External Events
 

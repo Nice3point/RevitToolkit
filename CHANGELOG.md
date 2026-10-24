@@ -1,3 +1,53 @@
+# 2027.0.3
+
+### External Events
+
+- `ExternalEvent<T>` and the asynchronous external events execute each queued raise with its own argument. Each `RaiseAsync()` task completes with the result or exception of its handler. Previously, concurrent raises overwrote the argument and left earlier tasks incomplete.
+- Requests refused with `ExternalEventRequest.Denied` or `ExternalEventRequest.TimedOut` skip the handler. `Raise(argument)` returns the refusal; `RaiseAsync()` returns a task faulted with `InvalidOperationException`.
+- New `RaiseAsync()` overloads accept a `CancellationToken` to cancel a pending execution. Token-aware constructors pass the token to the handler for cooperative cancellation during execution.
+
+### ExternalEvent Source Generator
+
+- A trailing `CancellationToken` parameter receives the token of `RaiseAsync()` and is excluded from the event arguments. Synchronous events pass `CancellationToken.None`.
+- Generated `RaiseAsync()` extension methods include an overload with a `CancellationToken`.
+
+Pass a cancellation token to the generated event to cancel a pending execution or stop the handler cooperatively:
+
+```c#
+public partial class MyRevitContext
+{
+    [ExternalEvent]
+    private void DeleteWindows(UIApplication application, ICollection<ElementId> elementIds, CancellationToken cancellationToken)
+    {
+        var document = application.ActiveUIDocument.Document;
+        using var transaction = new Transaction(document, "Delete windows");
+        transaction.Start();
+
+        foreach (var elementId in elementIds)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            document.Delete(elementId);
+        }
+
+        transaction.Commit();
+    }
+
+    private async Task DeleteWindowsAsync(ICollection<ElementId> elementIds)
+    {
+        using var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+        try
+        {
+            await DeleteWindowsAsyncEvent.RaiseAsync(elementIds, cancellationSource.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            //The execution was canceled; uncommitted changes are rolled back
+        }
+    }
+}
+```
+
 # 2027.0.2
 
 Performance optimizations for Revit 2027:
@@ -7,9 +57,9 @@ Performance optimizations for Revit 2027:
 
 # 2027.0.1
 
-- `AsyncExternalEvent.RaiseAsync()` with `ExternalEventOptions.AllowDirectInvocation` returns a faulted task when the handler throws inside the Revit API context. The exception was previously lost and the task completed successfully.
+### External Events
 
-# 2027.0.0
+- `AsyncExternalEvent.RaiseAsync()` with `ExternalEventOptions.AllowDirectInvocation` returns a faulted task when the handler throws inside the Revit API context. The exception was previously lost and the task completed successfully.
 
 ### Compiler Tooling Fixes
 
@@ -24,6 +74,8 @@ Performance optimizations for Revit 2027:
 - Concurrent first access initializes each generated event property once; failed initialization remains retryable.
 - Generated event properties use `System.Threading.Lock` when the consumer supports C# 13 and provides the type; other targets use an object lock.
 - Unsupported signatures report `RVTTK0006`; conflicting generated member names report `RVTTK0007`.
+
+# 2027.0.0
 
 ### External Events
 

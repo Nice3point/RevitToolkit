@@ -41,5 +41,12 @@ namespace Consumer
         {
             return externalEvent.RaiseAsync(new global::Consumer.Outer<TValue>.Model<TResult>.RunArgs(value, result));
         }
+
+        [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        [global::System.CodeDom.Compiler.GeneratedCode("Nice3point.Revit.Toolkit.SourceGenerators.ExternalEventGenerator", "1.0.0.0")]
+        public static global::System.Threading.Tasks.Task<TResult> RaiseAsync<TValue, TResult>(this global::Nice3point.Revit.Toolkit.External.IAsyncRequestExternalEvent<global::Consumer.Outer<TValue>.Model<TResult>.RunArgs, TResult> externalEvent, TValue value, TResult result, global::System.Threading.CancellationToken cancellationToken) where TValue : class where TResult : struct
+        {
+            return externalEvent.RaiseAsync(new global::Consumer.Outer<TValue>.Model<TResult>.RunArgs(value, result), cancellationToken);
+        }
     }
 }

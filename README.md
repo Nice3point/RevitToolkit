@@ -44,6 +44,7 @@ Package included by default in [Revit Templates](https://github.com/Nice3point/R
     * [AsyncExternalEvent\<T>](#asyncexternaleventt)
     * [AsyncRequestExternalEvent\<TResult>](#asyncrequestexternaleventtresult)
     * [AsyncRequestExternalEvent\<T, TResult>](#asyncrequestexternaleventt-tresult)
+    * [Cancellation](#cancellation)
     * [ExternalEventOptions](#externaleventoptions)
     * [ExternalEvent attribute](#externalevent-attribute)
 * [Context](#context)
@@ -200,6 +201,15 @@ so you can create them anywhere in your code and on any thread.
 Use `Raise()` when the caller does not need to wait, or `RaiseAsync()` when it needs completion or a return value.
 For generated event properties, see the [ExternalEvent attribute](#externalevent-attribute).
 
+Several callers can share one event, such as two modeless windows, or a background service and a window.
+Each `Raise(argument)` and `RaiseAsync()` call runs the handler once with its own argument, in the order of the calls.
+Each `RaiseAsync()` task completes with the result or the exception of its own run.
+`ExternalEvent` without an argument runs once for all waiting raises, the same way Revit runs a raised event.
+
+A raise that Revit refuses with `Denied` or `TimedOut` never runs.
+`Raise(argument)` returns that result to the caller.
+The `RaiseAsync()` task fails with an `InvalidOperationException`.
+
 #### ExternalEvent
 
 A synchronous external event that queues the handler via the Revit external event mechanism.
@@ -354,6 +364,57 @@ private async Task<ElementId, bool> DeleteWindowAsync(ElementId elementId)
 > [!IMPORTANT]
 > Await asynchronous events. Blocking a pending event with `.Wait()`, `.Result`, or `.GetAwaiter().GetResult()` on the Revit main thread prevents Revit from processing it and can deadlock.
 > The event handler itself remains synchronous; perform asynchronous I/O before or after raising the event.
+
+#### Cancellation
+
+Every `RaiseAsync()` method has an overload that accepts a `CancellationToken`.
+Pass a cancellation token to cancel a pending execution while Revit is busy with a modal dialog or a running command:
+
+```c#
+private async Task DeleteWindowAsync(ElementId elementId)
+{
+    using var cancellationSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+    try
+    {
+        await _deleteWindowAsyncEvent.RaiseAsync(elementId, cancellationSource.Token);
+    }
+    catch (OperationCanceledException)
+    {
+        //The pending execution was canceled
+    }
+}
+```
+
+Cancellation before execution cancels the task without running the delegate.
+Cancellation during execution does not interrupt the delegate; the task completes with its result or exception.
+Other queued calls are unaffected.
+
+To stop a long-running delegate, accept the token as its last parameter:
+
+```c#
+private readonly AsyncExternalEvent<ICollection<ElementId>> _deleteWindowsAsyncEvent = new((application, elementIds, cancellationToken) =>
+{
+    var document = application.ActiveUIDocument.Document;
+    using var transaction = new Transaction(document, "Delete windows");
+    transaction.Start();
+
+    foreach (var elementId in elementIds)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        document.Delete(elementId);
+    }
+
+    transaction.Commit();
+});
+```
+
+When the token is canceled, `ThrowIfCancellationRequested()` stops the delegate and cancels the task.
+Disposing the uncommitted transaction rolls back the changes.
+
+The delegate observes a cancellation requested from another thread, such as a timeout or a remote client.
+A cancel button of a modeless window runs on the Revit thread.
+Its cancellation takes effect only after the delegate returns.
 
 #### ExternalEventOptions
 
@@ -562,6 +623,11 @@ public static partial class MyViewModelExtensions
     {
         return externalEvent.RaiseAsync(new MyViewModel.CreateRoomArgs(level, coordinate));
     }
+
+    public static global::System.Threading.Tasks.Task<Room> RaiseAsync(this IAsyncRequestExternalEvent<MyViewModel.CreateRoomArgs, Room> externalEvent, Level level, UV coordinate, global::System.Threading.CancellationToken cancellationToken)
+    {
+        return externalEvent.RaiseAsync(new MyViewModel.CreateRoomArgs(level, coordinate), cancellationToken);
+    }
 }
 ```
 
@@ -569,6 +635,38 @@ Older language versions use an explicit backing field, and targets without C# 13
 If initialization throws, the next access retries it.
 
 </details>
+
+**Methods with CancellationToken parameter**
+
+Declare a `CancellationToken` as the last parameter to receive the token passed to `RaiseAsync()`.
+The generator excludes it from the event arguments:
+
+```c#
+[ExternalEvent]
+private void DeleteWindows(UIApplication application, ICollection<ElementId> elementIds, CancellationToken cancellationToken)
+{
+    var document = application.ActiveUIDocument.Document;
+    using var transaction = new Transaction(document, "Delete windows");
+    transaction.Start();
+
+    foreach (var elementId in elementIds)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        document.Delete(elementId);
+    }
+
+    transaction.Commit();
+}
+
+// Generates:
+// IExternalEvent<ICollection<ElementId>> DeleteWindowsEvent
+// IAsyncExternalEvent<ICollection<ElementId>> DeleteWindowsAsyncEvent
+```
+
+Call `await DeleteWindowsAsyncEvent.RaiseAsync(elementIds, cancellationToken)` to pass the token to the handler.
+`DeleteWindowsEvent.Raise(elementIds)` passes `CancellationToken.None`.
+A `CancellationToken` in any other position is a regular argument.
+See [Cancellation](#cancellation) for cancellation behavior and exception handling.
 
 **Enabling direct invocation**
 

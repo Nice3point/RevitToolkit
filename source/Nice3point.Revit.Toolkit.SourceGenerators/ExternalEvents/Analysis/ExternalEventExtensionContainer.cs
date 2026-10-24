@@ -8,10 +8,7 @@ internal static class ExternalEventExtensionContainer
 {
     public static (string ClassAccessibility, string? ConflictingName) Resolve(IMethodSymbol method, CancellationToken cancellationToken)
     {
-        var hasUiApplicationParameter = method.Parameters.Length > 0 &&
-                                        method.Parameters[0].Type.WithNullableAnnotation(NullableAnnotation.NotAnnotated).ToDisplayString() == ExternalEventTypeNames.UiApplication.WithoutGlobalPrefix;
-
-        if (method.Parameters.Length - (hasUiApplicationParameter ? 1 : 0) <= 1)
+        if (ExternalEventParameters.GetArgumentParameters(method).Count() <= 1)
         {
             return ("public", null);
         }

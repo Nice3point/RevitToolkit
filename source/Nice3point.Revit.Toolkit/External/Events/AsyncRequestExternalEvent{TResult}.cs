@@ -5,28 +5,22 @@ using Autodesk.Revit.UI;
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
-///     A generic asynchronous external event expanding <see cref="AsyncExternalEvent" />
-///     to return a result of type <typeparamref name="TResult" /> via <see cref="RaiseAsync" />.
+///     A generic asynchronous external event expanding <see cref="AsyncExternalEvent" /> to return a result of type <typeparamref name="TResult" /> via <see cref="RaiseAsync()" />.
 /// </summary>
 /// <typeparam name="TResult">The type of the result produced by the handler.</typeparam>
 [PublicAPI]
 public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, IAsyncRequestExternalEvent<TResult>
 {
-    private readonly Func<TResult>? _handler;
+    private readonly AsyncExternalEventCore<VoidResult, TResult> _core;
     private readonly ExternalEventOptions _options;
-    private readonly Func<UIApplication, TResult>? _uiHandler;
-    private TaskCompletionSource<TResult>? _taskCompletionSource;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{TResult}" /> class.
     /// </summary>
     /// <param name="handler">The execution logic that returns a result of type <typeparamref name="TResult" />.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public AsyncRequestExternalEvent(Func<TResult> handler)
+    public AsyncRequestExternalEvent(Func<TResult> handler) : this(handler, ExternalEventOptions.None)
     {
-        ArgumentNullException.ThrowIfNull(handler);
-
-        _handler = handler;
     }
 
     /// <summary>
@@ -39,26 +33,21 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _handler = handler;
+        _core = new((_, _, _) => handler(), base.Raise);
         _options = options;
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{TResult}" /> class
-    ///     with access to the <see cref="UIApplication" /> instance.
+    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{TResult}" /> class with access to the <see cref="UIApplication" /> instance.
     /// </summary>
     /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" /> and returns a result of type <typeparamref name="TResult" />.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public AsyncRequestExternalEvent(Func<UIApplication, TResult> handler)
+    public AsyncRequestExternalEvent(Func<UIApplication, TResult> handler) : this(handler, ExternalEventOptions.None)
     {
-        ArgumentNullException.ThrowIfNull(handler);
-
-        _uiHandler = handler;
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{TResult}" /> class
-    ///     with access to the <see cref="UIApplication" /> instance.
+    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{TResult}" /> class with access to the <see cref="UIApplication" /> instance.
     /// </summary>
     /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" /> and returns a result of type <typeparamref name="TResult" />.</param>
     /// <param name="options">The options to use to configure the external event.</param>
@@ -67,7 +56,30 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _uiHandler = handler;
+        _core = new((uiApplication, _, _) => handler(uiApplication), base.Raise);
+        _options = options;
+    }
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{TResult}" /> class with access to the <see cref="UIApplication" /> instance and the cancellation token of the raise.
+    /// </summary>
+    /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" /> and the token passed to <see cref="RaiseAsync(CancellationToken)" />, returning a result of type <typeparamref name="TResult" />.</param>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
+    public AsyncRequestExternalEvent(Func<UIApplication, CancellationToken, TResult> handler) : this(handler, ExternalEventOptions.None)
+    {
+    }
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="AsyncRequestExternalEvent{TResult}" /> class with access to the <see cref="UIApplication" /> instance and the cancellation token of the raise.
+    /// </summary>
+    /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" /> and the token passed to <see cref="RaiseAsync(CancellationToken)" />, returning a result of type <typeparamref name="TResult" />.</param>
+    /// <param name="options">The options to use to configure the external event.</param>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
+    public AsyncRequestExternalEvent(Func<UIApplication, CancellationToken, TResult> handler, ExternalEventOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+
+        _core = new((uiApplication, _, cancellationToken) => handler(uiApplication, cancellationToken), base.Raise);
         _options = options;
     }
 
@@ -77,59 +89,61 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
     /// <returns>The <see cref="Task{TResult}" /> representing the async operation being executed, containing the result of type <typeparamref name="TResult" />.</returns>
     /// <remarks>
     ///     Revit will wait until it is ready to process the event and then it will execute its event handler.
-    ///     Revit processes external events only when no other commands or edit modes are currently active in Revit,
-    ///     which is the same policy like the one that applies to evoking external commands.<br /><br />
-    ///     When <see cref="ExternalEventOptions.AllowDirectInvocation" /> is specified and Revit is in API mode,
-    ///     the handler is executed directly on the calling thread instead of being queued.
+    ///     Revit processes external events only when no other commands or edit modes are currently active in Revit, which is the same policy like the one that applies to evoking external commands.<br />
+    ///     Each call executes the handler once, in the order of the calls.
+    ///     The returned task completes with the outcome of that execution.
+    ///     A call that Revit refuses with <see cref="ExternalEventRequest.Denied" /> or <see cref="ExternalEventRequest.TimedOut" /> fails its task with an <see cref="System.InvalidOperationException" /> without executing the handler.<br />
+    ///     When <see cref="ExternalEventOptions.AllowDirectInvocation" /> is specified and Revit is in API mode, the handler is executed directly on the calling thread instead of being queued.
+    ///     This overload passes <see cref="CancellationToken.None" /> to <see cref="RaiseAsync(CancellationToken)" />.
     /// </remarks>
     public Task<TResult> RaiseAsync()
     {
-        if ((_options & ExternalEventOptions.AllowDirectInvocation) != 0 && RevitContext.IsRevitInApiMode)
-        {
-            try
-            {
-                var result = ExecuteHandler(RevitContext.UiApplication);
-                return Task.FromResult(result);
-            }
-            catch (Exception exception)
-            {
-                return Task.FromException<TResult>(exception);
-            }
-        }
-
-        _taskCompletionSource = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        Raise();
-
-        return _taskCompletionSource.Task;
+        return RaiseAsync(CancellationToken.None);
     }
 
-    /// <summary>Callback invoked by Revit. Not intended to be called in user code.</summary>
+    /// <summary>
+    ///     Raises the external event asynchronously, instructing Revit to execute the handler within the Revit API context.
+    /// </summary>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+    /// <returns>The <see cref="Task{TResult}" /> representing the async operation being executed, containing the result of type <typeparamref name="TResult" />.</returns>
+    /// <remarks>
+    ///     Revit will wait until it is ready to process the event and then it will execute its event handler.
+    ///     Revit processes external events only when no other commands or edit modes are currently active in Revit, which is the same policy like the one that applies to evoking external commands.<br />
+    ///     Each call executes the handler once, in the order of the calls.
+    ///     The returned task completes with the outcome of that execution.
+    ///     A call that Revit refuses with <see cref="ExternalEventRequest.Denied" /> or <see cref="ExternalEventRequest.TimedOut" /> fails its task with an <see cref="System.InvalidOperationException" /> without executing the handler.<br />
+    ///     A cancellation requested before Revit executes the handler cancels the task at once without executing the handler.
+    ///     A cancellation requested while the handler executes doesn't interrupt it.
+    ///     An <see cref="System.OperationCanceledException" /> that the handler throws for the token cancels the task.<br />
+    ///     When <see cref="ExternalEventOptions.AllowDirectInvocation" /> is specified and Revit is in API mode, the handler is executed directly on the calling thread instead of being queued.
+    ///     The token is checked once, before the handler executes.
+    /// </remarks>
+    public Task<TResult> RaiseAsync(CancellationToken cancellationToken)
+    {
+        if ((_options & ExternalEventOptions.AllowDirectInvocation) != 0 && RevitContext.IsRevitInApiMode)
+        {
+            return _core.Invoke(RevitContext.UiApplication, default, cancellationToken);
+        }
+
+        return _core.RaiseAsync(default, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     Each call queues a separate execution without waiting for completion.
+    ///     The handler receives <see cref="CancellationToken.None" />; its result is discarded.
+    ///     Revit catches an exception of the handler.
+    /// </remarks>
+    public override ExternalEventRequest Raise()
+    {
+        return _core.Raise(default);
+    }
+
+    /// <summary>Callback invoked by Revit.</summary>
+    /// <remarks>Not intended to be called in user code.</remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override void Execute(UIApplication uiApplication)
     {
-        try
-        {
-            var result = ExecuteHandler(uiApplication);
-            _taskCompletionSource?.SetResult(result);
-        }
-        catch (Exception exception)
-        {
-            _taskCompletionSource?.SetException(exception);
-        }
-    }
-
-    private TResult ExecuteHandler(UIApplication uiApplication)
-    {
-        TResult result;
-        if (_uiHandler is not null)
-        {
-            result = _uiHandler.Invoke(uiApplication);
-        }
-        else
-        {
-            result = _handler!.Invoke();
-        }
-
-        return result;
+        _core.Execute(uiApplication);
     }
 }

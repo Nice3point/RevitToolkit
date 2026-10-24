@@ -14,7 +14,7 @@ internal sealed class ExternalEventExtensionSignature
 
     private readonly Dictionary<ISymbol, string> _typeParameterNames = new(SymbolEqualityComparer.Default);
 
-    public ExternalEventExtensionDefinition Create(IMethodSymbol method, bool hasUiApplicationParameter, CancellationToken cancellationToken)
+    public ExternalEventExtensionDefinition Create(IMethodSymbol method, CancellationToken cancellationToken)
     {
         var containingTypes = new Stack<INamedTypeSymbol>();
         for (var containingType = method.ContainingType; containingType is not null; containingType = containingType.ContainingType)
@@ -24,7 +24,8 @@ internal sealed class ExternalEventExtensionSignature
 
         var reservedParameterNames = new HashSet<string>(method.Parameters.Select(static parameter => parameter.Name), StringComparer.Ordinal)
         {
-            "externalEvent"
+            "externalEvent",
+            "cancellationToken"
         };
 
         var typeParameters = ImmutableArray.CreateBuilder<string>();
@@ -54,8 +55,7 @@ internal sealed class ExternalEventExtensionSignature
             typeParameters.ToImmutable(), constraints.ToString(),
             $"{Format(method.ContainingType, TypeFormat)}.{method.Name}Args",
             method.ReturnsVoid ? null : Format(method.ReturnType, TypeFormat),
-            method.Parameters
-                .Skip(hasUiApplicationParameter ? 1 : 0)
+            ExternalEventParameters.GetArgumentParameters(method)
                 .Select(parameter => Format(parameter.Type, TypeFormat))
                 .ToImmutableArray());
     }

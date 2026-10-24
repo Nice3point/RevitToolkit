@@ -17,4 +17,16 @@ public interface IAsyncRequestExternalEvent<in T, TResult>
     /// <param name="argument">The argument to pass to the handler.</param>
     /// <returns>The <see cref="Task{TResult}" /> representing the async operation being executed, containing the result of type <typeparamref name="TResult" />.</returns>
     Task<TResult> RaiseAsync(T argument);
+
+    /// <summary>
+    ///     Raises (signals) the external event with the specified argument, instructing Revit to execute the handler within the Revit API context and wait for completion asynchronously.
+    /// </summary>
+    /// <param name="argument">The argument to pass to the handler.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+    /// <returns>The <see cref="Task{TResult}" /> representing the async operation being executed, containing the result of type <typeparamref name="TResult" />.</returns>
+    /// <remarks>
+    ///     A cancellation requested before Revit executes the handler cancels the task at once without executing the handler.
+    ///     A cancellation requested while the handler executes doesn't interrupt it.
+    /// </remarks>
+    Task<TResult> RaiseAsync(T argument, CancellationToken cancellationToken);
 }

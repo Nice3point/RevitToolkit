@@ -15,6 +15,7 @@ internal sealed record ExternalEventDefinition(
     string? FullyQualifiedReturnType,
     string FullyQualifiedDelegateType,
     bool HasUiApplicationParameter,
+    bool HasCancellationTokenParameter,
     bool AllowDirectInvocation,
     EquatableArray<ContainingTypeDeclaration> TypeHierarchy,
     EquatableArray<ExternalEventParameter> ExtraParameters,

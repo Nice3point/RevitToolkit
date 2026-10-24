@@ -39,6 +39,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="Nice3point.Revit.Toolkit.Tests"/>
+    </ItemGroup>
+
+    <ItemGroup>
         <!-- Build order references -->
         <ProjectReference Include="..\Nice3point.Revit.Toolkit.Analyzers\Nice3point.Revit.Toolkit.Analyzers.csproj" ReferenceOutputAssembly="false"/>
         <ProjectReference Include="..\Nice3point.Revit.Toolkit.Analyzers.Roslyn414\Nice3point.Revit.Toolkit.Analyzers.Roslyn414.csproj" ReferenceOutputAssembly="false"/>

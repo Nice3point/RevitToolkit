@@ -39,6 +39,36 @@ public sealed class ExternalEventGeneratorNameBindingTests
     }
 
     [Test]
+    [Arguments("Method", "cancellationToken", "System.Threading.CancellationToken token", "")]
+    [Arguments("Argument", "Run", "int cancellationToken, int count, System.Threading.CancellationToken token", "2, 5")]
+    public async Task CancellationTokenName_KeepsDistinctBindingsAsync(string scenario, string methodName, string parameters, string arguments)
+    {
+        var cancellableArguments = arguments.Length == 0 ? "System.Threading.CancellationToken.None" : $"{arguments}, System.Threading.CancellationToken.None";
+        var source = $$"""
+                       using Nice3point.Revit.Toolkit.External;
+
+                       namespace Consumer;
+
+                       public partial class Model
+                       {
+                           [ExternalEvent]
+                           private void {{methodName}}({{parameters}}) { }
+
+                           public void UseGeneratedMembers()
+                           {
+                               _ = {{methodName}}Event.Raise({{arguments}});
+                               _ = {{methodName}}AsyncEvent.RaiseAsync({{cancellableArguments}});
+                           }
+                       }
+                       """;
+
+        var (driver, _) = await GeneratorTest.RunAsync(source);
+
+        await Assert.That(driver.GetRunResult().GeneratedTrees.Length).IsEqualTo(1);
+        await Verify(driver.GetRunResult()).UseParameters(scenario);
+    }
+
+    [Test]
     [Arguments("clone")]
     [Arguments("equals")]
     [Arguments("getHashCode")]

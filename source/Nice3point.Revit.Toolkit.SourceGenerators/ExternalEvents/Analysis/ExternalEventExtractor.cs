@@ -119,16 +119,13 @@ internal static class ExternalEventExtractor
 
     private static string[] GetGeneratedMemberNames(IMethodSymbol method)
     {
-        var hasUiApplicationParameter = method.Parameters.Length > 0 &&
-                                        method.Parameters[0].Type.ToDisplayString(NullableFlowFormat) == ExternalEventTypeNames.UiApplication.WithoutGlobalPrefix;
-
         var generatedMemberNames = new List<string> { $"{method.Name}AsyncEvent" };
         if (method.ReturnsVoid)
         {
             generatedMemberNames.Add($"{method.Name}Event");
         }
 
-        if (method.Parameters.Length - (hasUiApplicationParameter ? 1 : 0) > 1)
+        if (ExternalEventParameters.GetArgumentParameters(method).Count() > 1)
         {
             generatedMemberNames.Add($"{method.Name}Args");
         }
@@ -140,9 +137,11 @@ internal static class ExternalEventExtractor
     {
         var allowDirectInvocation = attribute.GetNamedArgument("AllowDirectInvocation", fallback: false);
 
-        var (hasUiApplicationParameter, extraParameters) = ClassifyParameters(methodSymbol);
+        var hasUiApplicationParameter = ExternalEventParameters.HasUiApplicationParameter(methodSymbol);
+        var hasCancellationTokenParameter = ExternalEventParameters.HasCancellationTokenParameter(methodSymbol);
+        var extraParameters = ClassifyParameters(methodSymbol);
         var (returnsVoid, returnType) = ExtractReturnType(methodSymbol);
-        var delegateType = BuildDelegateType(methodSymbol, hasUiApplicationParameter, returnsVoid, returnType, extraParameters);
+        var delegateType = BuildDelegateType(methodSymbol, returnsVoid, returnType);
 
         var typeHierarchy = GetTypeHierarchy(methodSymbol, cancellationToken);
         var containingNamespace = GetNamespace(methodSymbol.ContainingType);
@@ -156,10 +155,11 @@ internal static class ExternalEventExtractor
             returnType,
             delegateType,
             hasUiApplicationParameter,
+            hasCancellationTokenParameter,
             allowDirectInvocation,
             typeHierarchy,
             extraParameters,
-            new ExternalEventExtensionSignature().Create(methodSymbol, hasUiApplicationParameter, cancellationToken),
+            new ExternalEventExtensionSignature().Create(methodSymbol, cancellationToken),
             methodSymbol.ContainingType.GetMembers().Select(static member => member.Name).ToImmutableArray());
     }
 
@@ -252,29 +252,20 @@ internal static class ExternalEventExtractor
         return false;
     }
 
-    private static (bool HasUiApplicationParameter, EquatableArray<ExternalEventParameter> ExtraParameters) ClassifyParameters(IMethodSymbol methodSymbol)
+    private static EquatableArray<ExternalEventParameter> ClassifyParameters(IMethodSymbol methodSymbol)
     {
-        var parameters = methodSymbol.Parameters;
-        var hasUiApplicationParameter = false;
         var extraParameters = ImmutableArray.CreateBuilder<ExternalEventParameter>();
         var recordPropertyNames = GetReservedRecordPropertyNames(methodSymbol);
 
-        for (var parameterIndex = 0; parameterIndex < parameters.Length; parameterIndex++)
+        foreach (var parameter in ExternalEventParameters.GetArgumentParameters(methodSymbol))
         {
-            var parameter = parameters[parameterIndex];
-            if (parameterIndex == 0 && parameter.Type.ToDisplayString(NullableFlowFormat) == ExternalEventTypeNames.UiApplication.WithoutGlobalPrefix)
-            {
-                hasUiApplicationParameter = true;
-                continue;
-            }
-
             var propertyName = char.ToUpperInvariant(parameter.Name[0]) + parameter.Name[1..];
             propertyName = CSharpIdentifier.Reserve(propertyName, recordPropertyNames);
             var parameterTypeFullyQualified = parameter.Type.GetFullyQualifiedNameWithNullabilityAnnotations();
             extraParameters.Add(new ExternalEventParameter(parameter.Name, parameterTypeFullyQualified, propertyName));
         }
 
-        return (hasUiApplicationParameter, extraParameters.ToImmutable());
+        return extraParameters.ToImmutable();
     }
 
     private static HashSet<string> GetReservedRecordPropertyNames(IMethodSymbol methodSymbol)
@@ -302,23 +293,11 @@ internal static class ExternalEventExtractor
         return (false, methodSymbol.ReturnType.GetFullyQualifiedNameWithNullabilityAnnotations());
     }
 
-    private static string BuildDelegateType(
-        IMethodSymbol methodSymbol,
-        bool hasUiApplicationParameter,
-        bool returnsVoid,
-        string? fullyQualifiedReturnType,
-        EquatableArray<ExternalEventParameter> extraParameters)
+    private static string BuildDelegateType(IMethodSymbol methodSymbol, bool returnsVoid, string? fullyQualifiedReturnType)
     {
-        var parameterTypes = new List<string>();
-        if (hasUiApplicationParameter)
-        {
-            parameterTypes.Add(methodSymbol.Parameters[0].Type.GetFullyQualifiedNameWithNullabilityAnnotations());
-        }
-
-        foreach (var parameter in extraParameters)
-        {
-            parameterTypes.Add(parameter.FullyQualifiedType);
-        }
+        var parameterTypes = methodSymbol.Parameters
+            .Select(static parameter => parameter.Type.GetFullyQualifiedNameWithNullabilityAnnotations())
+            .ToList();
 
         if (returnsVoid)
         {

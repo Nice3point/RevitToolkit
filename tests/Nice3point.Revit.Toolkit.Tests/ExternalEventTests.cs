@@ -1,6 +1,7 @@
 using Autodesk.Revit.UI;
 using Nice3point.Revit.Toolkit.External;
 using Nice3point.TUnit.Revit;
+using TUnit.Assertions.Enums;
 using ExternalEvent = Nice3point.Revit.Toolkit.External.ExternalEvent;
 
 namespace Nice3point.Revit.Toolkit.Tests;
@@ -128,6 +129,51 @@ public sealed class ExternalEventTests : RevitApiUiTest
     }
 
     [Test]
+    [Timeout(10_000)]
+    public async Task Raise_RaisesBeforeTheEventCycle_ExecutesTheHandlerOnce(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var executionCount = 0;
+        var externalEvent = new ExternalEvent(() => executionCount++);
+        var eventCycle = new AsyncExternalEvent(() => { });
+
+        // Act
+        externalEvent.Raise();
+        externalEvent.Raise();
+        await eventCycle.RaiseAsync().WaitAsync(cancellationToken);
+        await eventCycle.RaiseAsync().WaitAsync(cancellationToken);
+
+        // Assert
+        await Assert.That(executionCount).IsEqualTo(1);
+    }
+
+    [Test]
+    [Timeout(10_000)]
+    public async Task Raise_GenericRaisesBeforeTheEventCycle_ExecutesTheHandlerForEachArgumentInOrder(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var receivedArguments = new List<int>();
+        var execution = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var externalEvent = new ExternalEvent<int>(argument =>
+        {
+            receivedArguments.Add(argument);
+            if (receivedArguments.Count == 3)
+            {
+                execution.SetResult();
+            }
+        });
+
+        // Act
+        externalEvent.Raise(1);
+        externalEvent.Raise(2);
+        externalEvent.Raise(3);
+        await execution.Task.WaitAsync(cancellationToken);
+
+        // Assert
+        await Assert.That(receivedArguments).IsEquivalentTo([1, 2, 3], CollectionOrdering.Matching);
+    }
+
+    [Test]
     public async Task GetName_DefaultIdentifier_ReturnsTheTypeName()
     {
         // Arrange
@@ -145,5 +191,41 @@ public sealed class ExternalEventTests : RevitApiUiTest
     {
         // Act & Assert
         await Assert.That(() => new ExternalEvent((Action)null!)).Throws<ArgumentNullException>();
+    }
+
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    [Timeout(10_000)]
+    public async Task Raise_GenericWithoutArgument_QueuesTheLastArgument(bool allowDirectInvocation, CancellationToken cancellationToken)
+    {
+        // Arrange
+        var receivedArguments = new List<int>();
+        var execution = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var options = allowDirectInvocation ? ExternalEventOptions.AllowDirectInvocation : ExternalEventOptions.None;
+        int[] expectedArguments = allowDirectInvocation ? [42, 0, 42] : [0, 42, 42];
+        var externalEvent = new ExternalEvent<int>(argument =>
+        {
+            receivedArguments.Add(argument);
+            if (receivedArguments.Count == 3)
+            {
+                execution.SetResult();
+            }
+        }, options);
+
+        // Act
+        var firstRequest = externalEvent.Raise();
+        externalEvent.Raise(42);
+        externalEvent.Raise();
+        var executionCountOnRaise = receivedArguments.Count;
+        await execution.Task.WaitAsync(cancellationToken);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            await Assert.That(firstRequest).IsEqualTo(ExternalEventRequest.Accepted);
+            await Assert.That(executionCountOnRaise).IsEqualTo(allowDirectInvocation ? 1 : 0);
+            await Assert.That(receivedArguments).IsEquivalentTo(expectedArguments, CollectionOrdering.Matching);
+        }
     }
 }

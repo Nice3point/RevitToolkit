@@ -1,6 +1,15 @@
 ; Shipped analyzer releases
 ; https://github.com/dotnet/roslyn-analyzers/blob/main/src/Microsoft.CodeAnalysis.Analyzers/ReleaseTrackingAnalyzers.Help.md
 
+## Release 2027.0.1
+
+### New Rules
+
+ Rule ID   | Category               | Severity | Notes
+-----------|------------------------|----------|-----------------------------------------------------------------------------
+ RVTTK0006 | ExternalEventGenerator | Error    | Reports signatures that cannot be represented by generated external events.
+ RVTTK0007 | ExternalEventGenerator | Error    | Reports generated member names that conflict with another declaration.
+
 ## Release 2027.0.0
 
 ### New Rules

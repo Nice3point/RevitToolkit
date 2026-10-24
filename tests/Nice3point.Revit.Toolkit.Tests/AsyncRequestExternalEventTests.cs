@@ -351,6 +351,7 @@ public sealed class AsyncRequestExternalEventTests : RevitApiUiTest
         using var raiseCancellationSource = new CancellationTokenSource();
         using var otherCancellationSource = new CancellationTokenSource();
         otherCancellationSource.Cancel();
+        // ReSharper disable once AccessToDisposedClosure
         var externalEvent = new AsyncRequestExternalEvent<int, int>(_ => throw new OperationCanceledException(otherCancellationSource.Token));
 
         // Act

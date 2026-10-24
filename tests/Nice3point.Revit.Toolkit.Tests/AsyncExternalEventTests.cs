@@ -5,6 +5,7 @@ using TUnit.Assertions.Enums;
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
+// ReSharper disable MethodSupportsCancellation
 public sealed class AsyncExternalEventTests : RevitApiUiTest
 {
     [Test]

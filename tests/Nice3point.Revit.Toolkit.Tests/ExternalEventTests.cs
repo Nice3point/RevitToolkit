@@ -6,6 +6,7 @@ using ExternalEvent = Nice3point.Revit.Toolkit.External.ExternalEvent;
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
+// ReSharper disable MethodSupportsCancellation
 public sealed class ExternalEventTests : RevitApiUiTest
 {
     [Test]

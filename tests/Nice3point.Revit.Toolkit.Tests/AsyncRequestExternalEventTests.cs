@@ -4,6 +4,7 @@ using TUnit.Assertions.Enums;
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
+// ReSharper disable MethodSupportsCancellation
 public sealed class AsyncRequestExternalEventTests : RevitApiUiTest
 {
     [Test]
@@ -293,6 +294,7 @@ public sealed class AsyncRequestExternalEventTests : RevitApiUiTest
         using var cancellationSource = new CancellationTokenSource();
         var externalEvent = new AsyncRequestExternalEvent<int, int>(argument =>
         {
+            // ReSharper disable once AccessToDisposedClosure
             cancellationSource.Cancel();
             return argument;
         });
@@ -327,6 +329,7 @@ public sealed class AsyncRequestExternalEventTests : RevitApiUiTest
         using var cancellationSource = new CancellationTokenSource();
         var externalEvent = new AsyncRequestExternalEvent<int, int>((_, argument, raiseToken) =>
         {
+            // ReSharper disable once AccessToDisposedClosure
             cancellationSource.Cancel();
             raiseToken.ThrowIfCancellationRequested();
             return argument;
@@ -385,6 +388,7 @@ public sealed class AsyncRequestExternalEventTests : RevitApiUiTest
         using var cancellationSource = new CancellationTokenSource();
         var externalEvent = new AsyncRequestExternalEvent<int, int>(argument =>
         {
+            // ReSharper disable once AccessToDisposedClosure
             cancellationSource.Cancel();
             return argument;
         }, ExternalEventOptions.AllowDirectInvocation);
@@ -407,6 +411,7 @@ public sealed class AsyncRequestExternalEventTests : RevitApiUiTest
         using var cancellationSource = new CancellationTokenSource();
         var externalEvent = new AsyncRequestExternalEvent<int, int>((_, argument, raiseToken) =>
         {
+            // ReSharper disable once AccessToDisposedClosure
             cancellationSource.Cancel();
             raiseToken.ThrowIfCancellationRequested();
             return argument;

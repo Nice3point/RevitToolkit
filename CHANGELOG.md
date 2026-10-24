@@ -15,7 +15,7 @@
 Pass a cancellation token to the generated event to cancel a pending execution or stop the handler cooperatively:
 
 ```c#
-public partial class MyViewModel
+public partial class MyRevitContext
 {
     [ExternalEvent]
     private void DeleteWindows(UIApplication application, ICollection<ElementId> elementIds, CancellationToken cancellationToken)

@@ -132,7 +132,7 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
     /// <remarks>
     ///     Each call queues a separate execution without waiting for completion.
     ///     The handler receives <see cref="CancellationToken.None" />; its result is discarded.
-    ///     An exception of the handler doesn't reach the caller.
+    ///     Revit catches an exception of the handler.
     /// </remarks>
     public override ExternalEventRequest Raise()
     {

@@ -7,7 +7,7 @@ namespace Nice3point.Revit.Toolkit.External;
 /// <summary>
 ///     An external event whose sole purpose is to relay its functionality to other objects by invoking delegates.
 ///     The default behavior queues the handler via the Revit external event mechanism.
-///     This type allows you to accept a <see cref="UIApplication" /> parameter in the <see cref="Nice3point.Revit.Toolkit.External.ExternalEvent(Action{Autodesk.Revit.UI.UIApplication})" /> callback overload.
+///     The <see cref="Nice3point.Revit.Toolkit.External.ExternalEvent(Action{Autodesk.Revit.UI.UIApplication})" /> constructor passes the current <see cref="UIApplication" /> to the handler.
 /// </summary>
 [PublicAPI]
 public class ExternalEvent : ExternalEventHandler, IExternalEvent

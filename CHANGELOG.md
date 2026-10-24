@@ -3,8 +3,7 @@
 ### External Events
 
 - `ExternalEvent<T>` and the asynchronous external events execute each queued raise with its own argument. Each `RaiseAsync()` task completes with the result or exception of its handler. Previously, concurrent raises overwrote the argument and left earlier tasks incomplete.
-- `Raise()` on asynchronous events queues the handler without waiting for completion. On events with an argument, it uses the last supplied argument, or `default(T)` before the first call. Handler exceptions propagate to Revit.
-- Requests refused with `ExternalEventRequest.Denied` or `ExternalEventRequest.TimedOut` skip the handler. `Raise()` returns the refusal; `RaiseAsync()` returns a task faulted with `InvalidOperationException`.
+- Requests refused with `ExternalEventRequest.Denied` or `ExternalEventRequest.TimedOut` skip the handler. `Raise(argument)` returns the refusal; `RaiseAsync()` returns a task faulted with `InvalidOperationException`.
 - New `RaiseAsync()` overloads accept a `CancellationToken` to cancel a pending execution. Token-aware constructors pass the token to the handler for cooperative cancellation during execution.
 
 ### ExternalEvent Source Generator

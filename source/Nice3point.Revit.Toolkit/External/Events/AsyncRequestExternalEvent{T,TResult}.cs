@@ -141,7 +141,8 @@ public sealed class AsyncRequestExternalEvent<T, TResult> : ExternalEventHandler
     /// <inheritdoc />
     /// <remarks>
     ///     Each call queues a separate execution with the last argument passed to <see cref="RaiseAsync(T, CancellationToken)" />, or the default value of <typeparamref name="T" /> before the first call.
-    ///     The handler receives <see cref="CancellationToken.None" />; its result is discarded and an exception propagates to Revit.
+    ///     The handler receives <see cref="CancellationToken.None" />; its result is discarded.
+    ///     An exception of the handler doesn't reach the caller.
     /// </remarks>
     public override ExternalEventRequest Raise()
     {

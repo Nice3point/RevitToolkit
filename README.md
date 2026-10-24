@@ -210,11 +210,6 @@ A raise that Revit refuses with `Denied` or `TimedOut` never runs.
 `Raise(argument)` returns that result to the caller.
 The `RaiseAsync()` task fails with an `InvalidOperationException`.
 
-The asynchronous event classes also expose `Raise()` to queue the handler without waiting for completion.
-For events with an argument, this overload uses the last supplied argument, or `default(T)` before the first call.
-It always queues the handler, including when `AllowDirectInvocation` is enabled, and passes `CancellationToken.None`.
-Handler exceptions propagate to Revit; `RaiseAsync()` reports them through its task.
-
 #### ExternalEvent
 
 A synchronous external event that queues the handler via the Revit external event mechanism.

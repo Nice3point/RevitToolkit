@@ -28,7 +28,7 @@ internal sealed class AsyncExternalEventCore<TArgument, TResult>(Func<UIApplicat
     /// </summary>
     /// <param name="argument">The argument to pass to the handler.</param>
     /// <returns>The result of the request to raise the Revit external event.</returns>
-    /// <remarks>An exception of the handler propagates to Revit.</remarks>
+    /// <remarks>An exception of the handler propagates from <see cref="Execute" />.</remarks>
     public ExternalEventRequest Raise(TArgument argument)
     {
         return Enqueue(new Operation(argument));

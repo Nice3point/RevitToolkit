@@ -648,23 +648,28 @@ The generator excludes it from the event arguments:
 
 ```c#
 [ExternalEvent]
-private void DeleteWindow(UIApplication application, ElementId elementId, CancellationToken cancellationToken)
+private void DeleteWindows(UIApplication application, ICollection<ElementId> elementIds, CancellationToken cancellationToken)
 {
-    cancellationToken.ThrowIfCancellationRequested();
     var document = application.ActiveUIDocument.Document;
-    using var transaction = new Transaction(document, "Delete window");
+    using var transaction = new Transaction(document, "Delete windows");
     transaction.Start();
-    document.Delete(elementId);
+
+    foreach (var elementId in elementIds)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        document.Delete(elementId);
+    }
+
     transaction.Commit();
 }
 
 // Generates:
-// IExternalEvent<ElementId> DeleteWindowEvent
-// IAsyncExternalEvent<ElementId> DeleteWindowAsyncEvent
+// IExternalEvent<ICollection<ElementId>> DeleteWindowsEvent
+// IAsyncExternalEvent<ICollection<ElementId>> DeleteWindowsAsyncEvent
 ```
 
-Call `await DeleteWindowAsyncEvent.RaiseAsync(elementId, cancellationToken)` to pass the token to the handler.
-`DeleteWindowEvent.Raise(elementId)` passes `CancellationToken.None`.
+Call `await DeleteWindowsAsyncEvent.RaiseAsync(elementIds, cancellationToken)` to pass the token to the handler.
+`DeleteWindowsEvent.Raise(elementIds)` passes `CancellationToken.None`.
 A `CancellationToken` in any other position is a regular argument.
 See [Cancellation](#cancellation) for cancellation behavior and exception handling.
 

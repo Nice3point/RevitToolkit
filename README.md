@@ -198,18 +198,6 @@ which is particularly useful when working with modeless windows.
 Events do not need to be created inside the Revit API context before use — the Toolkit handles all the initialization for you,
 so you can create them anywhere in your code and on any thread.
 
-Each handler runs as the add-in of the handler assembly.
-The handler assembly is the assembly whose code the event runs: the lambda or method passed to the event, or the class derived from `ExternalEventHandler`.
-Revit checks the permissions of that add-in, such as vendor write access to an Extensible Storage schema.
-`UIApplication.ActiveAddInId` returns the ID of that add-in inside the handler.
-
-Revit binds an event to the add-in that is active when the event is created.
-No add-in is active outside a Revit callback, such as on a background thread or in an event handler of a modeless window.
-For an event created outside a Revit callback, the Toolkit uses the add-in that was active the first time the handler assembly ran an `ExternalApplication` or an `ExternalCommand`, or created an external event inside a Revit callback.
-
-An add-in that implements `IExternalApplication` directly runs no `ExternalApplication` or `ExternalCommand` of the Toolkit.
-Create one external event in `OnStartup` to bind the events the add-in creates later outside a Revit callback.
-
 Use `Raise()` when the caller does not need to wait, or `RaiseAsync()` when it needs completion or a return value.
 For generated event properties, see the [ExternalEvent attribute](#externalevent-attribute).
 

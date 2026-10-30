@@ -36,8 +36,8 @@ internal static unsafe class AddInContext
 
     static AddInContext()
     {
-        // A toolkit in the AssemblyLoadContext of an isolated add-in runs for that add-in alone.
 #if NET
+        // Add-ins without dependency isolation share the toolkit loaded into the default AssemblyLoadContext.
         IsShared = AssemblyLoadContext.GetLoadContext(ToolkitAssembly) == AssemblyLoadContext.Default;
 #else
         IsShared = true;

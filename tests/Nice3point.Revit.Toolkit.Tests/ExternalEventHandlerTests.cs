@@ -12,7 +12,7 @@ namespace Nice3point.Revit.Toolkit.Tests;
 public sealed class ExternalEventHandlerTests : RevitApiUiTest
 {
     private const string WrittenResult = "Written";
-    private static readonly Guid AddInId = new(TestAddIn.Id);
+    private static readonly Guid AddInId = new(TestsConfiguration.AddInId);
 
     [Test]
     [Timeout(10_000)]
@@ -132,7 +132,7 @@ public sealed class ExternalEventHandlerTests : RevitApiUiTest
     }
 
     /// <summary>
-    ///     Writes an entity of a schema that grants write access to the vendor of the test add-in alone.
+    ///     Writes an entity of a schema with the vendor write access level and the vendor ID of the test add-in.
     /// </summary>
     /// <param name="uiApplication">The current <see cref="UIApplication" />.</param>
     /// <returns>The written result, or the message Revit refuses the write with.</returns>
@@ -141,7 +141,7 @@ public sealed class ExternalEventHandlerTests : RevitApiUiTest
         var schemaId = Guid.NewGuid();
         var schemaBuilder = new SchemaBuilder(schemaId);
         schemaBuilder.SetSchemaName($"ToolkitTests{schemaId:N}");
-        schemaBuilder.SetVendorId(TestAddIn.VendorId);
+        schemaBuilder.SetVendorId(TestsConfiguration.VendorId);
         schemaBuilder.SetReadAccessLevel(AccessLevel.Public);
         schemaBuilder.SetWriteAccessLevel(AccessLevel.Vendor);
         schemaBuilder.AddSimpleField("Value", typeof(string));

@@ -1,3 +1,16 @@
+# 2027.0.4
+
+### Context
+
+- New `RevitContext.BeginRenderingResumptionScope()` method resumes the rendering of the WPF windows of the Revit thread after Revit upgrades a family, a template, or a document of an earlier version. Previously, the progress dialog of the upgrade dropped the frame message of WPF, and the ribbon, the panes, and the windows of an add-in stopped drawing until a WPF window changed its size.
+
+```c#
+using (RevitContext.BeginRenderingResumptionScope())
+{
+    document.LoadFamily(fileName, out var family);
+}
+```
+
 # 2027.0.3
 
 ### External Events

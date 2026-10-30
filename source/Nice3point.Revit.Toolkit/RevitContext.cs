@@ -1,11 +1,10 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
-#if REVIT2027_OR_GREATER
 using Nice3point.Revit.Toolkit.Internal;
-#endif
 
 namespace Nice3point.Revit.Toolkit;
 
@@ -26,6 +25,13 @@ public class RevitContext : RevitApiContext
     private static int _dialogScopeCount;
     private static int? _suppressDialogCode;
     private static Action<DialogBoxShowingEventArgs>? _suppressDialogHandler;
+
+    private const string RenderNotificationWindowName = "MediaContextNotificationWindow";
+    private static readonly uint RenderNotificationMessage = NativeMethods.RegisterWindowMessage("MilChannelNotify");
+    private static readonly NativeMethods.EnumThreadWindowsCallback PostRenderNotificationCallback = PostRenderNotification;
+    private static readonly Lock RenderingLock = new();
+    private static int _renderingScopeCount;
+    private static uint _renderingThreadId;
 
     static RevitContext()
     {
@@ -353,6 +359,48 @@ public class RevitContext : RevitApiContext
         return new DialogSuppressionScope();
     }
 
+    /// <summary>
+    ///     Begins a scope that resumes the rendering of the WPF windows of the current thread after Revit upgrades a file.
+    ///     The rendering resumes when the outermost scope is disposed.
+    /// </summary>
+    /// <returns>A disposable scope. Call Dispose or use 'using' statement to resume the rendering.</returns>
+    /// <remarks>
+    ///     <para>
+    ///         Revit upgrades a family, a template, or a document of an earlier version when
+    ///         <see cref="M:Autodesk.Revit.DB.Document.LoadFamily(System.String)" />, <see cref="M:Autodesk.Revit.ApplicationServices.Application.NewFamilyDocument(System.String)" />,
+    ///         or <see cref="M:Autodesk.Revit.ApplicationServices.Application.OpenDocumentFile(System.String)" /> opens it.
+    ///         While it upgrades, the progress dialog of Revit drops the message the WPF render thread posts after each frame,
+    ///         and WPF presents no further frame of the thread until that message arrives: the ribbon, the panes, and the windows of an add-in stop drawing.
+    ///     </para>
+    ///     <para>
+    ///         Wrap the calls that can upgrade a file in the scope.
+    ///         When the outermost scope is disposed, the scope posts the message again to the thread that began it, and the WPF windows of that thread draw again.
+    ///         Begin the scope on the thread of the windows, the Revit main thread.
+    ///     </para>
+    ///     This method is thread-safe.
+    /// </remarks>
+    /// <example>
+    ///     <code>
+    ///         using (RevitContext.BeginRenderingResumptionScope())
+    ///         {
+    ///             document.LoadFamily(fileName, out var family);
+    ///         }
+    ///         // The WPF windows draw again
+    ///     </code>
+    /// </example>
+    public static IDisposable BeginRenderingResumptionScope()
+    {
+        lock (RenderingLock)
+        {
+            if (_renderingScopeCount++ == 0)
+            {
+                _renderingThreadId = NativeMethods.GetCurrentThreadId();
+            }
+        }
+
+        return new RenderingResumptionScope();
+    }
+
     internal static IDisposable BeginApiContextScope()
     {
         return new ApiContextScope(IncrementConstructorPointer, IncrementDestructorPointer);
@@ -376,6 +424,19 @@ public class RevitContext : RevitApiContext
         }
 
         handler?.Invoke(args);
+    }
+
+    private static bool PostRenderNotification(IntPtr window, IntPtr parameter)
+    {
+        var name = new StringBuilder(RenderNotificationWindowName.Length + 2);
+        NativeMethods.GetWindowText(window, name, name.Capacity);
+        if (name.ToString() != RenderNotificationWindowName)
+        {
+            return true;
+        }
+
+        NativeMethods.PostMessage(window, RenderNotificationMessage, IntPtr.Zero, IntPtr.Zero);
+        return false;
     }
 
     private sealed class ApiContextScope : IDisposable
@@ -426,6 +487,27 @@ public class RevitContext : RevitApiContext
                     _suppressDialogCode = null;
                     _suppressDialogHandler = null;
                     UiApplication.DialogBoxShowing -= ResolveDialogBox;
+                }
+            }
+        }
+    }
+
+    private sealed class RenderingResumptionScope : IDisposable
+    {
+        private int _disposed;
+
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref _disposed, value: 1) != 0)
+            {
+                return;
+            }
+
+            lock (RenderingLock)
+            {
+                if (--_renderingScopeCount == 0)
+                {
+                    NativeMethods.EnumThreadWindows(_renderingThreadId, PostRenderNotificationCallback, IntPtr.Zero);
                 }
             }
         }

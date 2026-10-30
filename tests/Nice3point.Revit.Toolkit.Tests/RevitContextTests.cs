@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.IO;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Autodesk.Revit.UI;
 using Nice3point.TUnit.Revit;
@@ -201,6 +203,46 @@ public sealed class RevitContextTests : RevitApiUiTest
     {
         // Arrange
         var scope = RevitContext.BeginDialogSuppressionScope();
+
+        // Act & Assert
+        await Assert.That(() =>
+        {
+            scope.Dispose();
+            scope.Dispose();
+        }).ThrowsNothing();
+    }
+
+    [Test]
+    public async Task BeginRenderingResumptionScope_TemplateOfThePreviousVersion_WindowDrawsTheNextFrame(CancellationToken cancellationToken)
+    {
+        // Arrange
+        var previousVersion = int.Parse(UiApplication.Application.VersionNumber, CultureInfo.InvariantCulture) - 1;
+        var templatePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Autodesk", $"RVT {previousVersion}", "Family Templates", "English", "Metric Detail Item.rft");
+        if (!File.Exists(templatePath))
+        {
+            Skip.Test($"Revit {previousVersion} with the English content is not installed");
+            return;
+        }
+
+        using var window = await ColorWindow.ShowAsync(Colors.Red, cancellationToken);
+
+        // Act
+        using (RevitContext.BeginRenderingResumptionScope())
+        {
+            UiApplication.Application.NewFamilyDocument(templatePath).Close(false);
+        }
+
+        window.Fill(Colors.Blue);
+
+        // Assert
+        await Assert.That(await window.WaitForDrawnColorAsync(Colors.Blue, cancellationToken)).IsEqualTo(Colors.Blue);
+    }
+
+    [Test]
+    public async Task BeginRenderingResumptionScope_DisposedTwice_DoesNotThrow()
+    {
+        // Arrange
+        var scope = RevitContext.BeginRenderingResumptionScope();
 
         // Act & Assert
         await Assert.That(() =>

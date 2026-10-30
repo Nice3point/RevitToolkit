@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Autodesk.Revit.UI;
 using Nice3point.Revit.Toolkit.Helpers;
+using Nice3point.Revit.Toolkit.Internal;
 #if NET
 using System.Runtime.Loader;
 #endif
@@ -129,7 +130,9 @@ public abstract class ExternalCommand : IExternalCommand
         JournalData = commandData.JournalData;
 
         var currentType = GetType();
+        AddInContext.Capture(currentType.Assembly);
 #if NET
+
         if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
         {
             using (ResolveHelper.BeginAssemblyResolveScope(currentType))
@@ -142,6 +145,7 @@ public abstract class ExternalCommand : IExternalCommand
             Execute();
         }
 #else
+
         using (ResolveHelper.BeginAssemblyResolveScope(currentType))
         {
             Execute();

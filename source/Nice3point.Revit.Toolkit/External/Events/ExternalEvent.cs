@@ -21,7 +21,7 @@ public class ExternalEvent : ExternalEventHandler, IExternalEvent
     /// </summary>
     /// <param name="handler">The execution logic.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public ExternalEvent(Action handler)
+    public ExternalEvent(Action handler) : base(handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -34,7 +34,7 @@ public class ExternalEvent : ExternalEventHandler, IExternalEvent
     /// <param name="handler">The execution logic.</param>
     /// <param name="options">The options to use to configure the external event.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public ExternalEvent(Action handler, ExternalEventOptions options)
+    public ExternalEvent(Action handler, ExternalEventOptions options) : base(handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -47,7 +47,7 @@ public class ExternalEvent : ExternalEventHandler, IExternalEvent
     /// </summary>
     /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" />.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public ExternalEvent(Action<UIApplication> handler)
+    public ExternalEvent(Action<UIApplication> handler) : base(handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -60,7 +60,7 @@ public class ExternalEvent : ExternalEventHandler, IExternalEvent
     /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" />.</param>
     /// <param name="options">The options to use to configure the external event.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public ExternalEvent(Action<UIApplication> handler, ExternalEventOptions options)
+    public ExternalEvent(Action<UIApplication> handler, ExternalEventOptions options) : base(handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 

@@ -1,4 +1,5 @@
 using Autodesk.Revit.UI;
+using Nice3point.Revit.Toolkit.Internal;
 
 // ReSharper disable once CheckNamespace
 namespace Nice3point.Revit.Toolkit.External;
@@ -17,11 +18,25 @@ public abstract class ExternalEventHandler : IExternalEventHandler
     ///     Initializes a new instance of the <see cref="ExternalEventHandler" /> class
     ///     and creates the underlying Revit external event.
     /// </summary>
-    protected ExternalEventHandler()
+    /// <remarks>
+    ///     The handler runs as the add-in that is active when the event is created.
+    ///     An event created outside a Revit callback, such as on a background thread or in an event handler of a modeless window, runs as the add-in of the assembly that declares the handler type.
+    ///     The add-in of an assembly is the add-in that is active the first time the assembly runs an <see cref="ExternalApplication" /> or an <see cref="ExternalCommand" />, or creates an external event inside a Revit callback.
+    /// </remarks>
+    protected ExternalEventHandler() : this(handler: null)
+    {
+    }
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="ExternalEventHandler" /> class
+    ///     and creates the underlying Revit external event for the add-in of the code that declares the handler delegate.
+    /// </summary>
+    /// <param name="handler">The delegate that implements the execution logic.</param>
+    private protected ExternalEventHandler(Delegate? handler)
     {
         using (RevitContext.BeginApiContextScope())
         {
-            _externalEvent = Autodesk.Revit.UI.ExternalEvent.Create(this);
+            _externalEvent = AddInContext.CreateExternalEvent(this, handler);
         }
     }
 

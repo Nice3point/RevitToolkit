@@ -1,3 +1,9 @@
+# 2027.0.4
+
+### External Events
+
+- An external event created outside a Revit callback, such as on a background thread, in an event handler of a modeless window, or by the first access to a generated `[ExternalEvent]` property, runs its handler as the add-in that uses it. The handler can write Extensible Storage entities with vendor write access. `ActiveAddInId` returns the add-in inside the handler. Previously, Revit ran such a handler with no add-in and refused vendor-restricted operations.
+
 # 2027.0.3
 
 ### External Events

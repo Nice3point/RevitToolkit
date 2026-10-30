@@ -78,7 +78,7 @@ internal static unsafe class AddInContext
     /// </summary>
     /// <param name="assembly">The assembly whose code the callback runs.</param>
     /// <remarks>
-    ///     A later call leaves the captured add-in of the assembly unchanged.
+    ///     A call for an assembly with a captured add-in returns immediately.
     ///     Outside a Revit callback, the call captures nothing.
     /// </remarks>
     internal static void Capture(Assembly assembly)

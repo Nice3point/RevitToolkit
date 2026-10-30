@@ -48,8 +48,8 @@ public abstract class ExternalApplication : IExternalApplication
 
         var currentType = GetType();
         AddInContext.Capture(currentType.Assembly);
-#if NET
 
+#if NET
         if (AssemblyLoadContext.GetLoadContext(currentType.Assembly) == AssemblyLoadContext.Default)
         {
             using (ResolveHelper.BeginAssemblyResolveScope(currentType))
@@ -62,7 +62,6 @@ public abstract class ExternalApplication : IExternalApplication
             OnStartup();
         }
 #else
-
         using (ResolveHelper.BeginAssemblyResolveScope(currentType))
         {
             OnStartup();

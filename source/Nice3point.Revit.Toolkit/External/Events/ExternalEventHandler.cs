@@ -5,9 +5,14 @@ using Nice3point.Revit.Toolkit.Internal;
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
-///     A base class wrapping the Revit <see cref="Autodesk.Revit.UI.ExternalEvent" /> and
-///     <see cref="IExternalEventHandler" /> boilerplate to simplify external event handler implementation.
+///     A base class wrapping the Revit <see cref="Autodesk.Revit.UI.ExternalEvent" /> and <see cref="IExternalEventHandler" /> boilerplate to simplify external event handler implementation.
 /// </summary>
+/// <remarks>
+///     The handler runs as the add-in that is active when the event is created.
+///     An event created outside a Revit callback, such as on a background thread or in an event handler of a modeless window, runs as the add-in of the handler assembly.
+///     The handler assembly is the assembly whose code the event runs: the delegate passed to a toolkit event, or the type derived from <see cref="ExternalEventHandler" />.
+///     The add-in of the handler assembly is the add-in that is active the first time the assembly runs an <see cref="ExternalApplication" /> or an <see cref="ExternalCommand" />, or creates an external event inside a Revit callback.
+/// </remarks>
 [PublicAPI]
 public abstract class ExternalEventHandler : IExternalEventHandler
 {
@@ -15,23 +20,22 @@ public abstract class ExternalEventHandler : IExternalEventHandler
     private string? _identifier;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ExternalEventHandler" /> class
-    ///     and creates the underlying Revit external event.
+    ///     Initializes a new instance of the <see cref="ExternalEventHandler" /> class.
     /// </summary>
     /// <remarks>
-    ///     The handler runs as the add-in that is active when the event is created.
-    ///     An event created outside a Revit callback, such as on a background thread or in an event handler of a modeless window, runs as the add-in of the assembly that declares the handler type.
-    ///     The add-in of an assembly is the add-in that is active the first time the assembly runs an <see cref="ExternalApplication" /> or an <see cref="ExternalCommand" />, or creates an external event inside a Revit callback.
+    ///     The constructor creates the underlying Revit external event, bound to the add-in of the assembly of the derived type.
     /// </remarks>
     protected ExternalEventHandler() : this(handler: null)
     {
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ExternalEventHandler" /> class
-    ///     and creates the underlying Revit external event for the add-in of the code that declares the handler delegate.
+    ///     Initializes a new instance of the <see cref="ExternalEventHandler" /> class.
     /// </summary>
-    /// <param name="handler">The delegate that implements the execution logic.</param>
+    /// <param name="handler">The delegate that implements the execution logic, or <see langword="null" /> when the derived type implements it.</param>
+    /// <remarks>
+    ///     The constructor creates the underlying Revit external event, bound to the add-in of the handler assembly.
+    /// </remarks>
     private protected ExternalEventHandler(Delegate? handler)
     {
         using (RevitContext.BeginApiContextScope())

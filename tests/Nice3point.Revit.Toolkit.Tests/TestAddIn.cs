@@ -6,7 +6,7 @@ using Nice3point.Revit.Toolkit.Tests;
 namespace Nice3point.Revit.Toolkit.Tests;
 
 /// <summary>
-///     The add-in Revit attributes every API call of the tests to.
+///     Represents the Revit add-in the test runner registers for the test assembly.
 /// </summary>
 internal static class TestAddIn
 {

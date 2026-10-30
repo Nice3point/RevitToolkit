@@ -8,7 +8,7 @@ using InvalidOperationException = Autodesk.Revit.Exceptions.InvalidOperationExce
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
-[SuppressMessage("ReSharper", "MethodSupportsCancellation")]
+[SuppressMessage("ReSharper", "MethodSupportsCancellation", Justification = "The tests raise the event through the overload without a token and bound the wait with WaitAsync.")]
 public sealed class ExternalEventHandlerTests : RevitApiUiTest
 {
     private const string WrittenResult = "Written";
@@ -48,7 +48,7 @@ public sealed class ExternalEventHandlerTests : RevitApiUiTest
     {
         // Arrange
         CreateExternalEventInsideAddInCallback();
-        var (creationAddInId, externalEvent) = await Task.Run(() => (ReadActiveAddInId(), new AsyncRequestExternalEvent<Guid?>(ReadActiveAddInId)), cancellationToken);
+        var (creationAddInId, externalEvent) = await Task.Run(CreateActiveAddInIdEvent, cancellationToken);
 
         // Act
         var handlerAddInId = await externalEvent.RaiseAsync().WaitAsync(cancellationToken);
@@ -68,7 +68,8 @@ public sealed class ExternalEventHandlerTests : RevitApiUiTest
         // Arrange
         CreateExternalEventInsideAddInCallback();
         var dispatcher = Dispatcher.CurrentDispatcher;
-        var (creationAddInId, externalEvent) = await dispatcher.InvokeAsync(() => (ReadActiveAddInId(), new AsyncRequestExternalEvent<Guid?>(ReadActiveAddInId))).Task.WaitAsync(cancellationToken);
+        var creation = dispatcher.InvokeAsync(CreateActiveAddInIdEvent);
+        var (creationAddInId, externalEvent) = await creation.Task.WaitAsync(cancellationToken);
 
         // Act
         var handlerAddInId = await externalEvent.RaiseAsync().WaitAsync(cancellationToken);
@@ -87,7 +88,7 @@ public sealed class ExternalEventHandlerTests : RevitApiUiTest
     {
         // Arrange
         CreateExternalEventInsideAddInCallback();
-        var handler = await Task.Run(() => new ActiveAddInHandler(), cancellationToken);
+        var handler = await Task.Run(static () => new ActiveAddInHandler(), cancellationToken);
 
         // Act
         handler.Raise();
@@ -103,7 +104,7 @@ public sealed class ExternalEventHandlerTests : RevitApiUiTest
     {
         // Arrange
         CreateExternalEventInsideAddInCallback();
-        var externalEvent = await Task.Run(() => new AsyncRequestExternalEvent<string>(WriteVendorEntity), cancellationToken);
+        var externalEvent = await Task.Run(static () => new AsyncRequestExternalEvent<string>(WriteVendorEntity), cancellationToken);
 
         // Act
         var result = await externalEvent.RaiseAsync().WaitAsync(cancellationToken);
@@ -112,10 +113,17 @@ public sealed class ExternalEventHandlerTests : RevitApiUiTest
         await Assert.That(result).IsEqualTo(WrittenResult);
     }
 
-    // The toolkit captures the add-in of the test assembly from an external event created inside a Revit callback.
+    /// <summary>
+    ///     Captures the add-in of the test assembly through an external event created inside a Revit callback.
+    /// </summary>
     private static void CreateExternalEventInsideAddInCallback()
     {
         _ = new External.ExternalEvent(static () => { });
+    }
+
+    private static (Guid? CreationAddInId, AsyncRequestExternalEvent<Guid?> ExternalEvent) CreateActiveAddInIdEvent()
+    {
+        return (ReadActiveAddInId(), new AsyncRequestExternalEvent<Guid?>(ReadActiveAddInId));
     }
 
     private static Guid? ReadActiveAddInId()
@@ -123,8 +131,11 @@ public sealed class ExternalEventHandlerTests : RevitApiUiTest
         return RevitApiContext.Application.ActiveAddInId?.GetGUID();
     }
 
-    // Writes an entity of a schema that grants write access to the vendor of the test add-in alone.
-    // Returns the written result, or the message Revit refuses the write with.
+    /// <summary>
+    ///     Writes an entity of a schema that grants write access to the vendor of the test add-in alone.
+    /// </summary>
+    /// <param name="uiApplication">The current <see cref="UIApplication" />.</param>
+    /// <returns>The written result, or the message Revit refuses the write with.</returns>
     private static string WriteVendorEntity(UIApplication uiApplication)
     {
         var schemaId = Guid.NewGuid();

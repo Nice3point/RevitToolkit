@@ -59,6 +59,7 @@
         <None Include="..\..\README.md" PackagePath="" Pack="true" Visible="false"/>
         <None Include="..\..\LICENSE.md" PackagePath="" Pack="true" Visible="false"/>
         <None Include="..\..\.nuget\PackageIcon.png" PackagePath="images/" Pack="true" Visible="false"/>
+        <None Include="build\Nice3point.Revit.Toolkit.targets" PackagePath="build\" Pack="true"/>
         <None Include="..\Nice3point.Revit.Toolkit.SourceGenerators\bin\$(Configuration)\netstandard2.0\Nice3point.Revit.Toolkit.SourceGenerators.dll" PackagePath="analyzers\dotnet\roslyn5.0\cs" Pack="true" Visible="false"/>
         <None Include="..\Nice3point.Revit.Toolkit.SourceGenerators.Roslyn414\bin\$(Configuration)\netstandard2.0\Nice3point.Revit.Toolkit.SourceGenerators.dll" PackagePath="analyzers\dotnet\roslyn4.14\cs" Pack="true" Visible="false"/>
         <None Include="..\Nice3point.Revit.Toolkit.Analyzers\bin\$(Configuration)\netstandard2.0\Nice3point.Revit.Toolkit.Analyzers.dll" PackagePath="analyzers\dotnet\roslyn5.0\cs" Pack="true" Visible="false"/>

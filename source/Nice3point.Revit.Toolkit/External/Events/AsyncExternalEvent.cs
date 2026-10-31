@@ -28,7 +28,7 @@ public sealed class AsyncExternalEvent : ExternalEventHandler, IAsyncExternalEve
     /// <param name="handler">The execution logic.</param>
     /// <param name="options">The options to use to configure the external event.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public AsyncExternalEvent(Action handler, ExternalEventOptions options)
+    public AsyncExternalEvent(Action handler, ExternalEventOptions options) : base(handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -56,7 +56,7 @@ public sealed class AsyncExternalEvent : ExternalEventHandler, IAsyncExternalEve
     /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" />.</param>
     /// <param name="options">The options to use to configure the external event.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public AsyncExternalEvent(Action<UIApplication> handler, ExternalEventOptions options)
+    public AsyncExternalEvent(Action<UIApplication> handler, ExternalEventOptions options) : base(handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -84,7 +84,7 @@ public sealed class AsyncExternalEvent : ExternalEventHandler, IAsyncExternalEve
     /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" /> and the token passed to <see cref="RaiseAsync(CancellationToken)" />.</param>
     /// <param name="options">The options to use to configure the external event.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public AsyncExternalEvent(Action<UIApplication, CancellationToken> handler, ExternalEventOptions options)
+    public AsyncExternalEvent(Action<UIApplication, CancellationToken> handler, ExternalEventOptions options) : base(handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 

@@ -1,12 +1,18 @@
 using Autodesk.Revit.UI;
+using Nice3point.Revit.Toolkit.Internal;
 
 // ReSharper disable once CheckNamespace
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
-///     A base class wrapping the Revit <see cref="Autodesk.Revit.UI.ExternalEvent" /> and
-///     <see cref="IExternalEventHandler" /> boilerplate to simplify external event handler implementation.
+///     A base class wrapping the Revit <see cref="Autodesk.Revit.UI.ExternalEvent" /> and <see cref="IExternalEventHandler" /> boilerplate to simplify external event handler implementation.
 /// </summary>
+/// <remarks>
+///     The handler runs as the add-in that declares it, on any thread the event is created on.
+///     <see cref="ExternalApplication" /> and <see cref="ExternalCommand" /> register their assembly with its project references automatically.
+///     An assembly that creates an external event inside a Revit callback registers itself.
+///     Other assemblies, for example a library from a NuGet package, are registered with <see cref="AddInAssemblyExtensions.RegisterAddInAssembly(UIControlledApplication, System.Reflection.Assembly)" />.
+/// </remarks>
 [PublicAPI]
 public abstract class ExternalEventHandler : IExternalEventHandler
 {
@@ -14,14 +20,27 @@ public abstract class ExternalEventHandler : IExternalEventHandler
     private string? _identifier;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ExternalEventHandler" /> class
-    ///     and creates the underlying Revit external event.
+    ///     Initializes a new instance of the <see cref="ExternalEventHandler" /> class.
     /// </summary>
-    protected ExternalEventHandler()
+    /// <remarks>
+    ///     The constructor creates the underlying Revit external event, bound to the add-in of the assembly of the derived type.
+    /// </remarks>
+    protected ExternalEventHandler() : this(handler: null)
+    {
+    }
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="ExternalEventHandler" /> class.
+    /// </summary>
+    /// <param name="handler">The delegate that implements the execution logic, or <see langword="null" /> when the derived type implements it.</param>
+    /// <remarks>
+    ///     The constructor creates the underlying Revit external event, bound to the add-in of the handler assembly.
+    /// </remarks>
+    private protected ExternalEventHandler(Delegate? handler)
     {
         using (RevitContext.BeginApiContextScope())
         {
-            _externalEvent = Autodesk.Revit.UI.ExternalEvent.Create(this);
+            _externalEvent = AddInContext.CreateExternalEvent(this, handler);
         }
     }
 

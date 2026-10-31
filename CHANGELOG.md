@@ -1,5 +1,26 @@
 # 2027.0.4
 
+### External Events
+
+#### External events run as your add-in from any thread
+
+An external event created on a background thread or in a modeless window used to run its handler without an add-in.
+Inside such a handler, `UIApplication.ActiveAddInId` returned no add-in, and Extensible Storage refused the changes to schemas with vendor write access.
+
+Now the handler always runs as your add-in: `ActiveAddInId` returns its ID, and vendor schemas accept the changes.
+`ExternalApplication` and `ExternalCommand` set this up automatically, for the add-in project and every project it references.
+
+The new `RegisterAddInAssembly()` method covers the remaining cases: an `IExternalApplication` without the Toolkit base class, an assembly loaded at run time, or a library from a NuGet package.
+Call it in `OnStartup`:
+
+```c#
+public Result OnStartup(UIControlledApplication application)
+{
+    application.RegisterAddInAssembly(typeof(Application).Assembly);
+    return Result.Succeeded;
+}
+```
+
 ### Context
 
 #### No more frozen Revit interface after loading older families

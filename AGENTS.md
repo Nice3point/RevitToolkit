@@ -14,6 +14,8 @@ The same package bundles Roslyn tooling: an incremental source generator that em
 * Never break the public surface. Deprecate a renamed member with `[Obsolete]` with a JetBrains `[CodeTemplate]` auto-conversion; the obsolete member forwards to the replacement and never throws or changes behavior.
 * Mark a member Revit invokes but consumers must not call `[EditorBrowsable(EditorBrowsableState.Never)]`.
 * The Roslyn tooling is public surface. It targets `netstandard2.0`, dual-targets Roslyn (the default with the `.Roslyn414` twins), uses stable `RVTTK####` diagnostic ids, and needs an `AnalyzerReleases.Unshipped.md` entry per new or changed rule. Never rename a generated member or renumber a shipped id.
+* The `AddInAssemblyGenerator` runs in every project with project references. Its output compiles with C# 7.3 and declares its own attribute type. The runtime matches `Nice3point.Revit.Toolkit.Generated.AddInAssemblyAttribute` by full name: never rename it.
+* The MSBuild targets in `source/Nice3point.Revit.Toolkit/build` are public surface. Their targets, items, and properties take the `_RevitToolkit` prefix.
 * Every type compiles under every supported configuration.
 * A change ships with a test covering the toolkit's custom logic: Revit behavior runs on the Revit thread, and the analyzers, fixers, and generator run against the Roslyn testing harness.
 * Confirm an unfamiliar Revit or .NET API before use through official docs or `gh` (`gh api`, `gh search code`).
@@ -21,7 +23,7 @@ The same package bundles Roslyn tooling: an incremental source generator that em
 
 ## Repository map
 
-* `source/Nice3point.Revit.Toolkit` it packs the runtime library and the tooling into one NuGet package for users.
+* `source/Nice3point.Revit.Toolkit` it packs the runtime library and the tooling into one NuGet package for users. Its `build/` folder contains the MSBuild targets NuGet imports into a consumer project.
 * `source/Nice3point.Revit.Toolkit.Analyzers`, `Nice3point.Revit.Toolkit.Analyzers.CodeFixers`, and `Nice3point.Revit.Toolkit.SourceGenerators` hold the analyzers, code fixers, and source generator, each with a `.Roslyn414` twin for the older Roslyn.
 * `tests/` — `Nice3point.Revit.Toolkit.Tests` runs inside a Revit process; the analyzer, fixer, and generator test projects run against the compiler.
 * `build/` — the ModularPipelines build.

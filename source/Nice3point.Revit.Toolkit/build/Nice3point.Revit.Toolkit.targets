@@ -1,0 +1,17 @@
+<Project>
+
+    <!-- Input of the AddInAssemblyGenerator. Lists the project references of the add-in, transitive ones included. -->
+    <ItemGroup>
+        <CompilerVisibleProperty Include="_RevitToolkitAddInProjectReferences"/>
+    </ItemGroup>
+
+    <!-- The compiler names an assembly after its output file. An analyzer config value ends at the first semicolon: the names are comma-separated. -->
+    <Target Name="_RevitToolkitCollectAddInProjectReferences"
+            AfterTargets="ResolveAssemblyReferences"
+            BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
+        <PropertyGroup>
+            <_RevitToolkitAddInProjectReferences>@(ReferencePath->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->'%(Filename)', ',')</_RevitToolkitAddInProjectReferences>
+        </PropertyGroup>
+    </Target>
+
+</Project>

@@ -32,7 +32,7 @@ public sealed class AsyncRequestExternalEvent<T, TResult> : ExternalEventHandler
     /// <param name="handler">The execution logic that receives an argument of type <typeparamref name="T" /> and returns a result of type <typeparamref name="TResult" />.</param>
     /// <param name="options">The options to use to configure the external event.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public AsyncRequestExternalEvent(Func<T, TResult> handler, ExternalEventOptions options)
+    public AsyncRequestExternalEvent(Func<T, TResult> handler, ExternalEventOptions options) : base(handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -55,7 +55,7 @@ public sealed class AsyncRequestExternalEvent<T, TResult> : ExternalEventHandler
     /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" /> and an argument of type <typeparamref name="T" />, returning a result of type <typeparamref name="TResult" />.</param>
     /// <param name="options">The options to use to configure the external event.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public AsyncRequestExternalEvent(Func<UIApplication, T, TResult> handler, ExternalEventOptions options)
+    public AsyncRequestExternalEvent(Func<UIApplication, T, TResult> handler, ExternalEventOptions options) : base(handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -78,7 +78,7 @@ public sealed class AsyncRequestExternalEvent<T, TResult> : ExternalEventHandler
     /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" />, an argument of type <typeparamref name="T" />, and the token passed to <see cref="RaiseAsync(T, CancellationToken)" />, returning a result of type <typeparamref name="TResult" />.</param>
     /// <param name="options">The options to use to configure the external event.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public AsyncRequestExternalEvent(Func<UIApplication, T, CancellationToken, TResult> handler, ExternalEventOptions options)
+    public AsyncRequestExternalEvent(Func<UIApplication, T, CancellationToken, TResult> handler, ExternalEventOptions options) : base(handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 

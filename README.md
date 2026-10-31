@@ -210,6 +210,15 @@ A raise that Revit refuses with `Denied` or `TimedOut` never runs.
 `Raise(argument)` returns that result to the caller.
 The `RaiseAsync()` task fails with an `InvalidOperationException`.
 
+Inside the event handler, `UIApplication.ActiveAddInId` returns the ID of your add-in, even when the event is created on a background thread or in a modeless window.
+Extensible Storage schemas with vendor write access accept the changes of the handler.
+`ExternalApplication` and `ExternalCommand` set this up automatically.
+Without them, or for a library from a NuGet package or loaded at run time, register the assembly in `OnStartup`:
+
+```c#
+application.RegisterAddInAssembly(typeof(Application).Assembly);
+```
+
 #### ExternalEvent
 
 A synchronous external event that queues the handler via the Revit external event mechanism.

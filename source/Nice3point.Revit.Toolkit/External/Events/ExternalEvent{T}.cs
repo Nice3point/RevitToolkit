@@ -31,7 +31,7 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
     /// <param name="handler">The execution logic that receives an argument of type <typeparamref name="T" />.</param>
     /// <param name="options">The options to use to configure the external event.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public ExternalEvent(Action<T> handler, ExternalEventOptions options)
+    public ExternalEvent(Action<T> handler, ExternalEventOptions options) : base(handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -54,7 +54,7 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
     /// <param name="handler">The execution logic that receives the current <see cref="UIApplication" /> and an argument of type <typeparamref name="T" />.</param>
     /// <param name="options">The options to use to configure the external event.</param>
     /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="handler" /> is <see langword="null" />.</exception>
-    public ExternalEvent(Action<UIApplication, T> handler, ExternalEventOptions options)
+    public ExternalEvent(Action<UIApplication, T> handler, ExternalEventOptions options) : base(handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 

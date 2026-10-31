@@ -1,3 +1,19 @@
+# 2027.0.4
+
+### External Events
+
+- External events always run as your add-in, even when created on a background thread or in a modeless window. Inside the handler, `ActiveAddInId` returns your add-in, and Extensible Storage schemas with vendor access accept the changes. Previously, Revit ran such a handler without an add-in.
+- `ExternalApplication` and `ExternalCommand` set this up automatically, for the add-in project and every project it references.
+- New `RegisterAddInAssembly()` method for the remaining cases: an `IExternalApplication` without the Toolkit base class, an assembly loaded at run time, or a library from a NuGet package. Call it in `OnStartup`:
+
+```c#
+public Result OnStartup(UIControlledApplication application)
+{
+    application.RegisterAddInAssembly(typeof(Application).Assembly);
+    return Result.Succeeded;
+}
+```
+
 # 2027.0.3
 
 ### External Events

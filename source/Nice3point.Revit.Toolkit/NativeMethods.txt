@@ -1,0 +1,5 @@
+FindWindowEx
+GetCurrentThreadId
+GetWindowThreadProcessId
+PostMessage
+RegisterWindowMessage

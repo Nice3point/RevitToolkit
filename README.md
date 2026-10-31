@@ -834,20 +834,20 @@ using (RevitContext.BeginDialogSuppressionScope(args =>
 }
 ```
 
-**Resuming rendering after a file upgrade**
+**Loading families from earlier Revit versions**
 
-Revit upgrades a family, a template, or a document of an earlier version when `Document.LoadFamily`, `Application.NewFamilyDocument`, or `Application.OpenDocumentFile` opens it.
-While it upgrades, its progress dialog drops the message WPF waits for before it draws the next frame, and the ribbon, the panes, and the windows of an add-in stop drawing.
-Wrap the calls that can upgrade a file in `BeginRenderingResumptionScope()` on the Revit thread:
+After the API loads a family or creates one from a template saved in an earlier Revit version, the ribbon, the dockable panes, and the add-in windows stop redrawing.
+They respond to clicks but show no change until a window is resized.
+Wrap the calls in `BeginWpfCompatibilityScope()` on the Revit thread:
 
 ```C#
-using (RevitContext.BeginRenderingResumptionScope())
+using (RevitContext.BeginWpfCompatibilityScope())
 {
     document.LoadFamily(fileName, out var family);
 }
 ```
 
-The WPF windows of the thread draw again when the last active scope is disposed.
+The interface redraws when the scope is disposed.
 
 ### Options
 

@@ -54,6 +54,9 @@
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.0.0"/>
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.4"/>
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="1.1.4"/>
+
+        <!-- Interop -->
+        <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.360"/>
     </ItemGroup>
 
     <!-- Development dependencies -->

@@ -1,20 +1,26 @@
-using System.Runtime.InteropServices;
+using System.Drawing;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.Graphics.Gdi;
+using Windows.Win32.Storage.Xps;
+using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
+using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using Rectangle = System.Windows.Shapes.Rectangle;
 
 namespace Nice3point.Revit.Toolkit.Tests;
 
 /// <summary>
-///     A WPF window of the test thread filled with one color, outside the taskbar, with one column of pixels on the screen.
-///     Windows composes no frame for a window entirely outside the screen.
+///     Represents a WPF window of the test thread filled with one color, outside the taskbar, with one column of pixels on the screen.
 /// </summary>
 /// <remarks>
+///     Windows composes no frame for a window entirely outside the screen.
 ///     The color the window shows is the color of the frame Windows composes for it, the last frame WPF presented.
-///     A square in its corner pulses on every frame, as the windows of Revit draw while Revit works: Revit drops the frame message only while WPF draws.
+///     A square in its corner pulses on every frame, as the ribbon and the panes of Revit draw while Revit works: Revit discards the frame notification only while WPF draws.
 /// </remarks>
 internal sealed class ColorWindow : IDisposable
 {
@@ -22,16 +28,14 @@ internal sealed class ColorWindow : IDisposable
     private const double VisibleWidth = 1;
     private const double PulseSize = 4;
     private const double PulseMinimumOpacity = 0.2;
-    private const uint RenderFullContent = 2;
-    private const int RedToGreenShift = 8;
-    private const int RedToBlueShift = 16;
+    private const PRINT_WINDOW_FLAGS RenderFullContent = (PRINT_WINDOW_FLAGS)2;
 
     private static readonly TimeSpan DrawTimeout = TimeSpan.FromSeconds(2);
     private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(50);
     private static readonly TimeSpan PulseDuration = TimeSpan.FromMilliseconds(500);
 
     private readonly Window _window;
-    private readonly IntPtr _handle;
+    private readonly HWND _handle;
 
     private ColorWindow(Color color)
     {
@@ -65,12 +69,19 @@ internal sealed class ColorWindow : IDisposable
 
         _window.Content = pulse;
         _window.Show();
-        _handle = new WindowInteropHelper(_window).Handle;
+        _handle = new HWND(new WindowInteropHelper(_window).Handle);
     }
 
     /// <summary>
     ///     Shows the window and waits until it shows the color.
     /// </summary>
+    /// <param name="color">The color of the window.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken" /> used to cancel the wait.</param>
+    /// <returns>
+    ///     A task that represents the asynchronous show operation.
+    ///     The task result contains the shown window.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">The window shows another color when the time to draw a frame runs out.</exception>
     public static async Task<ColorWindow> ShowAsync(Color color, CancellationToken cancellationToken)
     {
         var window = new ColorWindow(color);
@@ -84,14 +95,24 @@ internal sealed class ColorWindow : IDisposable
         return window;
     }
 
+    /// <summary>
+    ///     Fills the window with the color.
+    /// </summary>
+    /// <param name="color">The color of the window.</param>
     public void Fill(Color color)
     {
         _window.Background = new SolidColorBrush(color);
     }
 
     /// <summary>
-    ///     Returns the color the window shows once it is the expected color, or the color it shows when the time to draw a frame runs out.
+    ///     Waits until the window shows the expected color, or until the time to draw a frame runs out.
     /// </summary>
+    /// <param name="expectedColor">The color to wait for.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken" /> used to cancel the wait.</param>
+    /// <returns>
+    ///     A task that represents the asynchronous wait operation.
+    ///     The task result contains the color the window shows.
+    /// </returns>
     public async Task<Color> WaitForDrawnColorAsync(Color expectedColor, CancellationToken cancellationToken)
     {
         var deadline = DateTime.UtcNow + DrawTimeout;
@@ -105,70 +126,34 @@ internal sealed class ColorWindow : IDisposable
         return drawnColor;
     }
 
+    /// <inheritdoc />
     public void Dispose()
     {
         _window.Close();
     }
 
+    /// <summary>
+    ///     Reads the center pixel of the frame Windows composes for the window.
+    /// </summary>
+    /// <returns>The color of the center pixel.</returns>
     private Color ReadDrawnColor()
     {
-        GetClientRect(_handle, out var bounds);
-        var windowContext = GetDC(_handle);
-        var memoryContext = CreateCompatibleDC(windowContext);
-        var bitmap = CreateCompatibleBitmap(windowContext, bounds.Right, bounds.Bottom);
-        var previousObject = SelectObject(memoryContext, bitmap);
-        try
+        TestPInvoke.GetClientRect(_handle, out var bounds);
+        using var bitmap = new Bitmap(bounds.right, bounds.bottom);
+        using (var graphics = Graphics.FromImage(bitmap))
         {
-            PrintWindow(_handle, memoryContext, RenderFullContent);
-            var pixel = GetPixel(memoryContext, bounds.Right / 2, bounds.Bottom / 2);
-
-            return Color.FromRgb((byte)pixel, (byte)(pixel >> RedToGreenShift), (byte)(pixel >> RedToBlueShift));
+            var context = graphics.GetHdc();
+            try
+            {
+                TestPInvoke.PrintWindow(_handle, new HDC(context), RenderFullContent);
+            }
+            finally
+            {
+                graphics.ReleaseHdc(context);
+            }
         }
-        finally
-        {
-            SelectObject(memoryContext, previousObject);
-            DeleteObject(bitmap);
-            DeleteDC(memoryContext);
-            ReleaseDC(_handle, windowContext);
-        }
+
+        var pixel = bitmap.GetPixel(bounds.right / 2, bounds.bottom / 2);
+        return Color.FromRgb(pixel.R, pixel.G, pixel.B);
     }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct ClientBounds
-    {
-        public int Left;
-        public int Top;
-        public int Right;
-        public int Bottom;
-    }
-
-    [DllImport("user32.dll")]
-    private static extern bool GetClientRect(IntPtr window, out ClientBounds bounds);
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetDC(IntPtr window);
-
-    [DllImport("user32.dll")]
-    private static extern int ReleaseDC(IntPtr window, IntPtr context);
-
-    [DllImport("user32.dll")]
-    private static extern bool PrintWindow(IntPtr window, IntPtr context, uint flags);
-
-    [DllImport("gdi32.dll")]
-    private static extern IntPtr CreateCompatibleDC(IntPtr context);
-
-    [DllImport("gdi32.dll")]
-    private static extern IntPtr CreateCompatibleBitmap(IntPtr context, int width, int height);
-
-    [DllImport("gdi32.dll")]
-    private static extern IntPtr SelectObject(IntPtr context, IntPtr graphicsObject);
-
-    [DllImport("gdi32.dll")]
-    private static extern bool DeleteObject(IntPtr graphicsObject);
-
-    [DllImport("gdi32.dll")]
-    private static extern bool DeleteDC(IntPtr context);
-
-    [DllImport("gdi32.dll")]
-    private static extern uint GetPixel(IntPtr context, int x, int y);
 }

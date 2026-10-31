@@ -1,6 +1,5 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
@@ -25,13 +24,6 @@ public class RevitContext : RevitApiContext
     private static int _dialogScopeCount;
     private static int? _suppressDialogCode;
     private static Action<DialogBoxShowingEventArgs>? _suppressDialogHandler;
-
-    private const string RenderNotificationWindowName = "MediaContextNotificationWindow";
-    private static readonly uint RenderNotificationMessage = NativeMethods.RegisterWindowMessage("MilChannelNotify");
-    private static readonly NativeMethods.EnumThreadWindowsCallback PostRenderNotificationCallback = PostRenderNotification;
-    private static readonly Lock RenderingLock = new();
-    private static int _renderingScopeCount;
-    private static uint _renderingThreadId;
 
     static RevitContext()
     {
@@ -360,45 +352,36 @@ public class RevitContext : RevitApiContext
     }
 
     /// <summary>
-    ///     Begins a scope that resumes the rendering of the WPF windows of the current thread after Revit upgrades a file.
-    ///     The rendering resumes when the outermost scope is disposed.
+    ///     Begins a scope that redraws the Revit user interface after the API upgrades a family from an earlier Revit version.
     /// </summary>
-    /// <returns>A disposable scope. Call Dispose or use 'using' statement to resume the rendering.</returns>
+    /// <returns>A disposable scope. Call Dispose or use 'using' statement to redraw the user interface.</returns>
     /// <remarks>
     ///     <para>
-    ///         Revit upgrades a family, a template, or a document of an earlier version when
-    ///         <see cref="M:Autodesk.Revit.DB.Document.LoadFamily(System.String)" />, <see cref="M:Autodesk.Revit.ApplicationServices.Application.NewFamilyDocument(System.String)" />,
-    ///         or <see cref="M:Autodesk.Revit.ApplicationServices.Application.OpenDocumentFile(System.String)" /> opens it.
-    ///         While it upgrades, the progress dialog of Revit drops the message the WPF render thread posts after each frame,
-    ///         and WPF presents no further frame of the thread until that message arrives: the ribbon, the panes, and the windows of an add-in stop drawing.
+    ///         <see cref="Autodesk.Revit.DB.Document.LoadFamily(string)" />, <see cref="Autodesk.Revit.ApplicationServices.Application.NewFamilyDocument(string)" />,
+    ///         and <see cref="Autodesk.Revit.ApplicationServices.Application.OpenDocumentFile(string)" /> upgrade a family or a family template saved in an earlier Revit version,
+    ///         and Revit shows the Model Upgrade progress dialog.
+    ///         The dialog discards the notification WPF waits for before it draws the next frame.
+    ///         After the upgrade, the ribbon, the dockable panes, and the WPF windows of the Revit thread respond to input but show no change until a window changes its size.
+    ///         The model views are not affected.
     ///     </para>
     ///     <para>
-    ///         Wrap the calls that can upgrade a file in the scope.
-    ///         When the outermost scope is disposed, the scope posts the message again to the thread that began it, and the WPF windows of that thread draw again.
-    ///         Begin the scope on the thread of the windows, the Revit main thread.
+    ///         Disposing the scope posts the notification again, and the user interface redraws.
+    ///         Begin the scope on the Revit thread.
     ///     </para>
     ///     This method is thread-safe.
     /// </remarks>
     /// <example>
     ///     <code>
-    ///         using (RevitContext.BeginRenderingResumptionScope())
+    ///         using (RevitContext.BeginWpfCompatibilityScope())
     ///         {
     ///             document.LoadFamily(fileName, out var family);
     ///         }
-    ///         // The WPF windows draw again
+    ///         // The user interface redraws
     ///     </code>
     /// </example>
-    public static IDisposable BeginRenderingResumptionScope()
+    public static IDisposable BeginWpfCompatibilityScope()
     {
-        lock (RenderingLock)
-        {
-            if (_renderingScopeCount++ == 0)
-            {
-                _renderingThreadId = NativeMethods.GetCurrentThreadId();
-            }
-        }
-
-        return new RenderingResumptionScope();
+        return WpfCompatibilityScope.Instance;
     }
 
     internal static IDisposable BeginApiContextScope()
@@ -424,19 +407,6 @@ public class RevitContext : RevitApiContext
         }
 
         handler?.Invoke(args);
-    }
-
-    private static bool PostRenderNotification(IntPtr window, IntPtr parameter)
-    {
-        var name = new StringBuilder(RenderNotificationWindowName.Length + 2);
-        NativeMethods.GetWindowText(window, name, name.Capacity);
-        if (name.ToString() != RenderNotificationWindowName)
-        {
-            return true;
-        }
-
-        NativeMethods.PostMessage(window, RenderNotificationMessage, IntPtr.Zero, IntPtr.Zero);
-        return false;
     }
 
     private sealed class ApiContextScope : IDisposable
@@ -492,24 +462,19 @@ public class RevitContext : RevitApiContext
         }
     }
 
-    private sealed class RenderingResumptionScope : IDisposable
+    /// <summary>
+    ///     Represents a scope that posts the frame notification of WPF to the current thread on every dispose.
+    /// </summary>
+    /// <remarks>
+    ///     WPF returns at once on a repeated notification, and every call of <see cref="BeginWpfCompatibilityScope" /> returns the same instance.
+    /// </remarks>
+    private sealed class WpfCompatibilityScope : IDisposable
     {
-        private int _disposed;
+        public static readonly WpfCompatibilityScope Instance = new();
 
         public void Dispose()
         {
-            if (Interlocked.Exchange(ref _disposed, value: 1) != 0)
-            {
-                return;
-            }
-
-            lock (RenderingLock)
-            {
-                if (--_renderingScopeCount == 0)
-                {
-                    NativeMethods.EnumThreadWindows(_renderingThreadId, PostRenderNotificationCallback, IntPtr.Zero);
-                }
-            }
+            MediaContextNotificationWindow.PostChannelNotification();
         }
     }
 

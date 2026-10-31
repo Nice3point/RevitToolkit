@@ -6,7 +6,7 @@ using Nice3point.Revit.Toolkit.Internal;
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
-///     Provides extension methods for <see cref="UIControlledApplication" /> and <see cref="UIApplication" /> to register the assemblies of an add-in.
+///     Provides extension methods for <see cref="UIControlledApplication" /> and <see cref="UIApplication" /> to register add-in assemblies.
 /// </summary>
 [PublicAPI]
 public static class AddInAssemblyExtensions
@@ -20,14 +20,13 @@ public static class AddInAssemblyExtensions
         /// <summary>
         ///     Registers the assembly as part of the active add-in.
         /// </summary>
-        /// <param name="assembly">The assembly that declares external event handlers of the add-in.</param>
+        /// <param name="assembly">The assembly with external event handlers of the add-in.</param>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="assembly" /> is <see langword="null" />.</exception>
         /// <exception cref="T:System.InvalidOperationException">The method is called outside a Revit callback.</exception>
         /// <remarks>
-        ///     An external event whose handler is declared in the assembly runs as the active add-in, wherever the event is created.
-        ///     The registration replaces the add-in the toolkit captured for the assembly earlier.
-        ///     The project references the toolkit lists for the assembly at build time run as the same add-in.
-        ///     A Revit version without the native add-in data members ignores the call.
+        ///     External events of the assembly run as the active add-in on any thread.
+        ///     Project references of the assembly are registered too.
+        ///     <see cref="ExternalApplication" /> and <see cref="ExternalCommand" /> register their assembly automatically.
         /// </remarks>
         public void RegisterAddInAssembly(Assembly assembly)
         {

@@ -1,11 +1,11 @@
 <Project>
 
+    <!-- Input of the AddInAssemblyGenerator. Lists the project references of the add-in, transitive ones included. -->
     <ItemGroup>
         <CompilerVisibleProperty Include="AddInProjectReferences"/>
     </ItemGroup>
 
-    <!-- The source generator declares each listed project reference, transitive ones included, as an assembly of the add-in. -->
-    <!-- The compiler reads a global analyzer config value up to the first semicolon, and the target separates the names with commas. -->
+    <!-- The compiler reads an analyzer config value up to the first semicolon. The names are comma-separated. -->
     <Target Name="CollectAddInProjectReferences"
             AfterTargets="ResolveAssemblyReferences"
             BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">

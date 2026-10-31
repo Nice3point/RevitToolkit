@@ -2,9 +2,9 @@
 
 ### External Events
 
-- An external event created outside a Revit callback, such as on a background thread, in an event handler of a modeless window, or by the first access to a generated `[ExternalEvent]` property, runs its handler as the add-in of the assembly whose code the event runs. The handler can write Extensible Storage entities with vendor write access. `UIApplication.ActiveAddInId` returns the ID of that add-in inside the handler. Previously, Revit ran such a handler with no add-in and refused vendor-restricted operations.
-- A handler declared in a project reference of the add-in, transitive ones included, runs as the add-in. The build targets of the package list the project references, and the source generator declares them in the assembly of the add-in.
-- New `RegisterAddInAssembly` extension methods for `UIControlledApplication` and `UIApplication` register an assembly as part of the active add-in. Call one inside a Revit callback for an assembly loaded at run time, or for the assembly of a raw `IExternalApplication`:
+- External events always run as your add-in, even when created on a background thread or in a modeless window. Inside the handler, `ActiveAddInId` returns your add-in, and Extensible Storage schemas with vendor access accept the changes. Previously, Revit ran such a handler without an add-in.
+- `ExternalApplication` and `ExternalCommand` set this up automatically, for the add-in project and every project it references.
+- New `RegisterAddInAssembly()` method for the remaining cases: an `IExternalApplication` without the Toolkit base class, an assembly loaded at run time, or a library from a NuGet package. Call it in `OnStartup`:
 
 ```c#
 public Result OnStartup(UIControlledApplication application)

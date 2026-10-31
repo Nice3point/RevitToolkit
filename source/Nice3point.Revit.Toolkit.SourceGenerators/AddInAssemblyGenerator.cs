@@ -6,11 +6,11 @@ using Nice3point.Revit.Toolkit.SourceGenerators.AddInAssemblies;
 namespace Nice3point.Revit.Toolkit.SourceGenerators;
 
 /// <summary>
-///     Incremental source generator that declares an <c>[assembly: AddInAssembly]</c> attribute for every project reference of the project.
+///     Incremental source generator that declares an <c>[assembly: AddInAssembly]</c> attribute for each project reference.
 /// </summary>
 /// <remarks>
-///     The toolkit MSBuild targets pass the project references, transitive ones included, as the <c>AddInProjectReferences</c> build property.
-///     <para>A compilation without the accessible <c>AddInAssemblyAttribute</c> type of the toolkit generates no source.</para>
+///     The package targets list the project references in the <c>AddInProjectReferences</c> build property, transitive ones included.
+///     <para>A compilation without access to <c>AddInAssemblyAttribute</c> generates no source.</para>
 /// </remarks>
 [Generator(LanguageNames.CSharp)]
 public sealed class AddInAssemblyGenerator : IIncrementalGenerator

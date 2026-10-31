@@ -6,7 +6,7 @@ using Nice3point.Revit.Toolkit.SourceGenerators.Models;
 namespace Nice3point.Revit.Toolkit.SourceGenerators.AddInAssemblies;
 
 /// <summary>
-///     Reads the project references that the toolkit MSBuild targets pass to the compiler.
+///     Reads the project references listed by the package targets.
 /// </summary>
 internal static class AddInProjectReferences
 {
@@ -18,7 +18,7 @@ internal static class AddInProjectReferences
     ///     Reads the assembly names of the project references from the global analyzer config options.
     /// </summary>
     /// <param name="globalOptions">The global analyzer config options of the compilation.</param>
-    /// <returns>The distinct assembly names in ordinal order, or an empty array when the project has no project references.</returns>
+    /// <returns>The distinct assembly names in ordinal order, or an empty array for a project without project references.</returns>
     public static EquatableArray<string> Read(AnalyzerConfigOptions globalOptions)
     {
         if (!globalOptions.TryGetValue(PropertyName, out var value))

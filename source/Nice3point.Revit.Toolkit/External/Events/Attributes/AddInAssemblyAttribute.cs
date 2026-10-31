@@ -4,11 +4,10 @@ using System.ComponentModel;
 namespace Nice3point.Revit.Toolkit.External;
 
 /// <summary>
-///     Specifies an assembly whose external events run as the add-in of the assembly that declares the attribute.
+///     Specifies an assembly that runs its external events as the add-in of the declaring assembly.
 /// </summary>
 /// <remarks>
-///     The toolkit source generator declares the attribute for every project reference of a project that references the toolkit package.
-///     The assembly is matched by name at its first external event created outside a Revit callback.
+///     The Toolkit source generator declares the attribute for each project reference of the add-in.
 /// </remarks>
 [PublicAPI]
 [EditorBrowsable(EditorBrowsableState.Never)]

@@ -16,7 +16,8 @@ namespace Nice3point.Revit.Toolkit.Internal;
 ///     Revit binds an external event to the add-in on top of the add-in data stack of the creating thread.
 ///     The stack is thread-local and empty outside a Revit callback, where Revit binds the event to no add-in.
 ///     A native <c>AddInDataScope</c> pushes a copy of the captured add-in data onto the stack of the current thread for the creation of the event.
-///     A shared toolkit captures the add-in of an assembly for every assembly name its <see cref="AddInAssemblyAttribute" /> lists, at the first external event of the named assembly.
+///     A shared toolkit binds the assemblies listed by <see cref="AddInAssemblyAttribute" /> to the add-in of the declaring assembly.
+///     A listed assembly is matched by name at its first external event.
 ///     The context never frees a captured copy of the add-in data.
 ///     A Revit version without a member of the expected signature creates every event without a scope.
 /// </remarks>
@@ -80,7 +81,7 @@ internal static unsafe class AddInContext
     /// <summary>
     ///     Captures the add-in of the current Revit callback as the add-in of the assembly.
     /// </summary>
-    /// <param name="assembly">The assembly whose code the callback runs.</param>
+    /// <param name="assembly">The assembly that declares the callback.</param>
     /// <remarks>
     ///     A call for an assembly with a captured add-in returns immediately.
     ///     Outside a Revit callback, the call captures nothing.
@@ -96,12 +97,12 @@ internal static unsafe class AddInContext
     }
 
     /// <summary>
-    ///     Captures the add-in of the current Revit callback as the add-in of the assembly, and replaces the add-in captured for the assembly earlier.
+    ///     Captures the add-in of the current Revit callback for the assembly, replacing an earlier capture.
     /// </summary>
     /// <param name="assembly">The assembly to capture the add-in for.</param>
     /// <exception cref="T:System.InvalidOperationException">The current thread runs outside a Revit callback.</exception>
     /// <remarks>
-    ///     The add-in replaces the earlier add-in of every assembly name the <see cref="AddInAssemblyAttribute" /> of the assembly lists.
+    ///     The assemblies listed by <see cref="AddInAssemblyAttribute" /> receive the same add-in.
     /// </remarks>
     internal static void Register(Assembly assembly)
     {
@@ -112,7 +113,7 @@ internal static unsafe class AddInContext
 
         if (!IsAddInActive())
         {
-            throw new InvalidOperationException("No add-in is active on the current thread. Call the method inside a Revit callback, such as OnStartup or the Execute method of a command.");
+            throw new InvalidOperationException("No add-in is active on the current thread. Call the method in OnStartup or in the Execute method of a command.");
         }
 
         var owner = IsShared ? assembly : ToolkitAssembly;
@@ -191,13 +192,15 @@ internal static unsafe class AddInContext
     }
 
     /// <summary>
-    ///     Stores a copy of the active add-in data as the add-in of the assembly and of every assembly name its <see cref="AddInAssemblyAttribute" /> lists.
+    ///     Stores a copy of the active add-in data for the assembly.
     /// </summary>
     /// <param name="owner">The assembly to store the add-in under.</param>
-    /// <param name="replaceListedAddIns"><see langword="true" /> to replace the add-in of an assembly name that another assembly lists; otherwise, <see langword="false" />.</param>
+    /// <param name="replaceListedAddIns"><see langword="true" /> to overwrite a name listed by another assembly; otherwise, <see langword="false" />.</param>
     /// <remarks>
-    ///     The caller holds <see cref="CaptureLock" />, and <see cref="CapturedAddIns" /> contains no entry for <paramref name="owner" />.
-    ///     An isolated toolkit stores the add-in under its own assembly and reads no assembly names.
+    ///     The assemblies listed by <see cref="AddInAssemblyAttribute" /> receive the same copy.
+    ///     An isolated toolkit reads no attributes.
+    ///     The method runs under <see cref="CaptureLock" />.
+    ///     <see cref="CapturedAddIns" /> has no entry for <paramref name="owner" />.
     /// </remarks>
     private static void StoreActiveAddIn(Assembly owner, bool replaceListedAddIns)
     {
@@ -220,14 +223,15 @@ internal static unsafe class AddInContext
     }
 
     /// <summary>
-    ///     Gets the captured add-in data of the assembly, or of the assembly name that a captured assembly lists.
+    ///     Gets the captured add-in data of the assembly.
     /// </summary>
     /// <param name="owner">The assembly the captured add-in is stored under.</param>
     /// <param name="addInData">When this method returns, contains the pointer to the captured add-in data, if found.</param>
-    /// <returns><see langword="true" /> if the assembly or its name has a captured add-in; otherwise, <see langword="false" />.</returns>
+    /// <returns><see langword="true" /> if the assembly has a captured add-in; otherwise, <see langword="false" />.</returns>
     /// <remarks>
-    ///     The first miss of an assembly reads its name and stores the add-in of a listed name under the assembly.
-    ///     An unmatched assembly stores the count of listed names, and a later miss reads its name again only after the count grows.
+    ///     On the first miss, the method looks up the assembly name among the listed names.
+    ///     A match becomes the capture of the assembly.
+    ///     A miss is cached until another assembly lists new names.
     /// </remarks>
     private static bool TryGetCapturedAddIn(Assembly owner, out nint addInData)
     {

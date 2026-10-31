@@ -8,12 +8,9 @@ namespace Nice3point.Revit.Toolkit.External;
 ///     A base class wrapping the Revit <see cref="Autodesk.Revit.UI.ExternalEvent" /> and <see cref="IExternalEventHandler" /> boilerplate to simplify external event handler implementation.
 /// </summary>
 /// <remarks>
-///     The handler runs as the add-in that is active when the event is created.
-///     An event created outside a Revit callback, such as on a background thread or in an event handler of a modeless window, runs as the add-in of the handler assembly.
-///     The handler assembly is the assembly whose code the event runs: the delegate passed to a toolkit event, or the type derived from <see cref="ExternalEventHandler" />.
-///     The add-in of the handler assembly is the add-in that is active the first time the assembly runs an <see cref="ExternalApplication" /> or an <see cref="ExternalCommand" />, or creates an external event inside a Revit callback.
-///     A project reference of that assembly runs as the same add-in.
-///     Another assembly, such as one loaded at run time or an assembly of a raw <see cref="IExternalApplication" />, runs as the add-in that <see cref="AddInAssemblyExtensions.RegisterAddInAssembly(UIControlledApplication, System.Reflection.Assembly)" /> registers for it.
+///     The handler runs as the add-in that declares it, on any thread the event is created on.
+///     <see cref="ExternalApplication" /> and <see cref="ExternalCommand" /> register their assembly with its project references automatically.
+///     Any other assembly requires <see cref="AddInAssemblyExtensions.RegisterAddInAssembly(UIControlledApplication, System.Reflection.Assembly)" />.
 /// </remarks>
 [PublicAPI]
 public abstract class ExternalEventHandler : IExternalEventHandler

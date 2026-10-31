@@ -838,10 +838,10 @@ using (RevitContext.BeginDialogSuppressionScope(args =>
 
 After the API loads a family or creates one from a template saved in an earlier Revit version, the ribbon, the dockable panes, and the add-in windows stop redrawing.
 They respond to clicks but show no change until a window is resized.
-Wrap the calls in `BeginWpfCompatibilityScope()` on the Revit thread:
+Wrap the calls in `BeginModalLoopCompatibilityScope()` on the Revit thread:
 
 ```C#
-using (RevitContext.BeginWpfCompatibilityScope())
+using (RevitContext.BeginModalLoopCompatibilityScope())
 {
     document.LoadFamily(fileName, out var family);
 }

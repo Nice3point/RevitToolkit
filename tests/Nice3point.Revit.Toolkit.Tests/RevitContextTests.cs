@@ -213,7 +213,7 @@ public sealed class RevitContextTests : RevitApiUiTest
     }
 
     [Test]
-    public async Task BeginWpfCompatibilityScope_TemplateOfThePreviousVersion_WindowDrawsTheNextFrame(CancellationToken cancellationToken)
+    public async Task BeginModalLoopCompatibilityScope_TemplateOfThePreviousVersion_WindowDrawsTheNextFrame(CancellationToken cancellationToken)
     {
         // Arrange
         var previousVersion = int.Parse(UiApplication.Application.VersionNumber, CultureInfo.InvariantCulture) - 1;
@@ -227,7 +227,7 @@ public sealed class RevitContextTests : RevitApiUiTest
         using var window = await ColorWindow.ShowAsync(Colors.Red, cancellationToken);
 
         // Act
-        using (RevitContext.BeginWpfCompatibilityScope())
+        using (RevitContext.BeginModalLoopCompatibilityScope())
         {
             UiApplication.Application.NewFamilyDocument(templatePath).Close(false);
         }
@@ -239,10 +239,10 @@ public sealed class RevitContextTests : RevitApiUiTest
     }
 
     [Test]
-    public async Task BeginWpfCompatibilityScope_DisposedTwice_DoesNotThrow()
+    public async Task BeginModalLoopCompatibilityScope_DisposedTwice_DoesNotThrow()
     {
         // Arrange
-        var scope = RevitContext.BeginWpfCompatibilityScope();
+        var scope = RevitContext.BeginModalLoopCompatibilityScope();
 
         // Act & Assert
         await Assert.That(() =>
@@ -253,9 +253,9 @@ public sealed class RevitContextTests : RevitApiUiTest
     }
 
     [Test]
-    public async Task BeginWpfCompatibilityScope_DisposedOnThreadWithoutWpf_DoesNotThrow()
+    public async Task BeginModalLoopCompatibilityScope_DisposedOnThreadWithoutWpf_DoesNotThrow()
     {
         // Act & Assert
-        await Assert.That(() => Task.Run(() => RevitContext.BeginWpfCompatibilityScope().Dispose())).ThrowsNothing();
+        await Assert.That(() => Task.Run(() => RevitContext.BeginModalLoopCompatibilityScope().Dispose())).ThrowsNothing();
     }
 }

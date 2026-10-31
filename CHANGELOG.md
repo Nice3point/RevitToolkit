@@ -2,14 +2,24 @@
 
 ### Context
 
-- New `RevitContext.BeginWpfCompatibilityScope()` method redraws the Revit interface after `Document.LoadFamily`, `Application.NewFamilyDocument`, or `Application.OpenDocumentFile` upgrades a family or a family template saved in an earlier Revit version. Without the scope, the ribbon, the dockable panes, and the add-in windows stop redrawing after the upgrade: they respond to clicks but show no change until a window is resized.
+#### No more frozen Revit interface after loading older families
+
+It's a long-standing Revit issue known from the forums: an add-in loads a family saved in an earlier Revit version, and the Revit interface stops updating.
+The ribbon, the dockable panes, and the add-in windows still react to clicks, but nothing redraws until you resize a window.
+
+The cause is the modal loop of the Model Upgrade progress dialog: it swallows the message WPF waits for before it draws the next frame.
+
+The new `RevitContext.BeginModalLoopCompatibilityScope()` fixes it.
+Wrap the calls that load or open older files, and the interface redraws as soon as the scope ends:
 
 ```c#
-using (RevitContext.BeginWpfCompatibilityScope())
+using (RevitContext.BeginModalLoopCompatibilityScope())
 {
     document.LoadFamily(fileName, out var family);
 }
 ```
+
+The scope covers `Document.LoadFamily`, `Application.NewFamilyDocument`, and `Application.OpenDocumentFile`, and costs a single window message when it ends.
 
 # 2027.0.3
 

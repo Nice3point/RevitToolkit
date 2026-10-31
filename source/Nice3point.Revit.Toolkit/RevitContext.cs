@@ -359,8 +359,8 @@ public class RevitContext : RevitApiContext
     ///     <para>
     ///         <see cref="Autodesk.Revit.DB.Document.LoadFamily(string)" />, <see cref="Autodesk.Revit.ApplicationServices.Application.NewFamilyDocument(string)" />,
     ///         and <see cref="Autodesk.Revit.ApplicationServices.Application.OpenDocumentFile(string)" /> upgrade a family or a family template saved in an earlier Revit version,
-    ///         and Revit shows the Model Upgrade progress dialog.
-    ///         The dialog discards the notification WPF waits for before it draws the next frame.
+    ///         and Revit runs the modal loop of the Model Upgrade progress dialog.
+    ///         The modal loop discards the notification WPF waits for before it draws the next frame.
     ///         After the upgrade, the ribbon, the dockable panes, and the WPF windows of the Revit thread respond to input but show no change until a window changes its size.
     ///         The model views are not affected.
     ///     </para>
@@ -372,16 +372,16 @@ public class RevitContext : RevitApiContext
     /// </remarks>
     /// <example>
     ///     <code>
-    ///         using (RevitContext.BeginWpfCompatibilityScope())
+    ///         using (RevitContext.BeginModalLoopCompatibilityScope())
     ///         {
     ///             document.LoadFamily(fileName, out var family);
     ///         }
     ///         // The user interface redraws
     ///     </code>
     /// </example>
-    public static IDisposable BeginWpfCompatibilityScope()
+    public static IDisposable BeginModalLoopCompatibilityScope()
     {
-        return WpfCompatibilityScope.Instance;
+        return ModalLoopCompatibilityScope.Instance;
     }
 
     internal static IDisposable BeginApiContextScope()
@@ -466,11 +466,11 @@ public class RevitContext : RevitApiContext
     ///     Represents a scope that posts the frame notification of WPF to the current thread on every dispose.
     /// </summary>
     /// <remarks>
-    ///     WPF returns at once on a repeated notification, and every call of <see cref="BeginWpfCompatibilityScope" /> returns the same instance.
+    ///     WPF returns at once on a repeated notification, and every call of <see cref="BeginModalLoopCompatibilityScope" /> returns the same instance.
     /// </remarks>
-    private sealed class WpfCompatibilityScope : IDisposable
+    private sealed class ModalLoopCompatibilityScope : IDisposable
     {
-        public static readonly WpfCompatibilityScope Instance = new();
+        public static readonly ModalLoopCompatibilityScope Instance = new();
 
         public void Dispose()
         {

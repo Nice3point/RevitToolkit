@@ -146,6 +146,12 @@ public sealed class ExternalEventHandlerTests : RevitApiUiTest
         await Assert.That(() => registration).Throws<System.InvalidOperationException>();
     }
 
+    [Test]
+    public async Task RegisterAddInAssembly_NullAssembly_ThrowsArgumentNull()
+    {
+        await Assert.That(() => UiApplication.RegisterAddInAssembly(null!)).Throws<System.ArgumentNullException>();
+    }
+
     /// <summary>
     ///     Captures the add-in of the test assembly through an external event created inside a Revit callback.
     /// </summary>

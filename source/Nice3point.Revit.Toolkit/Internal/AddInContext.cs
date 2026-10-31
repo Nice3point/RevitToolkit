@@ -36,8 +36,7 @@ internal static unsafe class AddInContext
     private static readonly Assembly ToolkitAssembly = typeof(AddInContext).Assembly;
     private static readonly Lock CaptureLock = new();
     private static readonly ConditionalWeakTable<Assembly, StrongBox<nint>> CapturedAddIns = new();
-    private static readonly ConditionalWeakTable<Assembly, StrongBox<int>> UnmatchedAssemblies = new();
-    private static readonly Dictionary<string, nint> ListedAddIns = new(StringComparer.Ordinal);
+    private static readonly ListedAddInAssemblies ListedAssemblies = new();
 
     static AddInContext()
     {
@@ -208,18 +207,49 @@ internal static unsafe class AddInContext
         GetActiveAddInData((void*)addInData);
         CapturedAddIns.Add(owner, new StrongBox<nint>(addInData));
 
-        if (!IsShared)
+        if (IsShared && IsInDefaultContext(owner))
         {
-            return;
+            ListedAssemblies.Add(ReadListedAssemblyNames(owner), addInData, replaceListedAddIns);
         }
+    }
 
-        foreach (var attribute in owner.GetCustomAttributes<AddInAssemblyAttribute>())
+    /// <summary>
+    ///     Reads the assembly names listed by the <see cref="AddInAssemblyAttribute" /> of the assembly.
+    /// </summary>
+    /// <param name="assembly">The assembly to read the attributes of.</param>
+    /// <returns>The listed assembly names, or an empty array when the attributes can't be read.</returns>
+    /// <remarks>
+    ///     An attribute type from a missing assembly fails the read.
+    ///     A failed read lists no names: the capture never fails the startup of an add-in.
+    /// </remarks>
+    private static string[] ReadListedAssemblyNames(Assembly assembly)
+    {
+        try
         {
-            if (replaceListedAddIns || !ListedAddIns.ContainsKey(attribute.AssemblyName))
-            {
-                ListedAddIns[attribute.AssemblyName] = addInData;
-            }
+            return assembly.GetCustomAttributes<AddInAssemblyAttribute>().Select(static attribute => attribute.AssemblyName).ToArray();
         }
+        catch (Exception)
+        {
+            return [];
+        }
+    }
+
+    /// <summary>
+    ///     Determines whether the assembly is loaded into the default <c>AssemblyLoadContext</c>.
+    /// </summary>
+    /// <param name="assembly">The assembly to check.</param>
+    /// <returns><see langword="true" /> if the assembly is loaded into the default context; otherwise, <see langword="false" />.</returns>
+    /// <remarks>
+    ///     A shared toolkit matches names for the default context only.
+    ///     An isolated add-in can load its own assembly with a listed name.
+    /// </remarks>
+    private static bool IsInDefaultContext(Assembly assembly)
+    {
+#if NET
+        return AssemblyLoadContext.GetLoadContext(assembly) == AssemblyLoadContext.Default;
+#else
+        return true;
+#endif
     }
 
     /// <summary>
@@ -229,9 +259,8 @@ internal static unsafe class AddInContext
     /// <param name="addInData">When this method returns, contains the pointer to the captured add-in data, if found.</param>
     /// <returns><see langword="true" /> if the assembly has a captured add-in; otherwise, <see langword="false" />.</returns>
     /// <remarks>
-    ///     On the first miss, the method looks up the assembly name among the listed names.
+    ///     On a miss, the method looks up the assembly name among the listed names.
     ///     A match becomes the capture of the assembly.
-    ///     A miss is cached until another assembly lists new names.
     /// </remarks>
     private static bool TryGetCapturedAddIn(Assembly owner, out nint addInData)
     {
@@ -242,7 +271,7 @@ internal static unsafe class AddInContext
         }
 
         addInData = 0;
-        if (!IsShared)
+        if (!IsShared || !IsInDefaultContext(owner))
         {
             return false;
         }
@@ -255,16 +284,8 @@ internal static unsafe class AddInContext
                 return true;
             }
 
-            if (UnmatchedAssemblies.TryGetValue(owner, out var listedNameCount) && listedNameCount.Value == ListedAddIns.Count)
+            if (!ListedAssemblies.TryMatch(owner, out addInData))
             {
-                return false;
-            }
-
-            var assemblyName = owner.GetName().Name;
-            if (assemblyName is null || !ListedAddIns.TryGetValue(assemblyName, out addInData))
-            {
-                UnmatchedAssemblies.Remove(owner);
-                UnmatchedAssemblies.Add(owner, new StrongBox<int>(ListedAddIns.Count));
                 return false;
             }
 

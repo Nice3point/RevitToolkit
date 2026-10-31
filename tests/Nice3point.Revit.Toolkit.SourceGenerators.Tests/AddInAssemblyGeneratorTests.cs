@@ -35,8 +35,9 @@ public sealed class AddInAssemblyGeneratorTests
 
     [Test]
     [Arguments(" MyAddIn.Core , MyAddIn.Core,,")]
+    [Arguments("MyAddIn.Core,myaddin.core")]
     [Arguments("MyAddIn.Core")]
-    public async Task RepeatedOrPaddedNames_DeclareEachAssemblyOnceAsync(string projectReferences)
+    public async Task RepeatedPaddedOrCaseVariantNames_DeclareEachAssemblyOnceAsync(string projectReferences)
     {
         var (_, output) = await RunAsync(AttributeSource, projectReferences);
 

@@ -29,7 +29,7 @@ internal static class AddInProjectReferences
         return value.Split(',')
             .Select(static assemblyName => assemblyName.Trim())
             .Where(static assemblyName => assemblyName.Length > 0)
-            .Distinct(StringComparer.Ordinal)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(static assemblyName => assemblyName, StringComparer.Ordinal)
             .ToImmutableArray();
     }

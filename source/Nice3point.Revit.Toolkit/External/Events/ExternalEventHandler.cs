@@ -10,7 +10,8 @@ namespace Nice3point.Revit.Toolkit.External;
 /// <remarks>
 ///     The handler runs as the add-in that declares it, on any thread the event is created on.
 ///     <see cref="ExternalApplication" /> and <see cref="ExternalCommand" /> register their assembly with its project references automatically.
-///     Any other assembly requires <see cref="AddInAssemblyExtensions.RegisterAddInAssembly(UIControlledApplication, System.Reflection.Assembly)" />.
+///     An assembly that creates an external event inside a Revit callback registers itself.
+///     Other assemblies, for example a library from a NuGet package, are registered with <see cref="AddInAssemblyExtensions.RegisterAddInAssembly(UIControlledApplication, System.Reflection.Assembly)" />.
 /// </remarks>
 [PublicAPI]
 public abstract class ExternalEventHandler : IExternalEventHandler

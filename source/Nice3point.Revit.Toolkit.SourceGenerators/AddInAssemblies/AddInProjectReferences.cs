@@ -1,6 +1,5 @@
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Nice3point.Revit.Toolkit.SourceGenerators.CSharp;
 using Nice3point.Revit.Toolkit.SourceGenerators.Models;
 
 namespace Nice3point.Revit.Toolkit.SourceGenerators.AddInAssemblies;
@@ -10,9 +9,7 @@ namespace Nice3point.Revit.Toolkit.SourceGenerators.AddInAssemblies;
 /// </summary>
 internal static class AddInProjectReferences
 {
-    private const string PropertyName = "build_property.AddInProjectReferences";
-
-    public static readonly FullyQualifiedTypeName AddInAssemblyAttribute = "Nice3point.Revit.Toolkit.External.AddInAssemblyAttribute";
+    private const string PropertyName = "build_property._RevitToolkitAddInProjectReferences";
 
     /// <summary>
     ///     Reads the assembly names of the project references from the global analyzer config options.

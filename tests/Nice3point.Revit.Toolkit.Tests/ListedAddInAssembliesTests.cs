@@ -16,7 +16,7 @@ public sealed class ListedAddInAssembliesTests : RevitApiUiTest
     {
         // Arrange
         var listedAssemblies = new ListedAddInAssemblies();
-        listedAssemblies.Add([ListedName], FirstAddIn, replace: false);
+        listedAssemblies.Add([ListedName], FirstAddIn, replaceListedNames: false);
 
         // Act
         var isMatched = listedAssemblies.TryMatch(ListedAssembly, out var addInData);
@@ -34,7 +34,7 @@ public sealed class ListedAddInAssembliesTests : RevitApiUiTest
     {
         // Arrange
         var listedAssemblies = new ListedAddInAssemblies();
-        listedAssemblies.Add([ListedName.ToUpperInvariant()], FirstAddIn, replace: false);
+        listedAssemblies.Add([ListedName.ToUpperInvariant()], FirstAddIn, replaceListedNames: false);
 
         // Act
         var isMatched = listedAssemblies.TryMatch(ListedAssembly, out var addInData);
@@ -52,7 +52,7 @@ public sealed class ListedAddInAssembliesTests : RevitApiUiTest
     {
         // Arrange
         var listedAssemblies = new ListedAddInAssemblies();
-        listedAssemblies.Add(["MyAddIn.Core"], FirstAddIn, replace: false);
+        listedAssemblies.Add(["MyAddIn.Core"], FirstAddIn, replaceListedNames: false);
 
         // Act
         var isMatched = listedAssemblies.TryMatch(ListedAssembly, out var addInData);
@@ -70,9 +70,9 @@ public sealed class ListedAddInAssembliesTests : RevitApiUiTest
     {
         // Arrange
         var listedAssemblies = new ListedAddInAssemblies();
-        listedAssemblies.Add(["MyAddIn.Core"], FirstAddIn, replace: false);
+        listedAssemblies.Add(["MyAddIn.Core"], FirstAddIn, replaceListedNames: false);
         var isMatchedBeforeListing = listedAssemblies.TryMatch(ListedAssembly, out _);
-        listedAssemblies.Add([ListedName], SecondAddIn, replace: false);
+        listedAssemblies.Add([ListedName], SecondAddIn, replaceListedNames: false);
 
         // Act
         var isMatched = listedAssemblies.TryMatch(ListedAssembly, out var addInData);
@@ -91,10 +91,10 @@ public sealed class ListedAddInAssembliesTests : RevitApiUiTest
     {
         // Arrange
         var listedAssemblies = new ListedAddInAssemblies();
-        listedAssemblies.Add([ListedName], FirstAddIn, replace: false);
+        listedAssemblies.Add([ListedName], FirstAddIn, replaceListedNames: false);
 
         // Act
-        listedAssemblies.Add([ListedName], SecondAddIn, replace: false);
+        listedAssemblies.Add([ListedName], SecondAddIn, replaceListedNames: false);
 
         // Assert
         listedAssemblies.TryMatch(ListedAssembly, out var addInData);
@@ -106,10 +106,10 @@ public sealed class ListedAddInAssembliesTests : RevitApiUiTest
     {
         // Arrange
         var listedAssemblies = new ListedAddInAssemblies();
-        listedAssemblies.Add([ListedName], FirstAddIn, replace: false);
+        listedAssemblies.Add([ListedName], FirstAddIn, replaceListedNames: false);
 
         // Act
-        listedAssemblies.Add([ListedName], SecondAddIn, replace: true);
+        listedAssemblies.Add([ListedName], SecondAddIn, replaceListedNames: true);
 
         // Assert
         listedAssemblies.TryMatch(ListedAssembly, out var addInData);

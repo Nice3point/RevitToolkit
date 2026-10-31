@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 namespace Nice3point.Revit.Toolkit.Internal;
 
 /// <summary>
-///     Maps the assembly names listed by <see cref="External.AddInAssemblyAttribute" /> to the add-in of the listing assembly.
+///     Maps the assembly names listed by the generated <c>AddInAssemblyAttribute</c> to the add-in of the listing assembly.
 /// </summary>
 /// <remarks>
 ///     Assembly names are compared case-insensitively, as the runtime compares simple names.
@@ -20,12 +20,12 @@ internal sealed class ListedAddInAssemblies
     /// </summary>
     /// <param name="assemblyNames">The simple names of the assemblies.</param>
     /// <param name="addInData">The pointer to the add-in data.</param>
-    /// <param name="replace"><see langword="true" /> to overwrite a name listed earlier; otherwise, <see langword="false" />.</param>
-    public void Add(IEnumerable<string> assemblyNames, nint addInData, bool replace)
+    /// <param name="replaceListedNames"><see langword="true" /> to overwrite a name listed earlier; otherwise, <see langword="false" />.</param>
+    public void Add(IEnumerable<string> assemblyNames, nint addInData, bool replaceListedNames)
     {
         foreach (var assemblyName in assemblyNames)
         {
-            if (replace || !_addIns.ContainsKey(assemblyName))
+            if (replaceListedNames || !_addIns.ContainsKey(assemblyName))
             {
                 _addIns[assemblyName] = addInData;
             }

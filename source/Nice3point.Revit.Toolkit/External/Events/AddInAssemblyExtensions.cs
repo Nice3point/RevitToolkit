@@ -27,6 +27,8 @@ public static class AddInAssemblyExtensions
         ///     External events of the assembly run as the active add-in on any thread.
         ///     Project references of the assembly are registered too.
         ///     <see cref="ExternalApplication" /> and <see cref="ExternalCommand" /> register their assembly automatically.
+        ///     An external event created before the registration runs as the add-in Revit bound it to at creation.
+        ///     On a Revit version without the expected native API, the method does nothing.
         /// </remarks>
         public void RegisterAddInAssembly(Assembly assembly)
         {

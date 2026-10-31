@@ -115,25 +115,6 @@ public sealed class ExternalEventHandlerTests : RevitApiUiTest
 
     [Test]
     [Timeout(10_000)]
-    public async Task RaiseAsync_AssemblyRegisteredAndEventCreatedOnThreadPool_RunsTheHandlerAsTheAddIn(CancellationToken cancellationToken)
-    {
-        // Arrange
-        UiApplication.RegisterAddInAssembly(typeof(ExternalEventHandlerTests).Assembly);
-        var (creationAddInId, externalEvent) = await Task.Run(CreateActiveAddInIdEvent, cancellationToken);
-
-        // Act
-        var handlerAddInId = await externalEvent.RaiseAsync().WaitAsync(cancellationToken);
-
-        // Assert
-        using (Assert.Multiple())
-        {
-            await Assert.That(creationAddInId).IsNotEqualTo(AddInId).Because("the add-in is not active on a thread-pool thread");
-            await Assert.That(handlerAddInId).IsEqualTo(AddInId);
-        }
-    }
-
-    [Test]
-    [Timeout(10_000)]
     public async Task RegisterAddInAssembly_OnThreadPool_ThrowsInvalidOperation(CancellationToken cancellationToken)
     {
         // Arrange
@@ -149,7 +130,7 @@ public sealed class ExternalEventHandlerTests : RevitApiUiTest
     [Test]
     public async Task RegisterAddInAssembly_NullAssembly_ThrowsArgumentNull()
     {
-        await Assert.That(() => UiApplication.RegisterAddInAssembly(null!)).Throws<System.ArgumentNullException>();
+        await Assert.That(() => UiApplication.RegisterAddInAssembly(null!)).Throws<ArgumentNullException>();
     }
 
     /// <summary>

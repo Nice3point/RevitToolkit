@@ -2,7 +2,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Autodesk.Revit.UI;
-using AddInAssemblyAttribute = Nice3point.Revit.Toolkit.External.AddInAssemblyAttribute;
 #if NET
 using System.Runtime.Loader;
 #endif
@@ -16,9 +15,9 @@ namespace Nice3point.Revit.Toolkit.Internal;
 ///     Revit binds an external event to the add-in on top of the add-in data stack of the creating thread.
 ///     The stack is thread-local and empty outside a Revit callback, where Revit binds the event to no add-in.
 ///     A native <c>AddInDataScope</c> pushes a copy of the captured add-in data onto the stack of the current thread for the creation of the event.
-///     A shared toolkit binds the assemblies listed by <see cref="AddInAssemblyAttribute" /> to the add-in of the declaring assembly.
+///     A shared toolkit binds the assemblies listed by the generated <c>AddInAssemblyAttribute</c> to the add-in of the declaring assembly.
 ///     A listed assembly is matched by name at its first external event.
-///     The context never frees a captured copy of the add-in data.
+///     The context never frees a published copy of the add-in data.
 ///     A Revit version without a member of the expected signature creates every event without a scope.
 /// </remarks>
 internal static unsafe class AddInContext
@@ -33,10 +32,13 @@ internal static unsafe class AddInContext
     private static readonly delegate*<void*, void*, void*> EnterAddInDataScope;
     private static readonly delegate*<void*, void> ExitAddInDataScope;
 
+    private const string AddInAssemblyAttributeName = "Nice3point.Revit.Toolkit.Generated.AddInAssemblyAttribute";
+
     private static readonly Assembly ToolkitAssembly = typeof(AddInContext).Assembly;
-    private static readonly Lock CaptureLock = new();
     private static readonly ConditionalWeakTable<Assembly, StrongBox<nint>> CapturedAddIns = new();
-    private static readonly ListedAddInAssemblies ListedAssemblies = new();
+    private static readonly ConditionalWeakTable<Assembly, StrongBox<nint>>.CreateValueCallback CreateEmptyCapture = static _ => new StrongBox<nint>();
+    private static readonly Lock ListedAddInAssembliesLock = new();
+    private static readonly ListedAddInAssemblies ListedAddInAssemblies = new();
 
     static AddInContext()
     {
@@ -101,7 +103,7 @@ internal static unsafe class AddInContext
     /// <param name="assembly">The assembly to capture the add-in for.</param>
     /// <exception cref="T:System.InvalidOperationException">The current thread runs outside a Revit callback.</exception>
     /// <remarks>
-    ///     The assemblies listed by <see cref="AddInAssemblyAttribute" /> receive the same add-in.
+    ///     The assemblies listed by the generated <c>AddInAssemblyAttribute</c> receive the same add-in.
     /// </remarks>
     internal static void Register(Assembly assembly)
     {
@@ -116,11 +118,13 @@ internal static unsafe class AddInContext
         }
 
         var owner = IsShared ? assembly : ToolkitAssembly;
-        lock (CaptureLock)
-        {
-            CapturedAddIns.Remove(owner);
-            StoreActiveAddIn(owner, replaceListedAddIns: true);
-        }
+        var addInData = CopyActiveAddInData();
+
+        // A concurrent event can read the replaced copy, and the context never frees it.
+        var capturedAddIn = CapturedAddIns.GetValue(owner, CreateEmptyCapture);
+        Volatile.Write(ref capturedAddIn.Value, addInData);
+
+        ListAddInAssemblies(owner, addInData, replaceListedNames: true);
     }
 
     /// <summary>
@@ -167,9 +171,17 @@ internal static unsafe class AddInContext
         }
     }
 
+    /// <summary>
+    ///     Captures the active add-in for the assembly without a captured add-in.
+    /// </summary>
+    /// <param name="owner">The assembly to store the add-in under.</param>
+    /// <remarks>
+    ///     The first copy published by concurrent captures wins.
+    ///     The method frees a copy that loses.
+    /// </remarks>
     private static void CaptureAddIn(Assembly owner)
     {
-        if (CapturedAddIns.TryGetValue(owner, out _))
+        if (CapturedAddIns.TryGetValue(owner, out var capturedAddIn) && Volatile.Read(ref capturedAddIn.Value) != IntPtr.Zero)
         {
             return;
         }
@@ -179,46 +191,63 @@ internal static unsafe class AddInContext
             return;
         }
 
-        lock (CaptureLock)
+        capturedAddIn = CapturedAddIns.GetValue(owner, CreateEmptyCapture);
+        var addInData = CopyActiveAddInData();
+        if (Interlocked.CompareExchange(ref capturedAddIn.Value, addInData, IntPtr.Zero) != IntPtr.Zero)
         {
-            if (CapturedAddIns.TryGetValue(owner, out _))
-            {
-                return;
-            }
-
-            StoreActiveAddIn(owner, replaceListedAddIns: false);
+            Marshal.FreeHGlobal(addInData);
+            return;
         }
+
+        ListAddInAssemblies(owner, addInData, replaceListedNames: false);
     }
 
     /// <summary>
-    ///     Stores a copy of the active add-in data for the assembly.
+    ///     Copies the active add-in data into a new native buffer.
     /// </summary>
-    /// <param name="owner">The assembly to store the add-in under.</param>
-    /// <param name="replaceListedAddIns"><see langword="true" /> to overwrite a name listed by another assembly; otherwise, <see langword="false" />.</param>
-    /// <remarks>
-    ///     The assemblies listed by <see cref="AddInAssemblyAttribute" /> receive the same copy.
-    ///     An isolated toolkit reads no attributes.
-    ///     The method runs under <see cref="CaptureLock" />.
-    ///     <see cref="CapturedAddIns" /> has no entry for <paramref name="owner" />.
-    /// </remarks>
-    private static void StoreActiveAddIn(Assembly owner, bool replaceListedAddIns)
+    /// <returns>The pointer to the copy.</returns>
+    private static nint CopyActiveAddInData()
     {
         var addInData = Marshal.AllocHGlobal(AddInDataSize);
         GetActiveAddInData((void*)addInData);
-        CapturedAddIns.Add(owner, new StrongBox<nint>(addInData));
+        return addInData;
+    }
 
-        if (IsShared && IsInDefaultContext(owner))
+    /// <summary>
+    ///     Lists the assemblies named by the generated <c>AddInAssemblyAttribute</c> of the assembly under its add-in.
+    /// </summary>
+    /// <param name="owner">The assembly that declares the attributes.</param>
+    /// <param name="addInData">The pointer to the add-in data of the assembly.</param>
+    /// <param name="replaceListedNames"><see langword="true" /> to overwrite a name listed by another assembly; otherwise, <see langword="false" />.</param>
+    /// <remarks>
+    ///     An isolated toolkit lists no names.
+    /// </remarks>
+    private static void ListAddInAssemblies(Assembly owner, nint addInData, bool replaceListedNames)
+    {
+        if (!IsShared || !IsInDefaultContext(owner))
         {
-            ListedAssemblies.Add(ReadListedAssemblyNames(owner), addInData, replaceListedAddIns);
+            return;
+        }
+
+        var assemblyNames = ReadListedAssemblyNames(owner);
+        if (assemblyNames.Length == 0)
+        {
+            return;
+        }
+
+        lock (ListedAddInAssembliesLock)
+        {
+            ListedAddInAssemblies.Add(assemblyNames, addInData, replaceListedNames);
         }
     }
 
     /// <summary>
-    ///     Reads the assembly names listed by the <see cref="AddInAssemblyAttribute" /> of the assembly.
+    ///     Reads the assembly names listed by the generated <c>AddInAssemblyAttribute</c> of the assembly.
     /// </summary>
     /// <param name="assembly">The assembly to read the attributes of.</param>
     /// <returns>The listed assembly names, or an empty array when the attributes can't be read.</returns>
     /// <remarks>
+    ///     The source generator declares the attribute type in each assembly, and the method matches it by full name.
     ///     An attribute type from a missing assembly fails the read.
     ///     A failed read lists no names: the capture never fails the startup of an add-in.
     /// </remarks>
@@ -226,7 +255,11 @@ internal static unsafe class AddInContext
     {
         try
         {
-            return assembly.GetCustomAttributes<AddInAssemblyAttribute>().Select(static attribute => attribute.AssemblyName).ToArray();
+            return assembly.GetCustomAttributesData()
+                .Where(static attribute => attribute.AttributeType.FullName == AddInAssemblyAttributeName)
+                .Select(static attribute => attribute.ConstructorArguments[0].Value)
+                .OfType<string>()
+                .ToArray();
         }
         catch (Exception)
         {
@@ -260,14 +293,17 @@ internal static unsafe class AddInContext
     /// <returns><see langword="true" /> if the assembly has a captured add-in; otherwise, <see langword="false" />.</returns>
     /// <remarks>
     ///     On a miss, the method looks up the assembly name among the listed names.
-    ///     A match becomes the capture of the assembly.
+    ///     A match becomes the capture of the assembly, unless a concurrent capture publishes first.
     /// </remarks>
     private static bool TryGetCapturedAddIn(Assembly owner, out nint addInData)
     {
         if (CapturedAddIns.TryGetValue(owner, out var capturedAddIn))
         {
-            addInData = capturedAddIn.Value;
-            return true;
+            addInData = Volatile.Read(ref capturedAddIn.Value);
+            if (addInData != 0)
+            {
+                return true;
+            }
         }
 
         addInData = 0;
@@ -276,22 +312,19 @@ internal static unsafe class AddInContext
             return false;
         }
 
-        lock (CaptureLock)
+        nint listedAddInData;
+        lock (ListedAddInAssembliesLock)
         {
-            if (CapturedAddIns.TryGetValue(owner, out capturedAddIn))
-            {
-                addInData = capturedAddIn.Value;
-                return true;
-            }
-
-            if (!ListedAssemblies.TryMatch(owner, out addInData))
+            if (!ListedAddInAssemblies.TryMatch(owner, out listedAddInData))
             {
                 return false;
             }
-
-            CapturedAddIns.Add(owner, new StrongBox<nint>(addInData));
-            return true;
         }
+
+        capturedAddIn = CapturedAddIns.GetValue(owner, CreateEmptyCapture);
+        Interlocked.CompareExchange(ref capturedAddIn.Value, listedAddInData, IntPtr.Zero);
+        addInData = Volatile.Read(ref capturedAddIn.Value);
+        return true;
     }
 
     /// <summary>

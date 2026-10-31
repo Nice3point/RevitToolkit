@@ -11,23 +11,13 @@ namespace Nice3point.Revit.Toolkit.SourceGenerators.Tests;
 
 public sealed class AddInAssemblyGeneratorTests
 {
-    private const string AttributeSource = """
-                                           namespace Nice3point.Revit.Toolkit.External
-                                           {
-                                               [System.AttributeUsage(System.AttributeTargets.Assembly, AllowMultiple = true)]
-                                               public sealed class AddInAssemblyAttribute : System.Attribute
-                                               {
-                                                   public AddInAssemblyAttribute(string assemblyName) => AssemblyName = assemblyName;
-
-                                                   public string AssemblyName { get; }
-                                               }
-                                           }
-                                           """;
+    private const string Source = "public class Model { }";
+    private const string AttributeName = "Nice3point.Revit.Toolkit.Generated.AddInAssemblyAttribute";
 
     [Test]
     public async Task ProjectReferences_DeclareAnAttributePerAssemblyAsync()
     {
-        var (driver, output) = await RunAsync(AttributeSource, projectReferences: "MyAddIn.UI,MyAddIn.Core");
+        var (driver, output) = await RunAsync(Source, projectReferences: "MyAddIn.UI,MyAddIn.Core");
 
         await Assert.That(driver.GetRunResult().GeneratedTrees).Count().IsEqualTo(1);
         await Assert.That(ReadListedAssemblyNames(output)).IsEquivalentTo(["MyAddIn.Core", "MyAddIn.UI"], CollectionOrdering.Matching);
@@ -39,7 +29,7 @@ public sealed class AddInAssemblyGeneratorTests
     [Arguments("MyAddIn.Core")]
     public async Task RepeatedPaddedOrCaseVariantNames_DeclareEachAssemblyOnceAsync(string projectReferences)
     {
-        var (_, output) = await RunAsync(AttributeSource, projectReferences);
+        var (_, output) = await RunAsync(Source, projectReferences);
 
         await Assert.That(ReadListedAssemblyNames(output)).IsEquivalentTo(["MyAddIn.Core"]);
     }
@@ -50,23 +40,36 @@ public sealed class AddInAssemblyGeneratorTests
     [Arguments(" , ")]
     public async Task NoProjectReferences_GeneratesNoSourceAsync(string? projectReferences)
     {
-        var (driver, _) = await RunAsync(AttributeSource, projectReferences);
+        var (driver, _) = await RunAsync(Source, projectReferences);
 
         await Assert.That(driver.GetRunResult().GeneratedTrees).IsEmpty();
     }
 
     [Test]
-    public async Task MissingAttributeType_GeneratesNoSourceAsync()
+    [Arguments(LanguageVersion.CSharp7_3)]
+    [Arguments(LanguageVersion.CSharp14)]
+    public async Task LanguageVersion_GeneratesCompilableSourceAsync(LanguageVersion languageVersion)
     {
-        var (driver, _) = await RunAsync("public class Model { }", projectReferences: "MyAddIn.Core");
+        var (_, output) = await RunAsync(Source, projectReferences: "MyAddIn.Core", languageVersion: languageVersion);
 
-        await Assert.That(driver.GetRunResult().GeneratedTrees).IsEmpty();
+        await Assert.That(ReadListedAssemblyNames(output)).IsEquivalentTo(["MyAddIn.Core"]).Because("a .NET Framework project compiles with C# 7.3 by default");
+    }
+
+    [Test]
+    public async Task ReferenceWithVisibleInternals_DeclaresTheAttributeWithoutConflictsAsync()
+    {
+        const string librarySource = """[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Consumer")]""";
+        var (_, library) = await RunAsync(librarySource, projectReferences: "MyAddIn.Core", assemblyName: "MyAddIn.Services");
+
+        var (_, output) = await RunAsync(Source, projectReferences: "MyAddIn.Services", additionalReference: library.ToMetadataReference());
+
+        await Assert.That(ReadListedAssemblyNames(output)).IsEquivalentTo(["MyAddIn.Services"]);
     }
 
     [Test]
     public async Task UnrelatedSourceChange_ReusesGeneratedSourceAsync()
     {
-        var (driver, output) = await RunAsync(AttributeSource, projectReferences: "MyAddIn.Core");
+        var (driver, output) = await RunAsync(Source, projectReferences: "MyAddIn.Core");
         var previousSource = driver.GetRunResult().GeneratedTrees.Single().GetText().ToString();
         var unrelatedTree = CSharpSyntaxTree.ParseText("public class Unrelated { }", (CSharpParseOptions)output.SyntaxTrees.First().Options);
 
@@ -77,19 +80,24 @@ public sealed class AddInAssemblyGeneratorTests
         await Assert.That(outputStep.Outputs.Single().Reason).IsEqualTo(IncrementalStepRunReason.Cached);
     }
 
-    private static async Task<(GeneratorDriver Driver, Compilation Output)> RunAsync([StringSyntax("C#")] string source, string? projectReferences)
+    private static async Task<(GeneratorDriver Driver, Compilation Output)> RunAsync(
+        [StringSyntax("C#")] string source,
+        string? projectReferences,
+        string assemblyName = "Consumer",
+        LanguageVersion languageVersion = LanguageVersion.CSharp14,
+        MetadataReference? additionalReference = null)
     {
         var cancellationToken = TestContext.Current!.Execution.CancellationToken;
-        var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp14);
+        var parseOptions = new CSharpParseOptions(languageVersion);
         var references = await ReferenceAssemblies.Net.Net80.ResolveAsync(LanguageNames.CSharp, cancellationToken);
-        var input = CSharpCompilation.Create("Consumer",
+        var input = CSharpCompilation.Create(assemblyName,
             [CSharpSyntaxTree.ParseText(source, parseOptions, cancellationToken: cancellationToken)],
-            references,
+            additionalReference is null ? references : references.Add(additionalReference),
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
         var globalOptions = projectReferences is null
             ? ImmutableDictionary<string, string>.Empty
-            : ImmutableDictionary<string, string>.Empty.Add("build_property.AddInProjectReferences", projectReferences);
+            : ImmutableDictionary<string, string>.Empty.Add("build_property._RevitToolkitAddInProjectReferences", projectReferences);
 
         GeneratorDriver driver = CSharpGeneratorDriver.Create(
             [new AddInAssemblyGenerator().AsSourceGenerator()],
@@ -107,7 +115,7 @@ public sealed class AddInAssemblyGeneratorTests
     private static IEnumerable<string> ReadListedAssemblyNames(Compilation compilation)
     {
         return compilation.Assembly.GetAttributes()
-            .Where(static attribute => attribute.AttributeClass?.Name == "AddInAssemblyAttribute")
+            .Where(static attribute => attribute.AttributeClass?.ToDisplayString() == AttributeName)
             .Select(static attribute => (string)attribute.ConstructorArguments[0].Value!);
     }
 

@@ -3,9 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
-#if REVIT2027_OR_GREATER
 using Nice3point.Revit.Toolkit.Internal;
-#endif
 
 namespace Nice3point.Revit.Toolkit;
 
@@ -353,6 +351,39 @@ public class RevitContext : RevitApiContext
         return new DialogSuppressionScope();
     }
 
+    /// <summary>
+    ///     Begins a scope that redraws the Revit user interface after the API upgrades a family from an earlier Revit version.
+    /// </summary>
+    /// <returns>A disposable scope. Call Dispose or use 'using' statement to redraw the user interface.</returns>
+    /// <remarks>
+    ///     <para>
+    ///         <see cref="Autodesk.Revit.DB.Document.LoadFamily(string)" />, <see cref="Autodesk.Revit.ApplicationServices.Application.NewFamilyDocument(string)" />,
+    ///         and <see cref="Autodesk.Revit.ApplicationServices.Application.OpenDocumentFile(string)" /> upgrade a family or a family template saved in an earlier Revit version,
+    ///         and Revit runs the modal loop of the Model Upgrade progress dialog.
+    ///         The modal loop discards the notification WPF waits for before it draws the next frame.
+    ///         After the upgrade, the ribbon, the dockable panes, and the WPF windows of the Revit thread respond to input but show no change until a window changes its size.
+    ///         The model views are not affected.
+    ///     </para>
+    ///     <para>
+    ///         Disposing the scope posts the notification again, and the user interface redraws.
+    ///         Begin the scope on the Revit thread.
+    ///     </para>
+    ///     This method is thread-safe.
+    /// </remarks>
+    /// <example>
+    ///     <code>
+    ///         using (RevitContext.BeginModalLoopCompatibilityScope())
+    ///         {
+    ///             document.LoadFamily(fileName, out var family);
+    ///         }
+    ///         // The user interface redraws
+    ///     </code>
+    /// </example>
+    public static IDisposable BeginModalLoopCompatibilityScope()
+    {
+        return ModalLoopCompatibilityScope.Instance;
+    }
+
     internal static IDisposable BeginApiContextScope()
     {
         return new ApiContextScope(IncrementConstructorPointer, IncrementDestructorPointer);
@@ -428,6 +459,22 @@ public class RevitContext : RevitApiContext
                     UiApplication.DialogBoxShowing -= ResolveDialogBox;
                 }
             }
+        }
+    }
+
+    /// <summary>
+    ///     Represents a scope that posts the frame notification of WPF to the current thread on every dispose.
+    /// </summary>
+    /// <remarks>
+    ///     WPF returns at once on a repeated notification, and every call of <see cref="BeginModalLoopCompatibilityScope" /> returns the same instance.
+    /// </remarks>
+    private sealed class ModalLoopCompatibilityScope : IDisposable
+    {
+        public static readonly ModalLoopCompatibilityScope Instance = new();
+
+        public void Dispose()
+        {
+            MediaContextNotificationWindow.PostChannelNotification();
         }
     }
 

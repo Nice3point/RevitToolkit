@@ -210,14 +210,18 @@ A raise that Revit refuses with `Denied` or `TimedOut` never runs.
 `Raise(argument)` returns that result to the caller.
 The `RaiseAsync()` task fails with an `InvalidOperationException`.
 
-Inside the event handler, `UIApplication.ActiveAddInId` returns the ID of your add-in, even when the event is created on a background thread or in a modeless window.
-Extensible Storage schemas with vendor write access accept the changes of the handler.
-`ExternalApplication` and `ExternalCommand` set this up automatically.
-Without them, or for a library from a NuGet package or loaded at run time, register the assembly in `OnStartup`:
+**Running as your add-in from any thread**
+
+An external event created on a background thread or in a modeless window runs its handler as your add-in.
+Inside the handler, `UIApplication.ActiveAddInId` returns the ID of your add-in, and Extensible Storage schemas with vendor write access accept the changes.
+`ExternalApplication` and `ExternalCommand` register the add-in automatically.
+Without them, or for a library loaded at run time or from a NuGet package, register the assembly in `OnStartup`:
 
 ```c#
 application.RegisterAddInAssembly(typeof(Application).Assembly);
 ```
+
+The method registers the project references of the assembly too.
 
 #### ExternalEvent
 
@@ -842,6 +846,21 @@ using (RevitContext.BeginDialogSuppressionScope(args =>
     document.LoadFamily(fileName, out var family);
 }
 ```
+
+**Loading families from earlier Revit versions**
+
+After the API loads a family or creates one from a template saved in an earlier Revit version, the ribbon, the dockable panes, and the add-in windows stop redrawing.
+They respond to clicks but show no change until a window is resized.
+Wrap the calls in `BeginModalLoopCompatibilityScope()` on the Revit thread:
+
+```C#
+using (RevitContext.BeginModalLoopCompatibilityScope())
+{
+    document.LoadFamily(fileName, out var family);
+}
+```
+
+The interface redraws when the scope is disposed.
 
 ### Options
 

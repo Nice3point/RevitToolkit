@@ -2,9 +2,16 @@
 
 ### External Events
 
-- External events always run as your add-in, even when created on a background thread or in a modeless window. Inside the handler, `ActiveAddInId` returns your add-in, and Extensible Storage schemas with vendor access accept the changes. Previously, Revit ran such a handler without an add-in.
-- `ExternalApplication` and `ExternalCommand` set this up automatically, for the add-in project and every project it references.
-- New `RegisterAddInAssembly()` method for the remaining cases: an `IExternalApplication` without the Toolkit base class, an assembly loaded at run time, or a library from a NuGet package. Call it in `OnStartup`:
+#### External events run as your add-in from any thread
+
+An external event created on a background thread or in a modeless window used to run its handler without an add-in.
+Inside such a handler, `UIApplication.ActiveAddInId` returned no add-in, and Extensible Storage refused the changes to schemas with vendor write access.
+
+Now the handler always runs as your add-in: `ActiveAddInId` returns its ID, and vendor schemas accept the changes.
+`ExternalApplication` and `ExternalCommand` set this up automatically, for the add-in project and every project it references.
+
+The new `RegisterAddInAssembly()` method covers the remaining cases: an `IExternalApplication` without the Toolkit base class, an assembly loaded at run time, or a library from a NuGet package.
+Call it in `OnStartup`:
 
 ```c#
 public Result OnStartup(UIControlledApplication application)
@@ -13,6 +20,27 @@ public Result OnStartup(UIControlledApplication application)
     return Result.Succeeded;
 }
 ```
+
+### Context
+
+#### No more frozen Revit interface after loading older families
+
+It's a long-standing Revit issue known from the forums: an add-in loads a family saved in an earlier Revit version, and the Revit interface stops updating.
+The ribbon, the dockable panes, and the add-in windows still react to clicks, but nothing redraws until you resize a window.
+
+The cause is the modal loop of the Model Upgrade progress dialog: it swallows the message WPF waits for before it draws the next frame.
+
+The new `RevitContext.BeginModalLoopCompatibilityScope()` fixes it.
+Wrap the calls that load or open older files, and the interface redraws as soon as the scope ends:
+
+```c#
+using (RevitContext.BeginModalLoopCompatibilityScope())
+{
+    document.LoadFamily(fileName, out var family);
+}
+```
+
+The scope covers `Document.LoadFamily`, `Application.NewFamilyDocument`, and `Application.OpenDocumentFile`, and costs a single window message when it ends.
 
 # 2027.0.3
 

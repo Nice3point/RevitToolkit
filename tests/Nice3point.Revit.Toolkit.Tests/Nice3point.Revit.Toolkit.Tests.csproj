@@ -4,6 +4,7 @@
         <OutputType>Exe</OutputType>
         <UseWpf>true</UseWpf>
         <EnableTUnitPolyfills>false</EnableTUnitPolyfills>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <Configurations>Debug.R21;Debug.R22;Debug.R23;Debug.R24;Debug.R25;Debug.R26;Debug.R27</Configurations>
         <Configurations>$(Configurations);Release.R21;Release.R22;Release.R23;Release.R24;Release.R25;Release.R26;Release.R27</Configurations>
     </PropertyGroup>
@@ -14,6 +15,7 @@
         <PackageReference Include="Nice3point.Revit.Extensions"/>
         <PackageReference Include="Nice3point.TUnit.Revit"/>
         <PackageReference Include="TUnit"/>
+        <PackageReference Include="Microsoft.Windows.CsWin32" PrivateAssets="all"/>
     </ItemGroup>
 
     <ItemGroup>

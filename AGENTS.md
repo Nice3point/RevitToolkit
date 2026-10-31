@@ -10,6 +10,7 @@ The same package bundles Roslyn tooling: an incremental source generator that em
 * Model a temporary state change as an `IDisposable` returned from a `Begin...Scope()` factory that reverses it on `Dispose`.
 * Shared static state is thread-safe.
 * Reflection and native interop stay non-public in `Internal/`.
+* CsWin32 generates the Win32 interop from the `NativeMethods.txt` of each project. A new Win32 API goes into that file, never into a hand-written `DllImport` or `LibraryImport`.
 * Never break the public surface. Deprecate a renamed member with `[Obsolete]` with a JetBrains `[CodeTemplate]` auto-conversion; the obsolete member forwards to the replacement and never throws or changes behavior.
 * Mark a member Revit invokes but consumers must not call `[EditorBrowsable(EditorBrowsableState.Never)]`.
 * The Roslyn tooling is public surface. It targets `netstandard2.0`, dual-targets Roslyn (the default with the `.Roslyn414` twins), uses stable `RVTTK####` diagnostic ids, and needs an `AnalyzerReleases.Unshipped.md` entry per new or changed rule. Never rename a generated member or renumber a shipped id.

@@ -210,6 +210,16 @@ A raise that Revit refuses with `Denied` or `TimedOut` never runs.
 `Raise(argument)` returns that result to the caller.
 The `RaiseAsync()` task fails with an `InvalidOperationException`.
 
+A handler runs as the add-in that declares it, wherever the event is created.
+The Toolkit finds the add-in of an `ExternalApplication` or `ExternalCommand` assembly and of its project references.
+For an assembly loaded at run time, or for a raw `IExternalApplication`, register the assembly in `OnStartup`:
+
+```c#
+application.RegisterAddInAssembly(typeof(Application).Assembly);
+```
+
+The preceding code binds the external events of the assembly and of its project references to the add-in.
+
 #### ExternalEvent
 
 A synchronous external event that queues the handler via the Revit external event mechanism.

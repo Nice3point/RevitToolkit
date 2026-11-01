@@ -61,11 +61,12 @@ public sealed class RevitContextTests : RevitApiUiTest
     {
         // Arrange
         var revitThreadId = Environment.CurrentManagedThreadId;
-        var completion = new TaskCompletionSource<(int ThreadId, bool IsRevitInApiMode)>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         // Act
-        Dispatcher.CurrentDispatcher.BeginInvoke(() => completion.SetResult((Environment.CurrentManagedThreadId, RevitContext.IsRevitInApiMode)));
-        var (threadId, isRevitInApiMode) = await completion.Task.WaitAsync(cancellationToken);
+        var (threadId, isRevitInApiMode) = await Dispatcher.CurrentDispatcher
+            .InvokeAsync(() => (Environment.CurrentManagedThreadId, RevitContext.IsRevitInApiMode))
+            .Task
+            .WaitAsync(cancellationToken);
 
         // Assert
         using (Assert.Multiple())

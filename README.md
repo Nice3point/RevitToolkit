@@ -210,18 +210,24 @@ A raise that Revit refuses with `Denied` or `TimedOut` never runs.
 `Raise(argument)` returns that result to the caller.
 The `RaiseAsync()` task fails with an `InvalidOperationException`.
 
-**Running as your add-in from any thread**
+**Registering add-in assemblies**
 
-An external event created on a background thread or in a modeless window runs its handler as your add-in.
-Inside the handler, `UIApplication.ActiveAddInId` returns the ID of your add-in, and Extensible Storage schemas with vendor write access accept the changes.
-`ExternalApplication` and `ExternalCommand` register the add-in automatically.
-Without them, or for a library loaded at run time or from a NuGet package, register the assembly in `OnStartup`:
+Revit runs an external event handler as the add-in that created the event.
+Inside the handler, `UIApplication.ActiveAddInId` returns the add-in ID, and Extensible Storage grants access to the schemas of the add-in vendor.
+An event created outside the Revit API context runs as the add-in that registered the assembly of the event.
+
+`ExternalApplication` and `ExternalCommand` register their assembly and its project references automatically.
+Register any other assembly with external events in `OnStartup`, for example the assembly of an `IExternalApplication` without the Toolkit base class, a library from a NuGet package, or an assembly loaded at run time:
 
 ```c#
-application.RegisterAddInAssembly(typeof(Application).Assembly);
+public Result OnStartup(UIControlledApplication application)
+{
+    application.RegisterAddInAssembly(typeof(Application).Assembly);
+    return Result.Succeeded;
+}
 ```
 
-The method registers the project references of the assembly too.
+The preceding code registers the add-in assembly with its project references.
 
 #### ExternalEvent
 

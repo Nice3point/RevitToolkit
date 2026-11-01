@@ -23,7 +23,7 @@ The same package bundles Roslyn tooling: an incremental source generator that em
 
 ## Repository map
 
-* `source/Nice3point.Revit.Toolkit` it packs the runtime library and the tooling into one NuGet package for users. Its `build/` folder contains the MSBuild targets NuGet imports into a consumer project.
+* `source/Nice3point.Revit.Toolkit` it packs the runtime library and the tooling into one NuGet package for users.
 * `source/Nice3point.Revit.Toolkit.Analyzers`, `Nice3point.Revit.Toolkit.Analyzers.CodeFixers`, and `Nice3point.Revit.Toolkit.SourceGenerators` hold the analyzers, code fixers, and source generator, each with a `.Roslyn414` twin for the older Roslyn.
 * `tests/` — `Nice3point.Revit.Toolkit.Tests` runs inside a Revit process; the analyzer, fixer, and generator test projects run against the compiler.
 * `build/` — the ModularPipelines build.

@@ -35,7 +35,7 @@ public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternal
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _core = new((_, argument, _) =>
+        _core = new AsyncExternalEventCore<T, VoidResult>((_, argument, _) =>
         {
             handler(argument);
             return default;
@@ -63,7 +63,7 @@ public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternal
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _core = new((uiApplication, argument, _) =>
+        _core = new AsyncExternalEventCore<T, VoidResult>((uiApplication, argument, _) =>
         {
             handler(uiApplication, argument);
             return default;
@@ -91,7 +91,7 @@ public sealed class AsyncExternalEvent<T> : ExternalEventHandler, IAsyncExternal
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _core = new((uiApplication, argument, cancellationToken) =>
+        _core = new AsyncExternalEventCore<T, VoidResult>((uiApplication, argument, cancellationToken) =>
         {
             handler(uiApplication, argument, cancellationToken);
             return default;

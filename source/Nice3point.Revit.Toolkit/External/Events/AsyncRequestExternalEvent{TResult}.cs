@@ -33,7 +33,7 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _core = new((_, _, _) => handler(), base.Raise);
+        _core = new AsyncExternalEventCore<VoidResult, TResult>((_, _, _) => handler(), base.Raise);
         _options = options;
     }
 
@@ -56,7 +56,7 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _core = new((uiApplication, _, _) => handler(uiApplication), base.Raise);
+        _core = new AsyncExternalEventCore<VoidResult, TResult>((uiApplication, _, _) => handler(uiApplication), base.Raise);
         _options = options;
     }
 
@@ -79,7 +79,7 @@ public sealed class AsyncRequestExternalEvent<TResult> : ExternalEventHandler, I
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _core = new((uiApplication, _, cancellationToken) => handler(uiApplication, cancellationToken), base.Raise);
+        _core = new AsyncExternalEventCore<VoidResult, TResult>((uiApplication, _, cancellationToken) => handler(uiApplication, cancellationToken), base.Raise);
         _options = options;
     }
 

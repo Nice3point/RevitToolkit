@@ -35,7 +35,7 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _core = new((_, argument) => handler(argument), base.Raise);
+        _core = new ExternalEventCore<T>((_, argument) => handler(argument), base.Raise);
         _options = options;
     }
 
@@ -58,7 +58,7 @@ public class ExternalEvent<T> : ExternalEventHandler, IExternalEvent<T>
     {
         ArgumentNullException.ThrowIfNull(handler);
 
-        _core = new(handler, base.Raise);
+        _core = new ExternalEventCore<T>(handler, base.Raise);
         _options = options;
     }
 

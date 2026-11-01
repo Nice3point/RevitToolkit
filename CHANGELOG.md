@@ -2,15 +2,13 @@
 
 ### External Events
 
-#### External events run as your add-in from any thread
+#### Register the assemblies of your add-in
 
-An external event created on a background thread or in a modeless window used to run its handler without an add-in.
-Inside such a handler, `UIApplication.ActiveAddInId` returned no add-in, and Extensible Storage refused the changes to schemas with vendor write access.
+An external event created on a background thread or in a modeless window runs as the add-in that registered the assembly of the event.
+Inside the handler, `UIApplication.ActiveAddInId` returns the add-in ID, and Extensible Storage grants access to the schemas of the add-in vendor.
 
-Now the handler always runs as your add-in: `ActiveAddInId` returns its ID, and vendor schemas accept the changes.
-`ExternalApplication` and `ExternalCommand` set this up automatically, for the add-in project and every project it references.
-
-The new `RegisterAddInAssembly()` method covers the remaining cases: an `IExternalApplication` without the Toolkit base class, an assembly loaded at run time, or a library from a NuGet package.
+`ExternalApplication` and `ExternalCommand` register their assembly and every project it references automatically.
+The new `RegisterAddInAssembly()` method registers any other assembly: the assembly of an `IExternalApplication` without the Toolkit base class, a library from a NuGet package, or an assembly loaded at run time.
 Call it in `OnStartup`:
 
 ```c#
@@ -20,6 +18,10 @@ public Result OnStartup(UIControlledApplication application)
     return Result.Succeeded;
 }
 ```
+
+#### Fixes
+
+- An external event created outside the Revit API context runs its handler as its add-in. Previously, Revit bound such an event to no add-in: `ActiveAddInId` returned no add-in ID inside the handler, and Extensible Storage denied access to the schemas with the vendor access level.
 
 ### Context
 

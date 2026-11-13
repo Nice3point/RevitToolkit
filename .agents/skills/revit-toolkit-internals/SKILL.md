@@ -125,27 +125,27 @@ public override ExternalEventRequest Raise()
 Await completion with a `TaskCompletionSource` (see `AsyncExternalEvent.RaiseAsync`), and queue cross-thread work with a thread-safe structure such as `ConcurrentQueue` when a handler batches multiple actions.
 The base `ExternalEventHandler` constructor creates the underlying Revit event inside `RevitContext.BeginApiContextScope()`; construction is valid off the API context.
 
-### Step 5: Pump messages with DispatcherFrame for async
+### Step 5: Run an async entry point through MessagePump
 
-`async`/`await` inside a synchronous Revit command works by pumping a `DispatcherFrame`.
-Complete the frame from a continuation scheduled on `TaskScheduler.Default`, not the UI synchronization context, or the continuation deadlocks against `PushFrame`.
+`async`/`await` inside a synchronous Revit callback works by pumping the messages of the Revit thread until the task completes.
+An async base class passes its override to `MessagePump.Run` and contains no wait of its own.
 
 ```csharp
 public sealed override void Execute()
 {
-    var task = ExecuteAsync();
-    if (task.IsCompleted)
-    {
-        task.GetAwaiter().GetResult();
-        return;
-    }
-
-    var frame = new DispatcherFrame();
-    task.ContinueWith(_ => frame.Continue = false, TaskScheduler.Default);
-    Dispatcher.PushFrame(frame);
-    task.GetAwaiter().GetResult();
+    MessagePump.Run(ExecuteAsync);
 }
 ```
+
+`MessagePump.Run` selects the wait by the state of the WPF dispatcher of the calling thread:
+
+- A running dispatcher pumps a `DispatcherFrame` created with `exitWhenRequested: false`.
+  A frame that exits on the shutdown request of the dispatcher returns before the task completes, and the blocking wait after it deadlocks.
+- A dispatcher that has shut down throws from `Dispatcher.PushFrame` and aborts every operation posted to it.
+  Revit shuts down the dispatcher of its thread after the main window unloads, which can precede `OnShutdown`.
+  The pump installs its own `SynchronizationContext`, runs the continuations on the calling thread, and dispatches the window messages of the thread.
+
+Complete the frame from a continuation scheduled on `TaskScheduler.Default`, not the UI synchronization context, or the continuation deadlocks against `PushFrame`.
 
 ### Step 6: Confine native and reflection interop to Internal/
 
@@ -178,7 +178,7 @@ dotnet test -c Debug.R27
 - [ ] Entry points are instance base classes with one `abstract` override; global contexts are static classes; boilerplate lives in the base, not the override.
 - [ ] A temporary state change is a `Begin...Scope()` returning `IDisposable`, reference-counted under a `Lock`, with an `Interlocked.Exchange` dispose guard.
 - [ ] All shared static state is synchronized; the Revit event is unsubscribed when the last scope closes.
-- [ ] Cross-thread Revit work is marshaled through the external event with the API-mode fast path; async pumps a `DispatcherFrame` with a `TaskScheduler.Default` continuation.
+- [ ] Cross-thread Revit work is marshaled through the external event with the API-mode fast path; an async entry point waits through `MessagePump.Run`.
 - [ ] Reflection and native interop stay in `Internal/` and are never surfaced.
 - [ ] Public classes carry `[PublicAPI]`, Revit callbacks `[EditorBrowsable(Never)]`, read-only methods `[Pure]`; every type compiles under every `Debug.RNN`/`Release.RNN`.
 - [ ] A test covers the changed custom logic.
@@ -192,5 +192,6 @@ dotnet test -c Debug.R27
 | Touching a shared field outside the lock           | Read it under the lock into a local, then act.                                     |
 | Calling the Revit API off the API context          | Marshal through the external event; fast-path only when `IsRevitInApiMode`.        |
 | Completing the async frame on the UI context       | Continue on `TaskScheduler.Default`; the UI context deadlocks against `PushFrame`. |
+| Calling `Dispatcher.PushFrame` in an async base    | Pass the override to `MessagePump.Run`; `PushFrame` throws after the shutdown.     |
 | Exposing a reflected member or native pointer      | Keep it `internal` in `Internal/`; expose only the wrapped type.                   |
 | A version-specific API without a compilation gate  | Gate with `#if REVIT####_OR_GREATER` / `#if NET*` so every configuration compiles. |

@@ -1,4 +1,4 @@
-using System.Windows.Threading;
+using Nice3point.Revit.Toolkit.Internal;
 
 // ReSharper disable once CheckNamespace
 namespace Nice3point.Revit.Toolkit.External;
@@ -42,8 +42,15 @@ public abstract class AsyncExternalApplication : ExternalApplication
     ///     Overload this method to execute some asynchronous tasks when Revit shuts down.
     /// </summary>
     /// <remarks>
-    ///     The method will not be executed if the value of the <see cref="Autodesk.Revit.UI.Result" /> property in the <see cref="OnStartupAsync()" />
-    ///     method is different from <see cref="Autodesk.Revit.UI.Result.Succeeded" />.
+    ///     <para>
+    ///         The method will not be executed if the value of the <see cref="Autodesk.Revit.UI.Result" /> property in the <see cref="OnStartupAsync()" />
+    ///         method is different from <see cref="Autodesk.Revit.UI.Result.Succeeded" />.
+    ///     </para>
+    ///     <para>
+    ///         Revit shuts down the WPF dispatcher of its thread after the main window unloads, which can precede this method.
+    ///         The code after an <see langword="await" /> runs on the Revit thread in both states of the dispatcher.
+    ///         A dispatcher that has shut down cancels every operation posted to it.
+    ///     </para>
     /// </remarks>
     public virtual Task OnShutdownAsync()
     {
@@ -55,7 +62,7 @@ public abstract class AsyncExternalApplication : ExternalApplication
     /// </summary>
     public sealed override void OnStartup()
     {
-        ExecuteAsync(OnStartupAsync);
+        MessagePump.Run(OnStartupAsync);
     }
 
     /// <summary>
@@ -63,28 +70,6 @@ public abstract class AsyncExternalApplication : ExternalApplication
     /// </summary>
     public sealed override void OnShutdown()
     {
-        ExecuteAsync(OnShutdownAsync);
-    }
-
-    private static void ExecuteAsync(Func<Task> asyncMethod)
-    {
-        var task = asyncMethod();
-        if (task.IsCompleted)
-        {
-            //Rethrow exceptions
-            task.GetAwaiter().GetResult();
-            return;
-        }
-
-        var frame = new DispatcherFrame();
-
-        // TaskScheduler.Default ensures continuation runs on ThreadPool, not UI thread.
-        // Prevents deadlock: if continuation ran on UI thread via SynchronizationContext,
-        // it would wait for PushFrame to finish, which waits for continuation - deadlock.
-        task.ContinueWith(_ => frame.Continue = false, TaskScheduler.Default);
-
-        Dispatcher.PushFrame(frame);
-
-        task.GetAwaiter().GetResult();
+        MessagePump.Run(OnShutdownAsync);
     }
 }

@@ -1,2 +1,7 @@
 GetClientRect
+KillTimer
+PeekMessage
+PostQuitMessage
 PrintWindow
+SetTimer
+WM_QUIT

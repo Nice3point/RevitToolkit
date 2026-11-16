@@ -8,9 +8,8 @@ namespace Nice3point.Revit.Toolkit.External;
 /// </summary>
 /// <remarks>
 ///     <para>
-///         Enables async/await patterns within Revit external commands while maintaining
-///         execution on the Revit main thread. The Revit UI remains responsive during async operations
-///         through dispatcher message pumping.
+///         Enables async/await patterns within Revit external commands while maintaining execution on the Revit main thread.
+///         The Revit UI remains responsive during async operations through dispatcher message pumping.
 ///     </para>
 ///     <para>
 ///         Ideal for I/O-bound operations such as HTTP requests, file operations, or database queries.

@@ -8,13 +8,11 @@ namespace Nice3point.Revit.Toolkit.External;
 /// </summary>
 /// <remarks>
 ///     <para>
-///         Enables async/await patterns within Revit external applications while maintaining
-///         execution on the Revit main thread. The Revit UI remains responsive during async operations
-///         through dispatcher message pumping.
+///         Enables async/await patterns within Revit external applications while maintaining execution on the Revit main thread.
+///         The Revit UI remains responsive during async operations through dispatcher message pumping.
 ///     </para>
 ///     <para>
-///         Ideal for I/O-bound operations such as HTTP requests, file operations, or database queries
-///         during application startup and shutdown.
+///         Ideal for I/O-bound operations such as HTTP requests, file operations, or database queries during application startup and shutdown.
 ///         Revit API calls can be made before and after await points since execution resumes on the main thread.
 ///     </para>
 /// </remarks>
@@ -43,8 +41,7 @@ public abstract class AsyncExternalApplication : ExternalApplication
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         The method will not be executed if the value of the <see cref="Autodesk.Revit.UI.Result" /> property in the <see cref="OnStartupAsync()" />
-    ///         method is different from <see cref="Autodesk.Revit.UI.Result.Succeeded" />.
+    ///         The method will not be executed if the value of the <see cref="Autodesk.Revit.UI.Result" /> property in the <see cref="OnStartupAsync()" /> method is different from <see cref="Autodesk.Revit.UI.Result.Succeeded" />.
     ///     </para>
     ///     <para>
     ///         Revit shuts down the WPF dispatcher of its thread after the main window unloads, which can precede this method.

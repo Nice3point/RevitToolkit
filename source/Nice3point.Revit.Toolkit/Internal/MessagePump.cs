@@ -7,7 +7,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 namespace Nice3point.Revit.Toolkit.Internal;
 
 /// <summary>
-///     Provides the synchronous wait for an asynchronous method that pumps the messages of the calling thread.
+///     Provides the synchronous wait that pumps the messages of the calling thread until an asynchronous method completes.
 /// </summary>
 /// <remarks>
 ///     Revit shuts down the WPF dispatcher of its thread after the main window unloads, and the dispatcher pumps no <see cref="DispatcherFrame" /> from that moment.
@@ -41,19 +41,18 @@ internal static class MessagePump
         var task = asyncMethod();
         if (!task.IsCompleted)
         {
-            // A frame that exits on the shutdown request of the dispatcher returns before the task completes,
-            // and the blocking wait that follows deadlocks against the continuation posted to this thread.
+            // A frame that exits on the shutdown request of the dispatcher returns before the task completes.
+            // The blocking wait after it deadlocks against the continuation posted to this thread.
             var frame = new DispatcherFrame(false);
 
-            // TaskScheduler.Default ensures continuation runs on ThreadPool, not UI thread.
-            // Prevents deadlock: if continuation ran on UI thread via SynchronizationContext,
-            // it would wait for PushFrame to finish, which waits for continuation - deadlock.
+            // TaskScheduler.Default runs the continuation on the thread pool.
+            // A continuation scheduled on the synchronization context of this thread deadlocks against the frame.
             task.ContinueWith(_ => frame.Continue = false, TaskScheduler.Default);
 
             Dispatcher.PushFrame(frame);
         }
 
-        //Rethrow exceptions
+        // Rethrows the exception of a faulted task.
         task.GetAwaiter().GetResult();
     }
 
@@ -79,7 +78,7 @@ internal static class MessagePump
                 context.RunCallbacks(task);
             }
 
-            //Rethrow exceptions
+            // Rethrows the exception of a faulted task.
             task.GetAwaiter().GetResult();
         }
         finally

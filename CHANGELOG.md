@@ -1,3 +1,34 @@
+# 2027.0.5
+
+### External Applications
+
+#### No more failure dialog when Revit exits
+
+An add-in that awaits in `OnShutdownAsync`, for example the stop of a host, could end the Revit session with the **External Tool Failure** dialog and this exception in the journal:
+
+```text
+System.InvalidOperationException: Cannot perform requested operation because the Dispatcher shut down.
+```
+
+The cause is Revit itself: it shuts down the WPF dispatcher of its thread after the main window closes, and `AsyncExternalApplication` waited for the task through that dispatcher.
+
+`OnShutdownAsync` completes in both states of the dispatcher, with no change to your code:
+
+```c#
+public override async Task OnShutdownAsync()
+{
+    await _host.StopAsync();
+    _host.Dispose();
+}
+```
+
+The code after an `await` runs on the Revit thread.
+A dispatcher that has shut down cancels every operation posted to it, and `await Dispatcher.InvokeAsync(...)` throws `TaskCanceledException`: call that code directly.
+
+#### Fixes
+
+- `AsyncExternalApplication` and `AsyncExternalCommand` wait for the task when the dispatcher starts its shutdown during an `await`. Previously, the wait ended early and blocked the Revit thread.
+
 # 2027.0.4
 
 ### External Events

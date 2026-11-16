@@ -1,5 +1,12 @@
+DispatchMessage
 FindWindowEx
 GetCurrentThreadId
 GetWindowThreadProcessId
+INFINITE
+MsgWaitForMultipleObjectsEx
+PeekMessage
 PostMessage
+PostQuitMessage
 RegisterWindowMessage
+TranslateMessage
+WM_QUIT

@@ -1,4 +1,4 @@
-using System.Windows.Threading;
+using Nice3point.Revit.Toolkit.Internal;
 
 // ReSharper disable once CheckNamespace
 namespace Nice3point.Revit.Toolkit.External;
@@ -8,9 +8,8 @@ namespace Nice3point.Revit.Toolkit.External;
 /// </summary>
 /// <remarks>
 ///     <para>
-///         Enables async/await patterns within Revit external commands while maintaining
-///         execution on the Revit main thread. The Revit UI remains responsive during async operations
-///         through dispatcher message pumping.
+///         Enables async/await patterns within Revit external commands while maintaining execution on the Revit main thread.
+///         The Revit UI remains responsive during async operations through dispatcher message pumping.
 ///     </para>
 ///     <para>
 ///         Ideal for I/O-bound operations such as HTTP requests, file operations, or database queries.
@@ -54,23 +53,6 @@ public abstract class AsyncExternalCommand : ExternalCommand
     /// </summary>
     public sealed override void Execute()
     {
-        var task = ExecuteAsync();
-        if (task.IsCompleted)
-        {
-            //Rethrow exceptions
-            task.GetAwaiter().GetResult();
-            return;
-        }
-
-        var frame = new DispatcherFrame();
-
-        // TaskScheduler.Default ensures continuation runs on ThreadPool, not UI thread.
-        // Prevents deadlock: if continuation ran on UI thread via SynchronizationContext,
-        // it would wait for PushFrame to finish, which waits for continuation - deadlock.
-        task.ContinueWith(_ => frame.Continue = false, TaskScheduler.Default);
-
-        Dispatcher.PushFrame(frame);
-
-        task.GetAwaiter().GetResult();
+        MessagePump.Run(ExecuteAsync);
     }
 }
